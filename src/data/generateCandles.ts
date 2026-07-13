@@ -6,6 +6,7 @@ export interface Candle {
     high: number;
     low: number;
     close: number;
+    volume: number;
 }
 
 export function generateCandles(
@@ -21,16 +22,19 @@ export function generateCandles(
     for (let i = 0; i < count; i++) {
         const open = currentPrice;
 
-        // Random movement between -15 and +15 points
-        const change = (Math.random() - 0.5) * 30;
-        const close = open + change;
+        // Random body movement
+        const body = (Math.random() - 0.5) * 30;
+        const close = open + body;
 
         // Random wick sizes
-        const high =
-            Math.max(open, close) + Math.random() * 10;
+        const upperWick = Math.random() * 8;
+        const lowerWick = Math.random() * 8;
 
-        const low =
-            Math.min(open, close) - Math.random() * 10;
+        const high = Math.max(open, close) + upperWick;
+        const low = Math.min(open, close) - lowerWick;
+
+        // Random volume
+        const volume = Math.floor(500 + Math.random() * 1500);
 
         candles.push({
             time: Math.floor(currentTime.getTime() / 1000) as UTCTimestamp,
@@ -38,11 +42,10 @@ export function generateCandles(
             high: Number(high.toFixed(2)),
             low: Number(low.toFixed(2)),
             close: Number(close.toFixed(2)),
+            volume,
         });
 
         currentPrice = close;
-
-        // Advance 1 minute
         currentTime.setMinutes(currentTime.getMinutes() + 1);
     }
 
