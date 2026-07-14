@@ -45,7 +45,7 @@ const chartOptions: DeepPartial<ChartOptions> = {
 };
 
 export function ChartComponent(
-    { timerMin = 3 }: { timerMin?: number }
+    { timerMin = 1 }: { timerMin?: number }
 ) {
     const { candles, volume } = useReplay(timerMin);
     const {

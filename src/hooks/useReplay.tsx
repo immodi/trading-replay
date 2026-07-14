@@ -2,18 +2,22 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { generateCandles, type Candle } from "@/data/generateCandles";
 import { aggregateCandle } from "@/utils/aggregateCandle";
-import getCandleWindow from "@/utils/getCandleWindow";
 
-const candleData = generateCandles(100 * 60);
 
 interface ReplayState {
-    windowIndex: number;
+    sourceIndex: number;
+    currentCandle: Candle | null;
+    minutesInCurrent: number;
+    candlesSrc: Candle[];
 }
 
 export function useReplay(timerMin: number) {
     // Engine state (does not trigger renders)
     const replay = useRef<ReplayState>({
-        windowIndex: 0,
+        sourceIndex: 0,
+        currentCandle: null,
+        minutesInCurrent: 0,
+        candlesSrc: generateCandles(100 * 60),
     });
 
     // UI state
@@ -34,39 +38,52 @@ export function useReplay(timerMin: number) {
 
     useEffect(() => {
         const id = setInterval(() => {
-            advanceChart()
-        }, timerMin * 1000);
+            const state = replay.current;
+            if (state.sourceIndex >= state.candlesSrc.length) {
+                clearInterval(id);
+                return;
+            }
+
+            tick();
+
+        }, 1000);
 
         return () => clearInterval(id);
-    }, []);
+    }, [timerMin]);
 
 
-    const advanceChart = () => {
+    const tick = () => {
         const state = replay.current;
 
-        const candleWindow = getCandleWindow(candleData, state.windowIndex, timerMin)
-        if (candleWindow.length === 0) {
-            return;
+        const sourceCandle = state.candlesSrc[state.sourceIndex];
+        if (!sourceCandle) return;
+
+        if (state.currentCandle === null) {
+            // Create new candle
+            state.currentCandle = sourceCandle;
+
+            setCandles(prev => [...prev, sourceCandle]);
+        } else {
+            // Update existing candle
+            const nextCandle = aggregateCandle(state.currentCandle, sourceCandle);
+            state.currentCandle = nextCandle
+
+            setCandles(prev => {
+                const next = [...prev];
+                next[next.length - 1] = nextCandle;
+                return next;
+            });
         }
-        let currentCandle = candleWindow[0]
-
-        const timeFrameCandles = candleWindow.slice(1)
-
-        timeFrameCandles.forEach((candle, index) => {
-            setTimeout(() => {
-                currentCandle = aggregateCandle(currentCandle, candle);
-                setCandles(prev => {
-                    const next = [...prev];
-                    next[next.length - 1] = currentCandle;
-                    return next;
-                });
-            }, (index + 1) * 1000);
-        })
 
 
         // Advance engine synchronously
-        state.windowIndex++;
-        setCandles(prev => [...prev, currentCandle]);
+        state.sourceIndex++;
+        state.minutesInCurrent++;
+
+        if (state.minutesInCurrent === timerMin) {
+            state.currentCandle = null;
+            state.minutesInCurrent = 0;
+        }
     }
 
     return {
