@@ -1,0 +1,32 @@
+# TODO
+
+## Replay Engine
+
+- [ ] Replace nested `setTimeout()` replay with a single 1-second replay loop.
+- [ ] Aggregate 1-minute candles into the selected timeframe during replay.
+- [ ] Support replay speeds (1x, 2x, 5x, 10x, etc.).
+- [ ] Play / Pause replay.
+- [ ] Step forward one candle.
+- [ ] Restart replay.
+
+## Chart
+
+- [ ] Timeframe selector.
+
+## Data
+
+- [ ] Load historical data from CSV.
+- [ ] Jump to a selected date/time.
+
+## Session
+
+- [ ] Save session to LocalStorage.
+- [ ] Ability to export session data into CSV.
+- [ ] Restore previous session on startup.
+
+## Trading
+
+- [ ] Place long/short trades.
+- [ ] Stop Loss and Take Profit.
+- [ ] Trade markers on chart.
+- [ ] Basic performance statistics saved to session.

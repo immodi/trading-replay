@@ -1,7 +1,3 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-
-import { generateCandles, type Candle } from "@/data/generateCandles";
-
 import {
     ColorType,
     CrosshairMode,
@@ -16,14 +12,9 @@ import {
     HistogramSeries,
     Pane,
 } from "lightweight-charts-react-components";
-import getCandleWindow from "@/utils/getCandleWindow";
-import { aggregateCandle } from "@/utils/aggregateCandle";
-
-const candleData = generateCandles(100 * 60);
-
-interface ReplayState {
-    windowIndex: number;
-}
+import { useReplay } from "@/hooks/useReplay";
+import { useGoToLatest } from "@/hooks/useGoToLatest";
+import { GoToLatestButton } from "./GoToLatestButton";
 
 const chartOptions: DeepPartial<ChartOptions> = {
     layout: {
@@ -56,63 +47,17 @@ const chartOptions: DeepPartial<ChartOptions> = {
 export function ChartComponent(
     { timerMin = 3 }: { timerMin?: number }
 ) {
-    // Engine state (does not trigger renders)
-    const replay = useRef<ReplayState>({
-        windowIndex: 0,
-        // candle: null
-    });
-
-    // UI state
-    const [candles, setCandles] = useState<Candle[]>([]);
-
-    const visibleVolume = useMemo(
-        () =>
-            candles.map(candle => ({
-                time: candle.time,
-                value: candle.volume,
-                color:
-                    candle.close >= candle.open
-                        ? "#26a69a"
-                        : "#ef5350",
-            })),
-        [candles]
-    );
-
-    useEffect(() => {
-        const id = setInterval(() => {
-            const state = replay.current;
-
-            const candleWindow = getCandleWindow(candleData, state.windowIndex, timerMin)
-            if (candleWindow.length === 0) {
-                return;
-            }
-            let currentCandle = candleWindow[0]
-
-            const timeFrameCandles = candleWindow.slice(1)
-            timeFrameCandles.forEach((candle, index) => {
-                setTimeout(() => {
-                    currentCandle = aggregateCandle(currentCandle, candle);
-                    setCandles(prev => {
-                        const next = [...prev];
-                        next[next.length - 1] = currentCandle;
-                        return next;
-                    });
-                }, (index + 1) * 1000);
-            })
-
-
-            // Advance engine synchronously
-            state.windowIndex++;
-            setCandles(prev => [...prev, currentCandle]);
-
-        }, timerMin * 1000);
-
-        return () => clearInterval(id);
-    }, []);
+    const { candles, volume } = useReplay(timerMin);
+    const {
+        handleChartInit,
+        showGoToLatest,
+        goToLatest,
+    } = useGoToLatest();
 
     return (
-        <div className="w-3/4 h-3/4">
+        <div className="relative w-3/4 h-3/4">
             <Chart
+                onInit={handleChartInit}
                 options={chartOptions}
                 containerProps={{
                     style: {
@@ -133,7 +78,7 @@ export function ChartComponent(
 
                 <Pane stretchFactor={1}>
                     <HistogramSeries
-                        data={visibleVolume}
+                        data={volume}
                         options={{
                             priceFormat: {
                                 type: "volume",
@@ -142,6 +87,11 @@ export function ChartComponent(
                     />
                 </Pane>
             </Chart>
+
+            <GoToLatestButton
+                visible={showGoToLatest}
+                onClick={goToLatest}
+            />
         </div>
     );
 }
