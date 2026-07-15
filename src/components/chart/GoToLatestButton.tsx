@@ -16,7 +16,7 @@ export function GoToLatestButton({
                 w-10
                 h-10
                 absolute
-                bottom-20
+                bottom-40
                 right-30
                 z-50
                 rounded-lg

@@ -2,7 +2,6 @@
 
 ## Replay Engine
 
-- [ ] Support replay speeds (1x, 2x, 5x, 10x, etc.).
 - [ ] Play / Pause replay.
 - [ ] Step forward one candle.
 - [ ] Restart replay.
