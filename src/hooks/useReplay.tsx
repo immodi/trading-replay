@@ -11,10 +11,15 @@ interface ReplayState {
     candlesSrc: Candle[];
 }
 
+export type PlayDirection = "forward" | "backward";
+
 export function useReplay(timeFrameMinutes: number, chartSpeed: number) {
     const timeoutRef = useRef<number | null>(null);
     const timeFrameRef = useRef(timeFrameMinutes);
     const speedRef = useRef(chartSpeed);
+
+    // const isPlaying = useRef(true);
+    // const direction = useRef<PlayDirection>("forward");
 
     const replay = useRef<ReplayState>({
         sourceIndex: 0,
@@ -24,6 +29,11 @@ export function useReplay(timeFrameMinutes: number, chartSpeed: number) {
     });
 
     const [candles, setCandles] = useState<Candle[]>([]);
+    const [isPlaying, setIsPlaying] = useState<boolean>(true);
+    const [isDone, setIsDone] = useState<boolean>(false);
+    const [direction, setDirection] = useState<PlayDirection>("forward");
+
+
 
     const volume = useMemo(
         () =>
@@ -45,18 +55,16 @@ export function useReplay(timeFrameMinutes: number, chartSpeed: number) {
 
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
+
+        setIsPlaying(false)
     }, []);
 
 
-    const tick = useCallback(() => {
+
+    const tick = useCallback((direction: PlayDirection) => {
         const state = replay.current;
         const sourceCandle = state.candlesSrc[state.sourceIndex];
 
-        // console.log(
-        //     "tick",
-        //     state.sourceIndex,
-        //     state.candlesSrc.length
-        // );
 
         if (!sourceCandle) {
             return false;
@@ -100,14 +108,17 @@ export function useReplay(timeFrameMinutes: number, chartSpeed: number) {
     }, []);
 
 
-    const start = useCallback(() => {
-        // console.log("START LOOP");
+    const start = useCallback((direction: PlayDirection) => {
         if (timeoutRef.current !== null) return;
 
+        setIsPlaying(true)
+
         const loop = () => {
-            const running = tick();
+            const running = tick(direction);
 
             if (!running) {
+                stop();
+                setIsDone(true);
                 timeoutRef.current = null;
                 return;
             }
@@ -134,9 +145,13 @@ export function useReplay(timeFrameMinutes: number, chartSpeed: number) {
 
         setCandles([]);
 
-        start();
+        start("forward");
 
     }, [stop, start]);
+
+    const rewind = useCallback(() => {
+
+    }, []);
 
 
     useEffect(() => {
@@ -155,8 +170,12 @@ export function useReplay(timeFrameMinutes: number, chartSpeed: number) {
     return {
         candles,
         volume,
+        isPlaying,
+        isDone,
+        direction,
         start,
         stop,
+        rewind,
         restart,
     };
 }

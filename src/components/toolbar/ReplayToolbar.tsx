@@ -1,11 +1,22 @@
+import type { PlayDirection } from "@/hooks/useReplay";
+import { ReplayControls } from "./ReplayControls";
 import { ReplaySpeedSelect } from "./ReplaySpeedSelect";
 import { ReplayTimeframeSelect } from "./ReplayTimeframeSelect";
 
 type ReplayToolbarProps = {
-    setSpeed: (speed: number) => void,
+    isPlaying: boolean,
+    isDone: boolean,
+    direction: PlayDirection,
+
     setTimeFrame: (timeFrame: number) => void
+    setSpeed: (speed: number) => void,
+
+    start: (direction: PlayDirection) => void,
+    stop: () => void,
+    restart: () => void,
+    rewind: () => void,
 }
-export function ReplayToolbar({ setSpeed, setTimeFrame }: ReplayToolbarProps) {
+export function ReplayToolbar(props: ReplayToolbarProps) {
     return (
         <div
             className="
@@ -25,9 +36,11 @@ export function ReplayToolbar({ setSpeed, setTimeFrame }: ReplayToolbarProps) {
 
             <div className="h-5 w-px bg-[#363A45]" />
 
-            <ReplaySpeedSelect setSpeed={setSpeed} />
+            <ReplaySpeedSelect setSpeed={props.setSpeed} />
 
-            <ReplayTimeframeSelect setTimeFrame={setTimeFrame} />
+            <ReplayTimeframeSelect setTimeFrame={props.setTimeFrame} />
+
+            <ReplayControls {...props} />
         </div>
     );
 }

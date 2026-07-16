@@ -9,3 +9,4 @@ export function aggregateCandle(current: Candle, next: Candle): Candle {
         volume: current.volume + next.volume,
     };
 }
+

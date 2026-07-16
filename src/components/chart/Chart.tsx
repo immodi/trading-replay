@@ -58,7 +58,7 @@ const chartOptions: DeepPartial<ChartOptions> = {
 export function ChartComponent() {
     const [timeFrameMinutes, setTimeFrameMinutes] = useState(Timeframe.Minute15 as number); // 15min
     const [speed, setSpeed] = useState(ChartSpeed.X1 as number);
-    const { candles, volume, start, stop, restart } = useReplay(timeFrameMinutes, speed);
+    const { candles, volume, direction, isPlaying, isDone, start, stop, rewind, restart } = useReplay(timeFrameMinutes, speed);
 
     const setTimeFrame = (timeFrameInMinutes: number) => {
         setTimeFrameMinutes(timeFrameInMinutes);
@@ -76,9 +76,23 @@ export function ChartComponent() {
         goToLatest,
     } = useGoToLatest();
 
+    const replayToolbarProps = {
+        isPlaying: isPlaying,
+        direction: direction,
+        isDone: isDone,
+
+        setSpeed: setChartSpeed,
+        setTimeFrame: setTimeFrame,
+
+        start: start,
+        stop: stop,
+        rewind: rewind,
+        restart: restart,
+    };
+
     return (
         <div className="flex h-screen w-screen flex-col bg-[#131722]">
-            <ReplayToolbar setSpeed={setChartSpeed} setTimeFrame={setTimeFrame} />
+            <ReplayToolbar {...replayToolbarProps} />
 
             <div className="flex-1 p-2">
                 <div className="relative h-full w-full overflow-hidden rounded-md border border-[#363A45]">
