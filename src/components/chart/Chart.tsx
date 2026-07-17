@@ -21,7 +21,7 @@ import { GoToLatestButton } from "./GoToLatestButton";
 import { Color } from "@/constants/replay";
 import { ReplayToolbar } from "../toolbar/ReplayToolbar";
 import { useState } from "react";
-import { ChartSpeed, ChartSpeeds } from "@/constants/chart";
+import { ChartSpeed } from "@/constants/chart";
 import { Timeframe } from "@/constants/toolbar";
 
 const chartOptions: DeepPartial<ChartOptions> = {

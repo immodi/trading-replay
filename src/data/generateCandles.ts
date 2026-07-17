@@ -4,7 +4,9 @@ export interface Candle {
     time: UTCTimestamp;
     open: number;
     high: number;
+    highHistory: number[];
     low: number;
+    lowHistory: number[];
     close: number;
     volume: number;
 }
@@ -40,7 +42,9 @@ export function generateCandles(
             time: Math.floor(currentTime.getTime() / 1000) as UTCTimestamp,
             open: Number(open.toFixed(2)),
             high: Number(high.toFixed(2)),
+            highHistory: [],
             low: Number(low.toFixed(2)),
+            lowHistory: [],
             close: Number(close.toFixed(2)),
             volume,
         });

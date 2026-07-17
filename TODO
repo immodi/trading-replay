@@ -1,11 +1,5 @@
 # TODO
 
-## Replay Engine
-
-- [ ] Play / Pause replay.
-- [ ] Step forward one candle.
-- [ ] Restart replay.
-
 ## Chart
 
 - [ ] Timeframe selector.
