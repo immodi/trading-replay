@@ -1,4 +1,4 @@
-import { ChartComponent } from "./components/Chart"
+import { ChartComponent } from "./components/chart/Chart"
 
 function App() {
 

@@ -1,0 +1,23 @@
+# TODO
+
+## Chart
+
+- [ ] Timeframe selector.
+
+## Data
+
+- [ ] Load historical data from CSV.
+- [ ] Jump to a selected date/time.
+
+## Session
+
+- [ ] Save session to LocalStorage.
+- [ ] Ability to export session data into CSV.
+- [ ] Restore previous session on startup.
+
+## Trading
+
+- [ ] Place long/short trades.
+- [ ] Stop Loss and Take Profit.
+- [ ] Trade markers on chart.
+- [ ] Basic performance statistics saved to session.
