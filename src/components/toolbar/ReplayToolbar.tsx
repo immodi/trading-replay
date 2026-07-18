@@ -14,7 +14,7 @@ type ReplayToolbarProps = {
     start: (direction: PlayDirection) => void,
     stop: () => void,
     restart: () => void,
-    rewind: () => void,
+    playback: (direction: PlayDirection) => void,
 }
 export function ReplayToolbar(props: ReplayToolbarProps) {
     return (

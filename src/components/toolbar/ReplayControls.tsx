@@ -12,7 +12,7 @@ type ReplayControlsProps = {
     start: (direction: PlayDirection) => void,
     stop: () => void,
     restart: () => void,
-    rewind: () => void,
+    playback: (direction: PlayDirection) => void,
 };
 
 export function ReplayControls(props: ReplayControlsProps) {
@@ -24,6 +24,14 @@ export function ReplayControls(props: ReplayControlsProps) {
     const stop = () => {
         if (props.isDone) return;
         props.stop();
+    };
+
+    const fastForward = () => {
+        props.playback("forward");
+    };
+
+    const rewind = () => {
+        props.playback("backward");
     };
 
     return (
@@ -43,10 +51,22 @@ export function ReplayControls(props: ReplayControlsProps) {
                     hover:border-gray-500
                     hover:bg-[#1B2130]
                     cursor-pointer
+
+                    disabled:cursor-not-allowed
+                    disabled:opacity-50
+                    disabled:border-[#2A2E39]
+                    disabled:bg-[#0F131C]
+                    disabled:hover:border-[#2A2E39]
+                    disabled:hover:bg-[#0F131C]
                 "
-                onClick={props.rewind}
+                disabled={props.isDone}
+                onClick={props.direction === "forward" ? rewind : fastForward}
             >
-                <img src={RewindIcon} alt="rewind" className="h-5 w-5" />
+                {
+                    props.direction === "forward"
+                        ? <img src={RewindIcon} alt="rewind" className="h-5 w-5" />
+                        : <img src={RewindIcon} alt="fastForward" className="h-5 w-5 rotate-180" />
+                }
             </button>
 
             {props.isDone ?

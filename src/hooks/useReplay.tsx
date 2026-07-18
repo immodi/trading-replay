@@ -85,10 +85,20 @@ export function useReplay(timeFrameMinutes: number, chartSpeed: number) {
         state.sourceIndex++;
         state.minutesInCurrent++;
 
+
+        // console.log({
+        //     sourceIndex: state.sourceIndex,
+        //     minutesInCurrent: state.minutesInCurrent,
+        //     currentCandle: state.currentCandle,
+        //     direction: "forward",
+        // });
+
         if (state.minutesInCurrent === timeFrameRef.current) {
             state.currentCandle = null;
             state.minutesInCurrent = 0;
         }
+
+
 
         return true;
 
@@ -96,31 +106,31 @@ export function useReplay(timeFrameMinutes: number, chartSpeed: number) {
 
     const tickBackward = useCallback(() => {
         const state = replay.current;
+
         state.sourceIndex--;
         state.minutesInCurrent--;
         const minuteIndex = state.minutesInCurrent - 1;
-
         if (state.sourceIndex <= 0) {
             return false;
         }
-
 
         if (minuteIndex < 0) {
             if (timeFrameRef.current > 1) {
                 state.minutesInCurrent = timeFrameRef.current - 1;
             } else {
+                state.minutesInCurrent = 0;
                 state.currentCandle = null;
             }
         }
 
         if (timeFrameRef.current === 1 || state.currentCandle === null) {
+            const previous = candles.at(-2);
+            state.currentCandle = previous ?? null;
+
             setCandles(prev => {
-                const previous = prev.at(-2);
-
-                state.currentCandle = previous ?? null;
-
                 return prev.slice(0, -1);
             });
+
         } else {
 
             const currentCandle = { ...state.currentCandle };
@@ -145,10 +155,10 @@ export function useReplay(timeFrameMinutes: number, chartSpeed: number) {
             setCandles(prev => {
                 if (prev.length === 0) return prev;
 
-                const next = [...prev];
-                next[next.length - 1] = prevCandle;
+                const candles = [...prev];
+                candles[candles.length - 1] = prevCandle;
 
-                return next;
+                return candles;
             });
         }
 
@@ -162,7 +172,7 @@ export function useReplay(timeFrameMinutes: number, chartSpeed: number) {
         setIsPlaying(true)
 
         const loop = () => {
-            const running = direction === "forward" ? tickForward() : tickBackward();;
+            const running = direction === "forward" ? tickForward() : tickBackward();
 
             if (!running) {
                 stop();
@@ -179,7 +189,7 @@ export function useReplay(timeFrameMinutes: number, chartSpeed: number) {
 
         loop();
 
-    }, [tickForward]);
+    }, [tickForward, tickBackward]);
 
     const stop = useCallback(() => {
         // console.log("STOP LOOP");
@@ -208,16 +218,16 @@ export function useReplay(timeFrameMinutes: number, chartSpeed: number) {
 
     }, [stop, start]);
 
-    const rewind = useCallback(() => {
+    const playback = useCallback((direction: PlayDirection) => {
         stop();
-        start("backward");
-        setDirection("backward");
+        start(direction);
+        // direction === "forward" ? tickForward() : tickBackward()
+        setDirection(direction);
     }, [stop, start]);
 
     useEffect(() => {
         speedRef.current = chartSpeed;
     }, [chartSpeed]);
-
 
     useEffect(() => {
         timeFrameRef.current = timeFrameMinutes;
@@ -235,7 +245,7 @@ export function useReplay(timeFrameMinutes: number, chartSpeed: number) {
         direction,
         start,
         stop,
-        rewind,
+        playback,
         restart,
     };
 }

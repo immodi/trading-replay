@@ -58,7 +58,7 @@ const chartOptions: DeepPartial<ChartOptions> = {
 export function ChartComponent() {
     const [timeFrameMinutes, setTimeFrameMinutes] = useState(Timeframe.Minute15 as number); // 15min
     const [speed, setSpeed] = useState(ChartSpeed.X1 as number);
-    const { candles, volume, direction, isPlaying, isDone, start, stop, rewind, restart } = useReplay(timeFrameMinutes, speed);
+    const { candles, volume, direction, isPlaying, isDone, start, stop, playback, restart } = useReplay(timeFrameMinutes, speed);
 
     const setTimeFrame = (timeFrameInMinutes: number) => {
         setTimeFrameMinutes(timeFrameInMinutes);
@@ -86,7 +86,7 @@ export function ChartComponent() {
 
         start: start,
         stop: stop,
-        rewind: rewind,
+        playback: playback,
         restart: restart,
     };
 
