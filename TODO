@@ -1,14 +1,5 @@
 # TODO
 
-## Chart
-
-- [ ] Timeframe selector.
-
-## Data
-
-- [ ] Load historical data from CSV.
-- [ ] Jump to a selected date/time.
-
 ## Session
 
 - [ ] Save session to LocalStorage.

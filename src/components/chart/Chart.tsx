@@ -20,9 +20,12 @@ import { GoToLatestButton } from "./GoToLatestButton";
 
 import { Color } from "@/constants/replay";
 import { ReplayToolbar } from "../toolbar/ReplayToolbar";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChartSpeed } from "@/constants/chart";
 import { Timeframe } from "@/constants/toolbar";
+import type { Candle } from "@/types/candle";
+import type { DataRange } from "@/types/dateRange";
+import { getContinuousMnqRange, loadContinuousMnq } from "@/data/mnq";
 
 const chartOptions: DeepPartial<ChartOptions> = {
     layout: {
@@ -58,7 +61,26 @@ const chartOptions: DeepPartial<ChartOptions> = {
 export function ChartComponent() {
     const [timeFrameMinutes, setTimeFrameMinutes] = useState(Timeframe.Minute15 as number); // 15min
     const [speed, setSpeed] = useState(ChartSpeed.X1 as number);
-    const { candles, volume, direction, isPlaying, isDone, start, stop, playback, restart } = useReplay(timeFrameMinutes, speed);
+
+    const [dataRange, setDataRange] = useState<DataRange | null>(null);
+    const [candleData, setCandleData] = useState<Candle[] | null>(null);
+    const { candles, volume, direction, isPlaying, isDone, start, stop, playback, restart } = useReplay(timeFrameMinutes, speed, candleData);
+
+    useEffect(() => {
+        async function load() {
+            const dataRange = await getContinuousMnqRange();
+            setDataRange(dataRange);
+
+            const candleData = await loadContinuousMnq(dataRange.start);
+            setCandleData(candleData);
+        }
+
+        load();
+    }, []);
+
+    useEffect(() => {
+        console.log(candleData);
+    }, [candleData])
 
     const setTimeFrame = (timeFrameInMinutes: number) => {
         setTimeFrameMinutes(timeFrameInMinutes);
@@ -70,13 +92,30 @@ export function ChartComponent() {
         return;
     };
 
+    const setChartData = (data: Candle[]) => {
+        setCandleData(data);
+    };
+
+
     const {
         handleChartInit,
         showGoToLatest,
         goToLatest,
     } = useGoToLatest();
 
+
+    if (!dataRange || !candleData) {
+        return (
+            <div className="flex w-screen h-screen items-center justify-center bg-[#131722] text-gray-300">
+                Loading historical data...
+            </div>
+        );
+    }
+
     const replayToolbarProps = {
+        minDate: dataRange.start,
+        maxDate: dataRange.end,
+
         isPlaying: isPlaying,
         direction: direction,
         isDone: isDone,
@@ -84,6 +123,7 @@ export function ChartComponent() {
         setSpeed: setChartSpeed,
         setTimeFrame: setTimeFrame,
 
+        setCandleData: setChartData,
         start: start,
         stop: stop,
         playback: playback,
