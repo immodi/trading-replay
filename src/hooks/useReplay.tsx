@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { generateCandles, type Candle } from "@/data/generateCandles";
-import { aggregateCandle } from "@/utils/aggregateCandle";
 import { Color } from "@/constants/replay";
-import { reaggregateCandle } from "@/data/reaggregateCandle";
+import { aggregateCandle } from "@/utils/aggregateCandle";
+import { reaggregateCandle } from "@/utils/reaggregateCandle";
+import type { Candle } from "@/types/candle";
 
 interface ReplayState {
     sourceIndex: number;
@@ -14,19 +14,16 @@ interface ReplayState {
 
 export type PlayDirection = "forward" | "backward";
 
-export function useReplay(timeFrameMinutes: number, chartSpeed: number) {
+export function useReplay(timeFrameMinutes: number, chartSpeed: number, source: Candle[] | null) {
     const timeoutRef = useRef<number | null>(null);
     const timeFrameRef = useRef(timeFrameMinutes);
     const speedRef = useRef(chartSpeed);
-
-    // const isPlaying = useRef(true);
-    // const direction = useRef<PlayDirection>("forward");
 
     const replay = useRef<ReplayState>({
         sourceIndex: 0,
         currentCandle: null,
         minutesInCurrent: 0,
-        candlesSrc: generateCandles(100),
+        candlesSrc: source ?? [],
     });
 
     const [candles, setCandles] = useState<Candle[]>([]);
@@ -97,8 +94,6 @@ export function useReplay(timeFrameMinutes: number, chartSpeed: number) {
             state.currentCandle = null;
             state.minutesInCurrent = 0;
         }
-
-
 
         return true;
 
@@ -224,6 +219,19 @@ export function useReplay(timeFrameMinutes: number, chartSpeed: number) {
         // direction === "forward" ? tickForward() : tickBackward()
         setDirection(direction);
     }, [stop, start]);
+
+    useEffect(() => {
+        if (!source) return;
+
+        replay.current = {
+            sourceIndex: 0,
+            currentCandle: null,
+            minutesInCurrent: 0,
+            candlesSrc: source,
+        };
+
+        restart();
+    }, [source, restart]);
 
     useEffect(() => {
         speedRef.current = chartSpeed;
