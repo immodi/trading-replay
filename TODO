@@ -8,7 +8,8 @@
 
 ## Trading
 
-- [ ] Place long/short trades.
-- [ ] Stop Loss and Take Profit.
 - [ ] Trade markers on chart.
 - [ ] Basic performance statistics saved to session.
+
+## Indicators
+- [ ] Display Basic selection of indicators

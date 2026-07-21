@@ -26,6 +26,9 @@ import { Timeframe } from "@/constants/toolbar";
 import type { Candle } from "@/types/candle";
 import type { DataRange } from "@/types/dateRange";
 import { getContinuousMnqRange, loadContinuousMnq } from "@/data/mnq";
+import { usePrice } from "@/hooks/usePrice";
+import { useTrade } from "@/hooks/useTrade";
+import { MNQ_POINT_DOLLAR_VALUE } from "@/constants/mnq";
 
 const chartOptions: DeepPartial<ChartOptions> = {
     layout: {
@@ -64,7 +67,9 @@ export function ChartComponent() {
 
     const [dataRange, setDataRange] = useState<DataRange | null>(null);
     const [candleData, setCandleData] = useState<Candle[] | null>(null);
-    const { candles, volume, direction, isPlaying, isDone, start, stop, playback, restart } = useReplay(timeFrameMinutes, speed, candleData);
+    const replay = useReplay(timeFrameMinutes, speed, candleData);
+    const priceData = usePrice(replay.candles);
+    const trade = useTrade(priceData, MNQ_POINT_DOLLAR_VALUE);
 
     useEffect(() => {
         async function load() {
@@ -78,10 +83,6 @@ export function ChartComponent() {
         load();
     }, []);
 
-    useEffect(() => {
-        console.log(candleData);
-    }, [candleData])
-
     const setTimeFrame = (timeFrameInMinutes: number) => {
         setTimeFrameMinutes(timeFrameInMinutes);
         return;
@@ -94,8 +95,8 @@ export function ChartComponent() {
 
     const setChartData = (data: Candle[]) => {
         setCandleData(data);
+        return;
     };
-
 
     const {
         handleChartInit,
@@ -116,18 +117,18 @@ export function ChartComponent() {
         minDate: dataRange.start,
         maxDate: dataRange.end,
 
-        isPlaying: isPlaying,
-        direction: direction,
-        isDone: isDone,
+        isPlaying: replay.isPlaying,
+        direction: replay.direction,
+        isDone: replay.isDone,
 
         setSpeed: setChartSpeed,
         setTimeFrame: setTimeFrame,
 
         setCandleData: setChartData,
-        start: start,
         stop: stop,
-        playback: playback,
-        restart: restart,
+        start: replay.start,
+        playback: replay.playback,
+        restart: replay.restart,
     };
 
     return (
@@ -148,7 +149,7 @@ export function ChartComponent() {
                     >
                         <Pane stretchFactor={4}>
                             <CandlestickSeries
-                                data={candles}
+                                data={replay.candles}
                                 options={{
                                     priceLineStyle: LineStyle.Dashed,
                                     priceLineWidth: 2,
@@ -158,7 +159,7 @@ export function ChartComponent() {
 
                         <Pane stretchFactor={1}>
                             <HistogramSeries
-                                data={volume}
+                                data={replay.volume}
                                 options={{
                                     priceFormat: {
                                         type: "volume",
