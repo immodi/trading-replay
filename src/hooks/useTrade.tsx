@@ -23,13 +23,13 @@ export function useTrade(priceData: PriceData, pointDollarValue: number) {
             if (position.state === "waiting") {
                 switch (position.side) {
                     case "long":
-                        if (priceData.CurrentPrice >= position.entryPrice) {
+                        if (priceData.High >= position.entryPrice) {
                             position.state = "open";
                         }
                         break;
 
                     case "short":
-                        if (priceData.CurrentPrice <= position.entryPrice) {
+                        if (priceData.Low <= position.entryPrice) {
                             position.state = "open";
                         }
                         break;
@@ -40,40 +40,59 @@ export function useTrade(priceData: PriceData, pointDollarValue: number) {
             switch (position.side) {
                 case "long":
                     if (
-                        position.takeProfit &&
-                        priceData.CurrentPrice >= position.takeProfit
-                        ||
-                        position.stopLoss &&
-                        priceData.CurrentPrice <= position.stopLoss
+                        (position.takeProfit !== undefined &&
+                            priceData.High >= position.takeProfit) ||
+                        (position.stopLoss !== undefined &&
+                            priceData.Low <= position.stopLoss)
                     ) {
-                        close(position);
-                    }
+                        if (
+                            (position.takeProfit !== undefined &&
+                                priceData.High >= position.takeProfit) &&
+                            (position.stopLoss !== undefined &&
+                                priceData.Low <= position.stopLoss)
+                        ) {
 
+                            // Conservative: assume SL was hit first.
+                            close(position, { exitPrice: position.stopLoss })
+                            return;
+                        }
+                        close(position, { exitPrice: position.takeProfit });
+                    }
                     break;
 
                 case "short":
                     if (
-                        position.takeProfit &&
-                        priceData.CurrentPrice <= position.takeProfit
-                        ||
-                        position.stopLoss &&
-                        priceData.CurrentPrice >= position.stopLoss
-
+                        (position.takeProfit !== undefined &&
+                            priceData.Low <= position.takeProfit) ||
+                        (position.stopLoss !== undefined &&
+                            priceData.High >= position.stopLoss)
                     ) {
-                        close(position);
+
+                        if (
+                            (position.takeProfit !== undefined &&
+                                priceData.Low <= position.takeProfit) &&
+                            (position.stopLoss !== undefined &&
+                                priceData.High >= position.stopLoss)
+                        ) {
+
+                            // Conservative: assume SL was hit first.
+                            close(position, { exitPrice: position.stopLoss })
+                            return;
+                        }
+                        close(position, { exitPrice: position.takeProfit });
                     }
                     break;
             }
         });
-    }, [priceData.CurrentPrice, priceData.CurrentTime]);
+    }, [priceData.Price, priceData.Time]);
 
     function enter(direction: Direction): void;
     function enter(direction: Direction, entryPrice: number, stopLoss: number, takeProfit: number): void;
     function enter(direction: Direction, entryPrice?: number, stopLoss?: number, takeProfit?: number) {
         const position: Position = {
             side: direction,
-            entryPrice: priceData.CurrentPrice,
-            entryTime: priceData.CurrentTime,
+            entryPrice: priceData.Price,
+            entryTime: priceData.Time,
             state: "open",
         };
 
@@ -95,26 +114,29 @@ export function useTrade(priceData: PriceData, pointDollarValue: number) {
 
     function close(): void;
     function close(position: Position): void;
-    function close(position?: Position) {
+    function close(position: Position, override: Partial<Position>): void;
+    function close(position?: Position, override?: Partial<Position>) {
         if (!position) {
             // close all 
             for (let i = 0; i < positions.current.length; i++) {
-                const position = positions.current.at(i)
-                if (!position || position.state === "close") continue;
+                const pos = positions.current.at(i)
+                if (!pos || pos.state === "close") continue;
 
-                position.state = "close";
-                position.exitTime = priceData.CurrentTime;
-                position.exitPrice = priceData.CurrentPrice;
-                pl.current += calculatePL(position);
+                pos.state = "close";
+                pos.exitTime = priceData.Time;
+                pos.exitPrice = priceData.Price;
+                pl.current += calculatePL(pos);
             }
             return
         }
 
-        position.state = "close";
-        position.exitTime = priceData.CurrentTime;
-        position.exitPrice = priceData.CurrentPrice;
+        Object.assign(position, {
+            state: "close",
+            exitTime: priceData.Time,
+            ...override,
+        });
+
         pl.current += calculatePL(position);
-        return;
     }
 
 

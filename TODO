@@ -1,5 +1,6 @@
 # TODO
 
+
 ## Session
 
 - [ ] Save session to LocalStorage.
@@ -8,6 +9,7 @@
 
 ## Trading
 
+- [ ] Implement Contract Quantity
 - [ ] Trade markers on chart.
 - [ ] Basic performance statistics saved to session.
 
