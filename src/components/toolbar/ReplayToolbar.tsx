@@ -4,6 +4,10 @@ import { ReplaySpeedSelect } from "./ReplaySpeedSelect";
 import { ReplayTimeframeSelect } from "./ReplayTimeframeSelect";
 import type { Candle } from "@/types/candle";
 import { loadContinuousMnq } from "@/data/mnq";
+import { ReplayTradingControls } from "./ReplayTradingControls";
+import type { Direction, Position } from "@/types/position";
+import type { PositionParamters } from "@/types/positionParamters";
+import { ReplayPLDisplay } from "./ReplayPLDisplay";
 
 type ReplayToolbarProps = {
     minDate: Date,
@@ -12,15 +16,28 @@ type ReplayToolbarProps = {
     isPlaying: boolean,
     isDone: boolean,
     direction: PlayDirection,
+    price: number,
+    pl: number,
+    positionParametersRef: React.RefObject<PositionParamters>;
 
     setTimeFrame: (timeFrame: number) => void
     setSpeed: (speed: number) => void,
     setCandleData: (data: Candle[]) => void,
 
+    resetPl: () => void,
     start: (direction: PlayDirection) => void,
     stop: () => void,
     restart: () => void,
     playback: (direction: PlayDirection) => void,
+    enter: {
+        (direction: Direction): void;
+        (direction: Direction, entryPrice: number, stopLoss: number, takeProfit: number): void;
+    },
+    close: {
+        (): void;
+        (position: Position): void;
+        (position: Position, override: Partial<Position>): void;
+    }
 }
 export function ReplayToolbar(props: ReplayToolbarProps) {
     const onDateChange = async (
@@ -80,6 +97,35 @@ export function ReplayToolbar(props: ReplayToolbarProps) {
             <ReplayTimeframeSelect setTimeFrame={props.setTimeFrame} />
 
             <ReplayControls {...props} />
+
+            <ReplayTradingControls
+                positionParametersRef={props.positionParametersRef}
+                onBuyMarket={() => {
+                    const { stopLossPoints, takeProfitPoints } =
+                        props.positionParametersRef.current;
+
+                    props.enter(
+                        "long",
+                        props.price,
+                        props.price - stopLossPoints,
+                        props.price + takeProfitPoints,
+                    );
+                }}
+
+                onSellMarket={() => {
+                    const { stopLossPoints, takeProfitPoints } =
+                        props.positionParametersRef.current;
+
+                    props.enter(
+                        "short",
+                        props.price,
+                        props.price + stopLossPoints,
+                        props.price - takeProfitPoints,
+                    );
+                }}
+            />
+
+            <ReplayPLDisplay pl={props.pl} resetPl={props.resetPl} />
         </div>
     );
 }

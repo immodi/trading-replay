@@ -14,4 +14,20 @@
 - [ ] Basic performance statistics saved to session.
 
 ## Indicators
+
 - [ ] Display Basic selection of indicators
+
+## Issues
+
+- [ ] Handle same-candle entry and TP/SL execution order when a pending order is triggered and its TP/SL is also reached within the same candle.
+    - Basically, use 1-min cadle data to decide trade executions, not aggregated data
+    - Or at least find a way to fix this instanly triggering
+        Entry: 14792.82
+        SL:    14772.82
+        TP:    14812.82
+
+        Candle:
+            Open:  14780
+            High:  14845
+            Low:   14770
+            Close: 14830

@@ -26,6 +26,7 @@ export function useGoToLatest() {
 
     return {
         handleChartInit,
+        chartRef,
         showGoToLatest,
         goToLatest,
     };
