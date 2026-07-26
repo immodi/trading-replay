@@ -22,7 +22,7 @@ import { useGoToLatest } from "@/hooks/useGoToLatest";
 import { GoToLatestButton } from "./GoToLatestButton";
 
 import { Color } from "@/constants/replay";
-import { ReplayToolbar } from "../toolbar/ReplayToolbar";
+import { ReplayToolbar, type ReplayToolbarProps } from "../toolbar/ReplayToolbar";
 import { useEffect, useRef, useState } from "react";
 import { ChartSpeed } from "@/constants/chart";
 import { Timeframe } from "@/constants/toolbar";
@@ -82,6 +82,7 @@ export function ChartComponent() {
     const positionParametersRef = useRef<PositionParamters>({
         takeProfitPoints: 20,
         stopLossPoints: 20,
+        quantity: 1,
     });
     const replay = useReplay(timeFrameMinutes, speed, candleData);
     const priceData = usePrice(replay.candles);
@@ -151,7 +152,7 @@ export function ChartComponent() {
         );
     }
 
-    const replayToolbarProps = {
+    const replayToolbarProps: ReplayToolbarProps = {
         minDate: dataRange.start,
         maxDate: dataRange.end,
         positionParametersRef: positionParametersRef,
@@ -165,14 +166,15 @@ export function ChartComponent() {
         setSpeed: setChartSpeed,
         setTimeFrame: setTimeFrame,
 
-        resetPl: trade.resetPL,
+        reset: trade.reset,
         setCandleData: setChartData,
         stop: replay.stop,
         start: replay.start,
         playback: replay.playback,
         restart: replay.restart,
         enter: trade.enter,
-        close: trade.close
+        close: trade.close,
+        closeAll: trade.closeAll
     };
 
     return (

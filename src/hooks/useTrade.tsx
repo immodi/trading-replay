@@ -23,13 +23,13 @@ export function useTrade(
             case "long":
                 return (
                     (position.exitPrice - position.entryPrice) *
-                    pointDollarValue
+                    pointDollarValue * position.quantity
                 );
 
             case "short":
                 return (
                     (position.entryPrice - position.exitPrice) *
-                    pointDollarValue
+                    pointDollarValue * position.quantity
                 );
         }
     };
@@ -152,23 +152,24 @@ export function useTrade(
         });
     }, [priceData.Price, priceData.Time]);
 
-    function enter(direction: Direction): void;
-
+    function enter(direction: Direction, quantity: number): void;
     function enter(
         direction: Direction,
+        quantity: number,
         entryPrice: number,
         stopLoss: number,
         takeProfit: number,
     ): void;
-
     function enter(
         direction: Direction,
+        quantity: number,
         entryPrice?: number,
         stopLoss?: number,
         takeProfit?: number,
     ) {
         const position: Position = {
             side: direction,
+            quantity: quantity,
             entryPrice:
                 entryPrice ?? priceData.Price,
             entryTime: priceData.Time,
@@ -236,7 +237,7 @@ export function useTrade(
         });
     }
 
-    function resetPL() {
+    function reset() {
         setPositions([]);
     }
 
@@ -247,6 +248,6 @@ export function useTrade(
         enter,
         close,
         closeAll,
-        resetPL,
+        reset,
     };
 }

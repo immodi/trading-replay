@@ -1,4 +1,7 @@
-interface Props {
+import ArrowIcon from "@/assets/arrow-right.svg";
+
+
+type GoToLatestButtonProps = {
     visible: boolean;
     onClick: () => void;
 }
@@ -6,7 +9,7 @@ interface Props {
 export function GoToLatestButton({
     visible,
     onClick,
-}: Props) {
+}: GoToLatestButtonProps) {
     if (!visible) return null;
 
     return (
@@ -31,7 +34,7 @@ export function GoToLatestButton({
                 hover:bg-gray-50
             "
         >
-            →
+            <img src={ArrowIcon} alt="go-to-latest" className="h-5 w-5" />
         </button>
     );
 }

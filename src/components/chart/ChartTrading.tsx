@@ -25,6 +25,7 @@ type ChartTradingProps = {
     onClose: () => void;
     enter: (
         direction: Direction,
+        quantity: number,
         entryPrice: number,
         stopLoss: number,
         takeProfit: number,
@@ -63,11 +64,12 @@ export function ChartTrading({
 
         if (price === null) return;
 
-        const { stopLossPoints, takeProfitPoints } =
+        const { stopLossPoints, takeProfitPoints, quantity } =
             positionParamtersRef.current;
 
         enter(
             "long",
+            quantity,
             price,
             price - stopLossPoints,
             price + takeProfitPoints,
@@ -81,11 +83,12 @@ export function ChartTrading({
 
         if (price === null) return;
 
-        const { stopLossPoints, takeProfitPoints } =
+        const { stopLossPoints, takeProfitPoints, quantity } =
             positionParamtersRef.current;
 
         enter(
             "short",
+            quantity,
             price,
             price + stopLossPoints,
             price - takeProfitPoints,
@@ -123,10 +126,7 @@ export function ChartTrading({
                     ? LineStyle.Dashed
                     : LineStyle.Solid,
                 axisLabelVisible: true,
-                title:
-                    position.state === "waiting"
-                        ? "Pending"
-                        : "Entry",
+                title: `${position.state === "waiting" ? "Pending" : "Entry"} (${position.quantity ?? 1})`,
             });
 
             lines.push(entryLine);

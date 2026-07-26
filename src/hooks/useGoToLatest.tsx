@@ -20,7 +20,22 @@ export function useGoToLatest() {
     };
 
     const goToLatest = () => {
-        chartRef.current?.timeScale().scrollToRealTime();
+        const chart = chartRef.current;
+        if (!chart) return;
+
+        const priceScale = chart.priceScale("right");
+
+        // 1. Enable auto‑scale temporarily
+        priceScale.applyOptions({ autoScale: true });
+
+        // 2. Scroll to the latest time
+        chart.timeScale().scrollToRealTime();
+
+        // 3. After the chart has rendered with auto‑scale, turn it off 
+        requestAnimationFrame(() => {
+            priceScale.applyOptions({ autoScale: false });
+        });
+
         setShowGoToLatest(false);
     };
 
