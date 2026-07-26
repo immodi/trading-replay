@@ -56,6 +56,9 @@ export function useTrade(
                             if (
                                 priceData.High >=
                                 position.entryPrice
+                                &&
+                                priceData.Low <=
+                                position.entryPrice
                             ) {
                                 position.state = "open";
                             }
@@ -64,6 +67,9 @@ export function useTrade(
                         case "short":
                             if (
                                 priceData.Low <=
+                                position.entryPrice
+                                &&
+                                priceData.High >=
                                 position.entryPrice
                             ) {
                                 position.state = "open";
