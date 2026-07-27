@@ -32,12 +32,22 @@ export type ReplayToolbarProps = {
     enter: {
         (direction: Direction, quantity: number): void;
         (direction: Direction, quantity: number, entryPrice: number, stopLoss: number, takeProfit: number): void;
+        (
+            direction: Direction,
+            quantity: number,
+            stopLoss: number,
+            takeProfit: number,
+        ): void;
     },
-    close:
-    (
-        position: Position,
-        exitPrice: number,
-    ) => void;
+    close: {
+        (
+            position: Position,
+        ): void;
+        (
+            position: Position,
+            exitPrice: number,
+        ): void;
+    };
     closeAll: () => void,
 
 }
@@ -60,6 +70,8 @@ export function ReplayToolbar(props: ReplayToolbarProps) {
                 border-[#363A45]
                 bg-[#1E222D]
                 px-4
+                overflow-x-auto
+                whitespace-nowrap
             "
         >
             <div
@@ -109,7 +121,6 @@ export function ReplayToolbar(props: ReplayToolbarProps) {
                     props.enter(
                         "long",
                         quantity,
-                        props.price,
                         props.price - stopLossPoints,
                         props.price + takeProfitPoints,
                     );
@@ -122,11 +133,11 @@ export function ReplayToolbar(props: ReplayToolbarProps) {
                     props.enter(
                         "short",
                         quantity,
-                        props.price,
                         props.price + stopLossPoints,
                         props.price - takeProfitPoints,
                     );
                 }}
+                closeAll={props.closeAll}
             />
 
             <ReplayPLDisplay pl={props.pl} reset={props.reset} />

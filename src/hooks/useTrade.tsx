@@ -1,6 +1,7 @@
 import type { Direction, Position } from "@/types/position";
 import type { PriceData } from "@/types/priceData";
 import { useEffect, useState } from "react";
+import postcssPluginWarning from "tailwindcss";
 
 export function useTrade(
     priceData: PriceData,
@@ -153,6 +154,14 @@ export function useTrade(
     }, [priceData.Price, priceData.Time]);
 
     function enter(direction: Direction, quantity: number): void;
+
+    function enter(
+        direction: Direction,
+        quantity: number,
+        stopLoss: number,
+        takeProfit: number,
+    ): void;
+
     function enter(
         direction: Direction,
         quantity: number,
@@ -160,31 +169,44 @@ export function useTrade(
         stopLoss: number,
         takeProfit: number,
     ): void;
+
     function enter(
         direction: Direction,
         quantity: number,
-        entryPrice?: number,
-        stopLoss?: number,
-        takeProfit?: number,
+        arg3?: number,
+        arg4?: number,
+        arg5?: number,
     ) {
+        const hasEntryPrice = arg5 !== undefined;
+
+        const entryPrice = hasEntryPrice
+            ? arg3
+            : priceData.Price;
+
+        const stopLoss = hasEntryPrice
+            ? arg4
+            : arg3;
+
+        const takeProfit = hasEntryPrice
+            ? arg5
+            : arg4;
+
         const position: Position = {
+            id: crypto.randomUUID(),
             side: direction,
-            quantity: quantity,
-            entryPrice:
-                entryPrice ?? priceData.Price,
+            quantity,
+            entryPrice,
             entryTime: priceData.Time,
-            state:
-                entryPrice !== undefined
-                    ? "waiting"
-                    : "open",
+            state: hasEntryPrice
+                ? "waiting"
+                : "open",
         };
 
-        if (
-            entryPrice !== undefined &&
-            stopLoss !== undefined &&
-            takeProfit !== undefined
-        ) {
+        if (stopLoss !== undefined) {
             position.stopLoss = stopLoss;
+        }
+
+        if (takeProfit !== undefined) {
             position.takeProfit = takeProfit;
         }
 
@@ -194,24 +216,31 @@ export function useTrade(
         ]);
     }
 
+
+    function close(position: Position): void;
+    function close(position: Position, exitPrice: number): void;
     function close(
         position: Position,
-        exitPrice: number,
+        exitPrice?: number,
     ) {
         setPositions((currentPositions) =>
             currentPositions.map((currentPosition) => {
                 if (
                     currentPosition.entryTime !==
                     position.entryTime
+                    ||
+                    currentPosition.entryPrice !==
+                    position.entryPrice
                 ) {
                     return currentPosition;
                 }
 
+                const positionExitPrice = exitPrice ? exitPrice : priceData.Price;
                 return {
                     ...currentPosition,
                     state: "close",
                     exitTime: priceData.Time,
-                    exitPrice,
+                    exitPrice: currentPosition.state !== "waiting" ? positionExitPrice : undefined,
                 };
             }),
         );
@@ -229,7 +258,7 @@ export function useTrade(
                         ...position,
                         state: "close" as const,
                         exitTime: priceData.Time,
-                        exitPrice: priceData.Price,
+                        exitPrice: position.state !== "waiting" ? priceData.Price : undefined,
                     };
                 });
 
@@ -238,7 +267,9 @@ export function useTrade(
     }
 
     function reset() {
-        setPositions([]);
+        setPositions((prev) =>
+            prev.filter((position) => position.state !== "close"),
+        );
     }
 
     return {

@@ -35,10 +35,11 @@ export function ReplayControls(props: ReplayControlsProps) {
     };
 
     return (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-w-fit">
             <button
                 type="button"
                 className="
+                    shrink-0
                     rounded
                     border
                     border-[#363A45]
@@ -52,10 +53,7 @@ export function ReplayControls(props: ReplayControlsProps) {
                     hover:bg-[#1B2130]
                     cursor-pointer
 
-                    disabled:cursor-not-allowed
                     disabled:opacity-50
-                    disabled:border-[#2A2E39]
-                    disabled:bg-[#0F131C]
                     disabled:hover:border-[#2A2E39]
                     disabled:hover:bg-[#0F131C]
                 "
@@ -73,6 +71,7 @@ export function ReplayControls(props: ReplayControlsProps) {
                 <button
                     type="button"
                     className="
+                    shrink-0
                     rounded
                     border
                     border-[#363A45]
@@ -94,6 +93,7 @@ export function ReplayControls(props: ReplayControlsProps) {
                 <button
                     type="button"
                     className="
+                    shrink-0
                     rounded
                     border
                     border-[#363A45]

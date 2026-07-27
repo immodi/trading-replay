@@ -229,6 +229,7 @@ export function ChartComponent() {
                             chartApi={chartRef.current}
                             orderMenu={orderMenu}
                             enter={trade.enter}
+                            close={trade.close}
                             onClose={() => setOrderMenu(null)}
                         />
                     )}

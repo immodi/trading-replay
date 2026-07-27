@@ -4,6 +4,7 @@ export type Direction = "long" | "short";
 export type State = "open" | "waiting" | "close";
 
 export type Position = {
+    id: `${string}-${string}-${string}-${string}-${string}`;
     side: Direction;
     state: State;
     quantity: number;

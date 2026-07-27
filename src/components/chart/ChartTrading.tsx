@@ -23,6 +23,15 @@ type ChartTradingProps = {
     positions: Position[];
 
     onClose: () => void;
+    close: {
+        (
+            position: Position,
+        ): void;
+        (
+            position: Position,
+            exitPrice: number,
+        ): void;
+    };
     enter: (
         direction: Direction,
         quantity: number,
@@ -97,24 +106,24 @@ export function ChartTrading({
         onClose();
     };
 
-    useEffect(() => {
-        // Remove existing position lines.
+    const cleanup = () => {
         for (const lines of positionLines.current.values()) {
             for (const line of lines) {
                 seriesApi.removePriceLine(line);
             }
         }
-
         positionLines.current.clear();
+    };
 
-        // Render lines for all active positions.
+    useEffect(() => {
+        cleanup();
+
         for (const position of positions) {
             if (position.state === "close") {
                 continue;
             }
 
             const lines: IPriceLine[] = [];
-
             const entryLine = seriesApi.createPriceLine({
                 price: position.entryPrice,
                 color:
@@ -122,9 +131,10 @@ export function ChartTrading({
                         ? "#26a69a"
                         : "#ef5350",
                 lineWidth: 2,
-                lineStyle: position.state === "waiting"
-                    ? LineStyle.Dashed
-                    : LineStyle.Solid,
+                lineStyle:
+                    position.state === "waiting"
+                        ? LineStyle.Dashed
+                        : LineStyle.Solid,
                 axisLabelVisible: true,
                 title: `${position.state === "waiting" ? "Pending" : "Entry"} (${position.quantity ?? 1})`,
             });
@@ -132,7 +142,7 @@ export function ChartTrading({
             lines.push(entryLine);
 
             if (position.stopLoss !== undefined) {
-                const stopLossLine =
+                lines.push(
                     seriesApi.createPriceLine({
                         price: position.stopLoss,
                         color: "#ef5350",
@@ -140,13 +150,12 @@ export function ChartTrading({
                         lineStyle: 2,
                         axisLabelVisible: true,
                         title: "SL",
-                    });
-
-                lines.push(stopLossLine);
+                    }),
+                );
             }
 
             if (position.takeProfit !== undefined) {
-                const takeProfitLine =
+                lines.push(
                     seriesApi.createPriceLine({
                         price: position.takeProfit,
                         color: "#26a69a",
@@ -154,27 +163,18 @@ export function ChartTrading({
                         lineStyle: 2,
                         axisLabelVisible: true,
                         title: "TP",
-                    });
-
-                lines.push(takeProfitLine);
+                    }),
+                );
             }
 
-            positionLines.current.set(
-                position.entryTime.toString(),
-                lines,
-            );
+            positionLines.current.set(position.id, lines);
         }
 
         return () => {
-            for (const lines of positionLines.current.values()) {
-                for (const line of lines) {
-                    seriesApi.removePriceLine(line);
-                }
-            }
-
-            positionLines.current.clear();
+            cleanup();
         };
-    }, [positions, seriesApi]);
+
+    }, [JSON.stringify(positions)]);
 
     if (!orderMenu) return null;
 
