@@ -8,6 +8,10 @@ import { ReplayTradingControls } from "./ReplayTradingControls";
 import type { Direction, Position } from "@/types/position";
 import type { PositionParamters } from "@/types/positionParamters";
 import { ReplayPLDisplay } from "./ReplayPLDisplay";
+import { IndicatorControls } from "./IndicatorControls";
+import type { IChartApi, ISeriesApi } from "lightweight-charts";
+import type { PriceData } from "@/types/priceData";
+import type { IndicatorSettings } from "@/types/indicator";
 
 export type ReplayToolbarProps = {
     minDate: Date,
@@ -16,9 +20,12 @@ export type ReplayToolbarProps = {
     isPlaying: boolean,
     isDone: boolean,
     direction: PlayDirection,
-    price: number,
+    priceData: PriceData,
     pl: number,
     positionParametersRef: React.RefObject<PositionParamters>;
+    seriesApi: ISeriesApi<"Candlestick">;
+    chartApi: IChartApi;
+    indicatorSettings: IndicatorSettings;
 
     setTimeFrame: (timeFrame: number) => void
     setSpeed: (speed: number) => void,
@@ -29,6 +36,7 @@ export type ReplayToolbarProps = {
     stop: () => void,
     restart: () => void,
     playback: (direction: PlayDirection) => void,
+    setIndicatorSettings: (newSettings: IndicatorSettings) => void,
     enter: {
         (direction: Direction, quantity: number): void;
         (direction: Direction, quantity: number, entryPrice: number, stopLoss: number, takeProfit: number): void;
@@ -59,9 +67,11 @@ export function ReplayToolbar(props: ReplayToolbarProps) {
         props.setCandleData(candleData);
     };
 
+
     return (
         <div
             className="
+                relative
                 flex
                 h-12
                 items-center
@@ -71,6 +81,7 @@ export function ReplayToolbar(props: ReplayToolbarProps) {
                 bg-[#1E222D]
                 px-4
                 overflow-x-auto
+                overflow-y-visible
                 whitespace-nowrap
             "
         >
@@ -121,8 +132,8 @@ export function ReplayToolbar(props: ReplayToolbarProps) {
                     props.enter(
                         "long",
                         quantity,
-                        props.price - stopLossPoints,
-                        props.price + takeProfitPoints,
+                        props.priceData.Price - stopLossPoints,
+                        props.priceData.Price + takeProfitPoints,
                     );
                 }}
 
@@ -133,14 +144,21 @@ export function ReplayToolbar(props: ReplayToolbarProps) {
                     props.enter(
                         "short",
                         quantity,
-                        props.price + stopLossPoints,
-                        props.price - takeProfitPoints,
+                        props.priceData.Price + stopLossPoints,
+                        props.priceData.Price - takeProfitPoints,
                     );
                 }}
                 closeAll={props.closeAll}
             />
 
             <ReplayPLDisplay pl={props.pl} reset={props.reset} />
+
+
+            <IndicatorControls
+                settings={props.indicatorSettings}
+                onChange={props.setIndicatorSettings}
+            />
+
         </div>
     );
 }

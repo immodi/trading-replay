@@ -34,6 +34,8 @@ import { useTrade } from "@/hooks/useTrade";
 import { MNQ_POINT_DOLLAR_VALUE } from "@/constants/mnq";
 import { ChartTrading } from "./ChartTrading";
 import type { PositionParamters } from "@/types/positionParamters";
+import type { IndicatorSettings } from "@/types/indicator";
+import { useIndicators } from "@/hooks/useIndicators";
 
 const chartOptions: DeepPartial<ChartOptions> = {
     layout: {
@@ -77,6 +79,12 @@ export function ChartComponent() {
         ISeriesApi<"Candlestick", UTCTimestamp> | null
     >(null);
 
+    const [indicatorSettings, setIndicatorSettings] =
+        useState<IndicatorSettings>({
+            vwap: { enabled: false, color: "#FF6B6B" },
+            ema: { enabled: false, color: "#FFD93D", period: 14 },
+            sma: { enabled: false, color: "#6BCB77", period: 20 },
+        });
     const [dataRange, setDataRange] = useState<DataRange | null>(null);
     const [candleData, setCandleData] = useState<Candle[] | null>(null);
     const positionParametersRef = useRef<PositionParamters>({
@@ -136,12 +144,22 @@ export function ChartComponent() {
         return;
     };
 
+    const handleIndicatorChange = (newSettings: IndicatorSettings) => {
+        setIndicatorSettings(newSettings)
+    };
+
     const {
         handleChartInit,
         showGoToLatest,
         chartRef,
         goToLatest,
     } = useGoToLatest();
+
+    const { reset: resetIndicators } = useIndicators({
+        chartApi: chartRef.current,
+        priceData,
+        settings: indicatorSettings,
+    });
 
 
     if (!dataRange || !candleData) {
@@ -156,7 +174,10 @@ export function ChartComponent() {
         minDate: dataRange.start,
         maxDate: dataRange.end,
         positionParametersRef: positionParametersRef,
-        price: priceData.Price,
+        priceData: priceData,
+        seriesApi: seriesApi,
+        chartApi: chartRef.current,
+        indicatorSettings: indicatorSettings,
 
         isPlaying: replay.isPlaying,
         direction: replay.direction,
@@ -164,9 +185,13 @@ export function ChartComponent() {
         isDone: replay.isDone,
 
         setSpeed: setChartSpeed,
+        setIndicatorSettings: handleIndicatorChange,
         setTimeFrame: setTimeFrame,
 
-        reset: trade.reset,
+        reset: () => {
+            trade.reset();
+            resetIndicators();
+        },
         setCandleData: setChartData,
         stop: replay.stop,
         start: replay.start,
@@ -224,8 +249,8 @@ export function ChartComponent() {
                     {seriesApi && chartRef.current && (
                         <ChartTrading
                             positions={trade.positions}
-                            seriesApi={seriesApi}
                             positionParamtersRef={positionParametersRef}
+                            seriesApi={seriesApi}
                             chartApi={chartRef.current}
                             orderMenu={orderMenu}
                             enter={trade.enter}
