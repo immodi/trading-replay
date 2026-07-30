@@ -4,23 +4,52 @@ import { ReplaySpeedSelect } from "./ReplaySpeedSelect";
 import { ReplayTimeframeSelect } from "./ReplayTimeframeSelect";
 import type { Candle } from "@/types/candle";
 import { loadContinuousMnq } from "@/data/mnq";
+import { ReplayTradingControls } from "./ReplayTradingControls";
+import type { Direction, Position } from "@/types/position";
+import type { PositionParamters } from "@/types/positionParamters";
+import { ReplayPLDisplay } from "./ReplayPLDisplay";
 
-type ReplayToolbarProps = {
+export type ReplayToolbarProps = {
     minDate: Date,
     maxDate: Date,
 
     isPlaying: boolean,
     isDone: boolean,
     direction: PlayDirection,
+    price: number,
+    pl: number,
+    positionParametersRef: React.RefObject<PositionParamters>;
 
     setTimeFrame: (timeFrame: number) => void
     setSpeed: (speed: number) => void,
     setCandleData: (data: Candle[]) => void,
 
+    reset: () => void,
     start: (direction: PlayDirection) => void,
     stop: () => void,
     restart: () => void,
     playback: (direction: PlayDirection) => void,
+    enter: {
+        (direction: Direction, quantity: number): void;
+        (direction: Direction, quantity: number, entryPrice: number, stopLoss: number, takeProfit: number): void;
+        (
+            direction: Direction,
+            quantity: number,
+            stopLoss: number,
+            takeProfit: number,
+        ): void;
+    },
+    close: {
+        (
+            position: Position,
+        ): void;
+        (
+            position: Position,
+            exitPrice: number,
+        ): void;
+    };
+    closeAll: () => void,
+
 }
 export function ReplayToolbar(props: ReplayToolbarProps) {
     const onDateChange = async (
@@ -41,6 +70,8 @@ export function ReplayToolbar(props: ReplayToolbarProps) {
                 border-[#363A45]
                 bg-[#1E222D]
                 px-4
+                overflow-x-auto
+                whitespace-nowrap
             "
         >
             <div
@@ -80,6 +111,36 @@ export function ReplayToolbar(props: ReplayToolbarProps) {
             <ReplayTimeframeSelect setTimeFrame={props.setTimeFrame} />
 
             <ReplayControls {...props} />
+
+            <ReplayTradingControls
+                positionParametersRef={props.positionParametersRef}
+                onBuyMarket={() => {
+                    const { stopLossPoints, takeProfitPoints, quantity } =
+                        props.positionParametersRef.current;
+
+                    props.enter(
+                        "long",
+                        quantity,
+                        props.price - stopLossPoints,
+                        props.price + takeProfitPoints,
+                    );
+                }}
+
+                onSellMarket={() => {
+                    const { stopLossPoints, takeProfitPoints, quantity } =
+                        props.positionParametersRef.current;
+
+                    props.enter(
+                        "short",
+                        quantity,
+                        props.price + stopLossPoints,
+                        props.price - takeProfitPoints,
+                    );
+                }}
+                closeAll={props.closeAll}
+            />
+
+            <ReplayPLDisplay pl={props.pl} reset={props.reset} />
         </div>
     );
 }
