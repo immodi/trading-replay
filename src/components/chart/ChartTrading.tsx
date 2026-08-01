@@ -18,8 +18,8 @@ type OrderMenu = {
 type ChartTradingProps = {
     orderMenu: OrderMenu | null;
     seriesApi: ISeriesApi<"Candlestick">;
-    positionParamtersRef: React.RefObject<PositionParamters>;
     chartApi: IChartApi;
+    positionParamtersRef: React.RefObject<PositionParamters>;
     positions: Position[];
 
     onClose: () => void;

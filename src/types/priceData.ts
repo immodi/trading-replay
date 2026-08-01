@@ -5,4 +5,6 @@ export type PriceData = {
     Time: UTCTimestamp;
     High: number;
     Low: number;
+    Volume: number;
+    History?: PriceData[];
 }

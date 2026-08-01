@@ -1,27 +1,27 @@
 import type { Candle } from "@/types/candle";
 import type { PriceData } from "@/types/priceData";
 import type { UTCTimestamp } from "lightweight-charts";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 
 export function usePrice(candles: Candle[]): PriceData {
-    const [currentPrice, setCurrentPrice] = useState<number>();
-    const [currentTime, setCurrentTime] = useState<UTCTimestamp>();
-    const [currentHigh, setCurrentHigh] = useState<number>();
-    const [currentLow, setCurrentLow] = useState<number>();
+    const candle = candles.at(-1);
 
-    useEffect(() => {
-        if (candles.length === 0) return;
-
-        setCurrentPrice(candles.at(-1).close);
-        setCurrentTime(candles.at(-1).time);
-        setCurrentHigh(candles.at(-1).high);
-        setCurrentLow(candles.at(-1).low);
-    }, [candles])
+    const history = useMemo(() => {
+        return candles.map(c => ({
+            Price: c.close,
+            Time: c.time,
+            High: c.high,
+            Low: c.low,
+            Volume: c.volume,
+        }));
+    }, [candles]);
 
     return {
-        Price: currentPrice,
-        Time: currentTime,
-        High: currentHigh,
-        Low: currentLow
+        Price: candle?.close ?? 0,
+        Time: (candle?.time ?? 0) as UTCTimestamp,
+        High: candle?.high ?? 0,
+        Low: candle?.low ?? 0,
+        Volume: candle?.volume ?? 0,
+        History: history,
     };
 }
