@@ -1,7 +1,6 @@
 import type { Direction, Position } from "@/types/position";
 import type { PriceData } from "@/types/priceData";
 import { useEffect, useState } from "react";
-import postcssPluginWarning from "tailwindcss";
 
 export function useTrade(
     priceData: PriceData,

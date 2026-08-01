@@ -1,4 +1,4 @@
-import type { Candle } from "@/data/generateCandles";
+import type { Candle } from "@/types/candle";
 
 export function aggregateCandle(current: Candle, next: Candle): Candle {
     const newHigh = Math.max(current.high, next.high);
