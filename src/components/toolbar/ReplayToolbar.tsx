@@ -30,6 +30,7 @@ export type ReplayToolbarProps = {
     setTimeFrame: (timeFrame: number) => void
     setSpeed: (speed: number) => void,
     setCandleData: (data: Candle[]) => void,
+    setChartDate: (date: Date) => void,
 
     reset: () => void,
     start: (direction: PlayDirection) => void,
@@ -63,7 +64,10 @@ export function ReplayToolbar(props: ReplayToolbarProps) {
     const onDateChange = async (
         event: React.ChangeEvent<HTMLInputElement>,
     ) => {
-        const candleData = await loadContinuousMnq(new Date(event.target.value));
+        const date = new Date(event.target.value);
+        const candleData = await loadContinuousMnq(date);
+
+        props.setChartDate(date)
         props.setCandleData(candleData);
     };
 

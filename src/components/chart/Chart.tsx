@@ -28,7 +28,7 @@ import { ChartSpeed } from "@/constants/chart";
 import { Timeframe } from "@/constants/toolbar";
 import type { Candle } from "@/types/candle";
 import type { DataRange } from "@/types/dateRange";
-import { getContinuousMnqRange, loadContinuousMnq } from "@/data/mnq";
+import { getContinuousMnqRange, getHistory, loadContinuousMnq } from "@/data/mnq";
 import { usePrice } from "@/hooks/usePrice";
 import { useTrade } from "@/hooks/useTrade";
 import { MNQ_POINT_DOLLAR_VALUE } from "@/constants/mnq";
@@ -69,7 +69,8 @@ const chartOptions: DeepPartial<ChartOptions> = {
 };
 
 export function ChartComponent() {
-    const [timeFrameMinutes, setTimeFrameMinutes] = useState(Timeframe.Minute15 as number); // 15min
+    const [currentDate, setCurrentDate] = useState<Date>(null);
+    const [timeFrameMinutes, setTimeFrameMinutes] = useState(Timeframe.Minute15 as number);
     const [speed, setSpeed] = useState(ChartSpeed.X1 as number);
     const [orderMenu, setOrderMenu] = useState<{
         x: number;
@@ -87,26 +88,43 @@ export function ChartComponent() {
         });
     const [dataRange, setDataRange] = useState<DataRange | null>(null);
     const [candleData, setCandleData] = useState<Candle[] | null>(null);
+    const [aggregatedCandleHistory, setAggregatedCandleHistory] = useState<Candle[]>([]);
     const positionParametersRef = useRef<PositionParamters>({
         takeProfitPoints: 20,
         stopLossPoints: 20,
         quantity: 1,
     });
-    const replay = useReplay(timeFrameMinutes, speed, candleData);
-    const priceData = usePrice(replay.candles);
-    const trade = useTrade(priceData, MNQ_POINT_DOLLAR_VALUE);
+
+    const replay = useReplay(timeFrameMinutes, speed, candleData, aggregatedCandleHistory);
+    const fullPriceData = usePrice(replay.candles);
+    const sessionPriceData = usePrice(replay.sessionCandles);
+    const trade = useTrade(fullPriceData, MNQ_POINT_DOLLAR_VALUE);
 
     useEffect(() => {
         async function load() {
-            const dataRange = await getContinuousMnqRange();
-            setDataRange(dataRange);
+            const range = await getContinuousMnqRange();
 
-            const candleData = await loadContinuousMnq(dataRange.start);
-            setCandleData(candleData);
+            setDataRange(range);
+            setCurrentDate(range.start);
         }
-
         load();
     }, []);
+
+    useEffect(() => {
+        if (!dataRange || !currentDate) return;
+
+        async function load() {
+            // Load raw 1‑minute candles for the selected date
+            const raw = await loadContinuousMnq(currentDate);
+            setCandleData(raw);
+
+            // Load aggregated history (candles before the selected date)
+            const history = await getHistory(currentDate, timeFrameMinutes);
+
+            setAggregatedCandleHistory(history);
+        }
+        load();
+    }, [currentDate, timeFrameMinutes, dataRange]);
 
     const handleSeriesInit = (
         ref: SeriesApiRef<"Candlestick", UTCTimestamp> | null,
@@ -144,6 +162,10 @@ export function ChartComponent() {
         return;
     };
 
+    const setChartDate = (date: Date) => {
+        setCurrentDate(date);
+    };
+
     const handleIndicatorChange = (newSettings: IndicatorSettings) => {
         setIndicatorSettings(newSettings)
     };
@@ -157,7 +179,8 @@ export function ChartComponent() {
 
     const { reset: resetIndicators } = useIndicators({
         chartApi: chartRef.current,
-        priceData,
+        fullPriceData,
+        sessionPriceData,
         settings: indicatorSettings,
     });
 
@@ -174,7 +197,7 @@ export function ChartComponent() {
         minDate: dataRange.start,
         maxDate: dataRange.end,
         positionParametersRef: positionParametersRef,
-        priceData: priceData,
+        priceData: fullPriceData,
         seriesApi: seriesApi,
         chartApi: chartRef.current,
         indicatorSettings: indicatorSettings,
@@ -187,6 +210,7 @@ export function ChartComponent() {
         setSpeed: setChartSpeed,
         setIndicatorSettings: handleIndicatorChange,
         setTimeFrame: setTimeFrame,
+        setChartDate: setChartDate,
 
         reset: () => {
             trade.reset();

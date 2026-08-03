@@ -1,5 +1,5 @@
+import type { Candle } from "@/types/candle";
 import type { UTCTimestamp } from "lightweight-charts";
-import type { Candle } from "./candle";
 
 
 export function generateCandles(

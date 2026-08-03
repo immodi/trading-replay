@@ -13,13 +13,15 @@ import { VWAPIndicator } from "@/indicators/vwap";
 
 type Props = {
     chartApi: IChartApi | null;
-    priceData: PriceData;
+    fullPriceData: PriceData;   // aggregated history + replay candles (for EMA & SMA)
+    sessionPriceData: PriceData; // only replay candles (for VWAP)
     settings: IndicatorSettings;
 };
 
 export function useIndicators({
     chartApi,
-    priceData,
+    fullPriceData,
+    sessionPriceData,
     settings,
 }: Props) {
     const ema = useRef<EMAIndicator | null>(null);
@@ -30,33 +32,26 @@ export function useIndicators({
     const smaSeries = useRef<ISeriesApi<"Line"> | null>(null);
     const vwapSeries = useRef<ISeriesApi<"Line"> | null>(null);
 
-    // Helper: sort history by time (ascending)
     const getSortedHistory = (history: PriceData[]) =>
         [...history].sort((a, b) => a.Time - b.Time);
 
-    // Helper: update all indicator series with the latest full data
-    const refreshAllIndicators = (history: PriceData[]) => {
-        const sortedHistory = getSortedHistory(history);
-
-        if (ema.current && emaSeries.current) {
-            ema.current.reset(sortedHistory);
-            emaSeries.current.setData(ema.current.getData());
-        }
-        if (sma.current && smaSeries.current) {
-            sma.current.reset(sortedHistory);
-            smaSeries.current.setData(sma.current.getData());
-        }
-        if (vwap.current && vwapSeries.current) {
-            vwap.current.reset(sortedHistory);
-            vwapSeries.current.setData(vwap.current.getData());
-        }
+    const refreshIndicator = <T extends { reset: (data: PriceData[]) => void; getData: () => any }>(
+        indicator: T | null,
+        series: ISeriesApi<"Line"> | null,
+        history: PriceData[]
+    ) => {
+        if (!indicator || !series) return;
+        const sorted = getSortedHistory(history);
+        indicator.reset(sorted);
+        series.setData(indicator.getData());
     };
 
-    // --- Create series and initialise indicators (runs once per setting change) ---
+    // --- Create / remove series and initialise indicators ---
     useEffect(() => {
         if (!chartApi) return;
 
-        const sortedHistory = getSortedHistory(priceData.History);
+        const fullHistory = fullPriceData.History;
+        const sessionHistory = sessionPriceData.History;
 
         // EMA
         if (settings.ema.enabled) {
@@ -66,7 +61,7 @@ export function useIndicators({
                     lineWidth: 4,
                 });
             }
-            ema.current = new EMAIndicator(settings.ema.period, sortedHistory);
+            ema.current = new EMAIndicator(settings.ema.period, fullHistory);
             emaSeries.current.setData(ema.current.getData());
         } else if (emaSeries.current) {
             chartApi.removeSeries(emaSeries.current);
@@ -74,7 +69,7 @@ export function useIndicators({
             ema.current = null;
         }
 
-        // SMA (same pattern)
+        // SMA
         if (settings.sma.enabled) {
             if (!smaSeries.current) {
                 smaSeries.current = chartApi.addSeries(LineSeries, {
@@ -82,7 +77,7 @@ export function useIndicators({
                     lineWidth: 4,
                 });
             }
-            sma.current = new SMAIndicator(settings.sma.period, sortedHistory);
+            sma.current = new SMAIndicator(settings.sma.period, fullHistory);
             smaSeries.current.setData(sma.current.getData());
         } else if (smaSeries.current) {
             chartApi.removeSeries(smaSeries.current);
@@ -90,7 +85,7 @@ export function useIndicators({
             sma.current = null;
         }
 
-        // VWAP (same pattern)
+        // VWAP – uses sessionHistory (current day only)
         if (settings.vwap.enabled) {
             if (!vwapSeries.current) {
                 vwapSeries.current = chartApi.addSeries(LineSeries, {
@@ -98,25 +93,46 @@ export function useIndicators({
                     lineWidth: 4,
                 });
             }
-            vwap.current = new VWAPIndicator(sortedHistory);
+            vwap.current = new VWAPIndicator(sessionHistory);
             vwapSeries.current.setData(vwap.current.getData());
         } else if (vwapSeries.current) {
             chartApi.removeSeries(vwapSeries.current);
             vwapSeries.current = null;
             vwap.current = null;
         }
-    }, [chartApi, settings]); // Only when API or settings change
+    }, [chartApi, settings]); // Dependencies: no history arrays; we refresh via separate effect
 
-    // --- Refresh indicators on every priceData change (forward or backward) ---
+    // --- Refresh indicators when data changes ---
     useEffect(() => {
-        if (!priceData.Time) return; // avoid empty data
-        refreshAllIndicators(priceData.History);
-    }, [priceData]); // runs on every tick
+        if (!chartApi) return;
 
-    // --- Reset function (used externally) ---
-    const reset = (history: PriceData[] = []) => {
-        const hist = history.length ? history : priceData.History;
-        refreshAllIndicators(hist);
+        const fullHistory = fullPriceData.History;
+        const sessionHistory = sessionPriceData.History;
+
+        refreshIndicator(ema.current, emaSeries.current, fullHistory);
+        refreshIndicator(sma.current, smaSeries.current, fullHistory);
+        refreshIndicator(vwap.current, vwapSeries.current, sessionHistory);
+    }, [fullPriceData.History, sessionPriceData.History, chartApi]);
+
+    // --- Also refresh on every tick (priceData object change) ---
+    useEffect(() => {
+        if (!fullPriceData.Time) return; // fullPriceData has latest time
+        const fullHistory = fullPriceData.History;
+        const sessionHistory = sessionPriceData.History;
+
+        refreshIndicator(ema.current, emaSeries.current, fullHistory);
+        refreshIndicator(sma.current, smaSeries.current, fullHistory);
+        refreshIndicator(vwap.current, vwapSeries.current, sessionHistory);
+    }, [fullPriceData, sessionPriceData]);
+
+    // --- Reset function ---
+    const reset = (fullHistoryOverride: PriceData[] = []) => {
+        const fullHist = fullHistoryOverride.length ? fullHistoryOverride : fullPriceData.History;
+        const sessionHist = sessionPriceData.History;
+
+        refreshIndicator(ema.current, emaSeries.current, fullHist);
+        refreshIndicator(sma.current, smaSeries.current, fullHist);
+        refreshIndicator(vwap.current, vwapSeries.current, sessionHist);
     };
 
     return { reset };
