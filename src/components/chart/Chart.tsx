@@ -119,7 +119,7 @@ export function ChartComponent() {
             setCandleData(raw);
 
             // Load aggregated history (candles before the selected date)
-            const history = await getHistory(currentDate, timeFrameMinutes);
+            const history = await getHistory(currentDate, timeFrameMinutes, 500);
 
             setAggregatedCandleHistory(history);
         }

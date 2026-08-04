@@ -65,18 +65,20 @@ export async function loadContinuousMnq(date: Date): Promise<Candle[]> {
 /**
  * Returns aggregated candlestick history from the start of the dataset
  * up to (but not including) the first 1‑minute candle of the given UTC date.
+ * Truncates the result to the last `maxCandles` (default: 200).
  *
  * @param date - The target date (start of the day, interpreted in UTC)
  * @param timeframe - Number of 1‑minute candles to combine per aggregated candle
  * @returns Promise resolving to an array of aggregated Candle objects
  */
+
 export async function getHistory(
     date: Date,
-    timeframe: number
+    timeframe: number,
+    maxCandles: number = 200
 ): Promise<Candle[]> {
     const raw = await getData();
 
-    // UTC midnight for the target day
     const targetStart = new Date(Date.UTC(
         date.getUTCFullYear(),
         date.getUTCMonth(),
@@ -84,17 +86,15 @@ export async function getHistory(
     ));
     const startTs = targetStart.getTime() / 1000;
 
-    // Find the first candle of that day (in UTC)
     const firstCandleOfDay = raw.find((c) => c.time >= startTs);
-    if (!firstCandleOfDay) {
-        return [];
-    }
+    if (!firstCandleOfDay) return [];
 
     const cutOffTime = firstCandleOfDay.time;
     const candlesBeforeDay = raw.filter((c) => c.time < cutOffTime);
 
     if (timeframe === 1) {
-        return candlesBeforeDay;
+        // For minute timeframe, we also truncate to last maxCandles
+        return candlesBeforeDay.slice(-maxCandles);
     }
 
     // Aggregate into timeframe‑minute blocks
@@ -120,6 +120,11 @@ export async function getHistory(
 
     if (current !== null) {
         aggregated.push(current);
+    }
+
+    // Keep only the most recent `maxCandles` candles
+    if (aggregated.length > maxCandles) {
+        return aggregated.slice(-maxCandles);
     }
 
     return aggregated;
