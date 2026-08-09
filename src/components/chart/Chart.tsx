@@ -159,11 +159,14 @@ export function ChartComponent() {
 
     const setChartData = (data: Candle[]) => {
         setCandleData(data);
+        trade.reset();
+        replay.restart();
         return;
     };
 
     const setChartDate = (date: Date) => {
         setCurrentDate(date);
+        return;
     };
 
     const handleIndicatorChange = (newSettings: IndicatorSettings) => {
