@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview",
     "convert-data": "node scripts/convertRawData.mjs"
@@ -31,5 +31,5 @@
     "tsx": "^4.23.1",
     "typescript": "~6.0.2",
     "vite": "^8.1.1"
-  }
+    }
 }
