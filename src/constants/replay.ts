@@ -10,14 +10,14 @@ export const Color = {
     Bullish: "#26A69A",
     Bearish: "#EF5350",
 
-    Background: "#131722",
-    Surface: "#1E222D",
+    Background: "#0B0E14",
+    Surface: "#121722",
 
-    Grid: "#2A2E39",
-    Border: "#363A45",
+    Grid: "#171D28",
+    Border: "#232B3A",
 
-    Text: "#D1D4DC",
-    MutedText: "#8F98A3",
+    Text: "#E6EAF2",
+    MutedText: "#93A0B4",
 
-    Accent: "#2962FF",
+    Accent: "#3D7EFF",
 } as const;

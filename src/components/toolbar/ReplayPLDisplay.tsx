@@ -10,28 +10,45 @@ export function ReplayPLDisplay({
     const isPositive = pl > 0;
     const isNegative = pl < 0;
     const color = isPositive
-        ? "text-[#26a69a]"
+        ? "text-bull"
         : isNegative
-            ? "text-[#ef5350]"
-            : "text-gray-300";
+            ? "text-bear"
+            : "text-sub";
 
     return (
-        <div className="ml-auto flex items-center gap-2">
-            {/* P/L Badge */}
-            <div className="flex items-center gap-2 rounded-md border border-[#2a2e39] bg-[#1E222D] px-3 py-1">
-                <span className="text-xs text-gray-400">P/L</span>
-                <span className={`text-sm font-bold ${color}`}>
+        <div className="flex shrink-0 items-center gap-3">
+            <div className="flex items-baseline gap-2">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-faint">
+                    P/L
+                </span>
+                <span className={`font-mono text-base font-semibold tabular-nums ${color}`}>
                     {pl >= 0 ? "+" : ""}
                     {pl.toFixed(2)}
                 </span>
-                <span className="text-[10px] text-gray-500">USD</span>
+                <span className="text-[10px] font-medium uppercase tracking-wider text-faint">
+                    USD
+                </span>
             </div>
 
-            {/* Reset Button - now smaller and more subtle */}
             <button
                 type="button"
                 onClick={reset}
-                className="rounded border border-[#363A45] px-1.5 py-0.5 text-[10px] text-gray-400 transition hover:border-gray-500 hover:bg-[#1B2130] hover:text-gray-200"
+                className="
+                    rounded-md
+                    border
+                    border-edge
+                    bg-canvas
+                    px-2
+                    py-1
+                    text-[10px]
+                    font-semibold
+                    uppercase
+                    tracking-wider
+                    text-sub
+                    transition
+                    hover:border-edge-strong
+                    hover:text-ink
+                "
             >
                 Reset
             </button>

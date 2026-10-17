@@ -17,14 +17,34 @@ export function ReplayTradingControls({
 }: ReplayTradingControlsProps) {
     const [bracket, setBracket] = useState(positionParametersRef.current.bracket);
 
-    const inputClassName = "w-16 rounded border bg-[#131722] px-2 py-1 text-sm text-gray-200 outline-none appearance-none focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-40";
+    const labelClassName = "text-[10px] font-semibold uppercase tracking-wider text-faint";
+
+    const inputClassName = `
+        w-16
+        rounded-md
+        border
+        border-edge
+        bg-canvas
+        px-2
+        py-1.5
+        text-right
+        font-mono
+        text-xs
+        tabular-nums
+        text-ink
+        outline-none
+        transition
+        focus:border-accent/60
+        disabled:cursor-not-allowed
+        disabled:opacity-40
+    `;
 
     return (
-        <div className="flex items-center gap-3">
-            {/* Input row */}
+        <div className="flex shrink-0 items-center gap-4">
+            {/* Order parameters */}
             <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1">
-                    <label htmlFor="trading-stop-loss" className="text-xs text-gray-400">
+                <div className="flex items-center gap-1.5">
+                    <label htmlFor="trading-stop-loss" className={labelClassName}>
                         SL
                     </label>
                     <input
@@ -41,8 +61,8 @@ export function ReplayTradingControls({
                     />
                 </div>
 
-                <div className="flex items-center gap-1">
-                    <label htmlFor="trading-take-profit" className="text-xs text-gray-400">
+                <div className="flex items-center gap-1.5">
+                    <label htmlFor="trading-take-profit" className={labelClassName}>
                         TP
                     </label>
                     <input
@@ -59,8 +79,8 @@ export function ReplayTradingControls({
                     />
                 </div>
 
-                <div className="flex items-center gap-1">
-                    <label htmlFor="trading-quantity" className="text-xs text-gray-400">
+                <div className="flex items-center gap-1.5">
+                    <label htmlFor="trading-quantity" className={labelClassName}>
                         Qty
                     </label>
                     <input
@@ -78,7 +98,25 @@ export function ReplayTradingControls({
 
                 <label
                     htmlFor="trading-bracket"
-                    className="flex cursor-pointer items-center gap-1 text-xs text-gray-400"
+                    className={`
+                        flex
+                        cursor-pointer
+                        items-center
+                        gap-1.5
+                        rounded-md
+                        border
+                        px-2
+                        py-1.5
+                        text-[10px]
+                        font-semibold
+                        uppercase
+                        tracking-wider
+                        transition
+                        ${bracket
+                            ? "border-accent/50 bg-accent/10 text-accent"
+                            : "border-edge bg-canvas text-faint hover:text-sub"
+                        }
+                    `}
                     title="Attach stop loss and take profit to new orders"
                 >
                     <input
@@ -90,32 +128,80 @@ export function ReplayTradingControls({
                             setBracket(next);
                             positionParametersRef.current.bracket = next;
                         }}
-                        className="h-3.5 w-3.5 cursor-pointer accent-blue-500"
+                        className="h-3.5 w-3.5 cursor-pointer accent-accent"
                     />
                     Bracket
                 </label>
             </div>
 
-            {/* Button group */}
-            <div className="flex gap-1">
+            {/* Order actions */}
+            <div className="flex items-center gap-1.5">
                 <button
                     type="button"
                     onClick={onBuyMarket}
-                    className="cursor-pointer rounded bg-[#26a69a] px-2 py-2 text-xs font-medium text-white transition hover:bg-[#2bbbad]"
+                    className="
+                        cursor-pointer
+                        rounded-md
+                        bg-bull
+                        px-3
+                        py-1.5
+                        text-xs
+                        font-bold
+                        uppercase
+                        tracking-wide
+                        text-white
+                        shadow-sm
+                        shadow-bull/20
+                        transition
+                        hover:brightness-110
+                        active:brightness-95
+                    "
                 >
                     Buy Mkt
                 </button>
                 <button
                     type="button"
                     onClick={onSellMarket}
-                    className="cursor-pointer rounded bg-[#ef5350] px-2 py-2 text-xs font-medium text-white transition hover:bg-[#f05f5c]"
+                    className="
+                        cursor-pointer
+                        rounded-md
+                        bg-bear
+                        px-3
+                        py-1.5
+                        text-xs
+                        font-bold
+                        uppercase
+                        tracking-wide
+                        text-white
+                        shadow-sm
+                        shadow-bear/20
+                        transition
+                        hover:brightness-110
+                        active:brightness-95
+                    "
                 >
                     Sell Mkt
                 </button>
                 <button
                     type="button"
                     onClick={closeAll}
-                    className="cursor-pointer rounded bg-[#363A45] px-2 py-2 text-xs font-medium text-white transition hover:bg-[#4A4F5A]"
+                    className="
+                        cursor-pointer
+                        rounded-md
+                        border
+                        border-edge
+                        bg-canvas
+                        px-3
+                        py-1.5
+                        text-xs
+                        font-semibold
+                        uppercase
+                        tracking-wide
+                        text-sub
+                        transition
+                        hover:border-edge-strong
+                        hover:text-ink
+                    "
                 >
                     Close All
                 </button>

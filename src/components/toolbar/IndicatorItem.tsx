@@ -20,24 +20,37 @@ export function IndicatorItem({
     showPeriod = false,
 }: IndicatorItemProps) {
     return (
-        <div className="flex items-center gap-2 py-1">
+        <div
+            className={`
+                flex
+                items-center
+                gap-2
+                rounded-md
+                px-2
+                py-1.5
+                transition
+                ${enabled ? "bg-raised/60" : "hover:bg-raised/40"}
+            `}
+        >
             {/* Toggle checkbox */}
             <input
                 type="checkbox"
                 checked={enabled}
                 onChange={onToggle}
-                className="w-4 h-4 accent-blue-500 cursor-pointer"
+                className="h-3.5 w-3.5 cursor-pointer accent-accent"
             />
 
             {/* Label */}
-            <span className="text-sm text-gray-300 w-10">{label}</span>
+            <span className="w-10 text-xs font-semibold tracking-wide text-ink">
+                {label}
+            </span>
 
             {/* Color picker */}
             <input
                 type="color"
                 value={color}
                 onChange={(e) => onColorChange(e.target.value)}
-                className="w-6 h-6 p-0 border-0 rounded cursor-pointer bg-transparent"
+                className="h-6 w-6 cursor-pointer rounded-md border border-edge bg-transparent p-0"
             />
 
             {/* Period input (only for EMA/SMA) */}
@@ -48,7 +61,24 @@ export function IndicatorItem({
                     step={1}
                     value={period ?? 14}
                     onChange={(e) => onPeriodChange?.(Number(e.target.value))}
-                    className="w-12 rounded border border-[#363A45] bg-[#131722] px-1 py-0.5 text-sm text-gray-200 outline-none focus:border-blue-500"
+                    className="
+                        ml-auto
+                        w-14
+                        rounded-md
+                        border
+                        border-edge
+                        bg-canvas
+                        px-1.5
+                        py-0.5
+                        text-right
+                        font-mono
+                        text-xs
+                        tabular-nums
+                        text-ink
+                        outline-none
+                        transition
+                        focus:border-accent/60
+                    "
                 />
             )}
         </div>

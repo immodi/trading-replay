@@ -166,9 +166,24 @@ export function ChartTrading({
 
     if (!orderMenu) return null;
 
+    const menuPrice = getPriceFromMenu();
+
     return (
         <div
-            className="fixed z-50 min-w-40 overflow-hidden rounded-md border border-[#363A45] bg-[#131722] py-1 shadow-xl"
+            className="
+                fixed
+                z-50
+                w-52
+                overflow-hidden
+                rounded-lg
+                border
+                border-edge-strong
+                bg-surface/95
+                py-1
+                shadow-2xl
+                shadow-black/50
+                backdrop-blur
+            "
             style={{
                 left: orderMenu.x,
                 top: orderMenu.y,
@@ -177,19 +192,54 @@ export function ChartTrading({
                 event.stopPropagation();
             }}
         >
+            <div className="flex items-center justify-between gap-2 border-b border-edge px-3 py-2">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-faint">
+                    Place order
+                </span>
+                <span className="font-mono text-xs font-semibold tabular-nums text-ink">
+                    {menuPrice === null ? "—" : menuPrice.toFixed(2)}
+                </span>
+            </div>
+
             <button
                 type="button"
-                className="block w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-[#1B2130]"
+                className="
+                    flex
+                    w-full
+                    items-center
+                    gap-2
+                    px-3
+                    py-2
+                    text-left
+                    text-sm
+                    text-ink
+                    transition
+                    hover:bg-bull/10
+                "
                 onClick={() => placeOrder("long", "stop")}
             >
+                <span className="h-1.5 w-1.5 rounded-full bg-bull" />
                 Buy Stop
             </button>
 
             <button
                 type="button"
-                className="block w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-[#1B2130]"
+                className="
+                    flex
+                    w-full
+                    items-center
+                    gap-2
+                    px-3
+                    py-2
+                    text-left
+                    text-sm
+                    text-ink
+                    transition
+                    hover:bg-bear/10
+                "
                 onClick={() => placeOrder("short", "stop")}
             >
+                <span className="h-1.5 w-1.5 rounded-full bg-bear" />
                 Sell Stop
             </button>
 
