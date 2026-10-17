@@ -28,7 +28,6 @@ export type EnterOrder = {
     orderType?: OrderType;
 
     /**
-     * Required for pending orders ("limit" | "stop").
      * Defaults to the current market price for "market" orders.
      */
     entryPrice?: number;
