@@ -193,17 +193,18 @@ export function useTrade(
     ) {
         setPositions((currentPositions) =>
             currentPositions.map((currentPosition) => {
-                if (
-                    currentPosition.entryTime !==
-                    position.entryTime
-                    ||
-                    currentPosition.entryPrice !==
-                    position.entryPrice
-                ) {
+                // Match on id: positions sharing an entry time/price must not
+                // be closed (or have their realised exit price rewritten) together.
+                if (currentPosition.id !== position.id) {
                     return currentPosition;
                 }
 
-                const positionExitPrice = exitPrice ? exitPrice : priceData.Price;
+                // Never re-close a position: that would overwrite its realised P/L.
+                if (currentPosition.state === "close") {
+                    return currentPosition;
+                }
+
+                const positionExitPrice = exitPrice ?? priceData.Price;
                 return {
                     ...currentPosition,
                     state: "close",
