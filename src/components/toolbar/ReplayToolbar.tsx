@@ -5,7 +5,7 @@ import { ReplayTimeframeSelect } from "./ReplayTimeframeSelect";
 import type { Candle } from "@/types/candle";
 import { loadContinuousMnq } from "@/data/mnq";
 import { ReplayTradingControls } from "./ReplayTradingControls";
-import type { Direction, Position } from "@/types/position";
+import type { EnterOrder, Position } from "@/types/position";
 import type { PositionParamters } from "@/types/positionParamters";
 import { ReplayPLDisplay } from "./ReplayPLDisplay";
 import { IndicatorControls } from "./IndicatorControls";
@@ -38,16 +38,7 @@ export type ReplayToolbarProps = {
     restart: () => void,
     playback: (direction: PlayDirection) => void,
     setIndicatorSettings: (newSettings: IndicatorSettings) => void,
-    enter: {
-        (direction: Direction, quantity: number): void;
-        (direction: Direction, quantity: number, entryPrice: number, stopLoss: number, takeProfit: number): void;
-        (
-            direction: Direction,
-            quantity: number,
-            stopLoss: number,
-            takeProfit: number,
-        ): void;
-    },
+    enter: (order: EnterOrder) => void,
     close: {
         (
             position: Position,
@@ -130,27 +121,35 @@ export function ReplayToolbar(props: ReplayToolbarProps) {
             <ReplayTradingControls
                 positionParametersRef={props.positionParametersRef}
                 onBuyMarket={() => {
-                    const { stopLossPoints, takeProfitPoints, quantity } =
+                    const { stopLossPoints, takeProfitPoints, quantity, bracket } =
                         props.positionParametersRef.current;
 
-                    props.enter(
-                        "long",
+                    props.enter({
+                        direction: "long",
                         quantity,
-                        props.priceData.Price - stopLossPoints,
-                        props.priceData.Price + takeProfitPoints,
-                    );
+                        stopLoss: bracket
+                            ? props.priceData.Price - stopLossPoints
+                            : undefined,
+                        takeProfit: bracket
+                            ? props.priceData.Price + takeProfitPoints
+                            : undefined,
+                    });
                 }}
 
                 onSellMarket={() => {
-                    const { stopLossPoints, takeProfitPoints, quantity } =
+                    const { stopLossPoints, takeProfitPoints, quantity, bracket } =
                         props.positionParametersRef.current;
 
-                    props.enter(
-                        "short",
+                    props.enter({
+                        direction: "short",
                         quantity,
-                        props.priceData.Price + stopLossPoints,
-                        props.priceData.Price - takeProfitPoints,
-                    );
+                        stopLoss: bracket
+                            ? props.priceData.Price + stopLossPoints
+                            : undefined,
+                        takeProfit: bracket
+                            ? props.priceData.Price - takeProfitPoints
+                            : undefined,
+                    });
                 }}
                 closeAll={props.closeAll}
             />
