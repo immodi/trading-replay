@@ -14,7 +14,7 @@ export interface CandleSourceConfig {
     /** Dollar value of a single point, used for P/L. */
     pointValue: number;
     /** URL the raw candle JSON is fetched from. */
-    url: string;
+    fileName: string;
 }
 
 /**

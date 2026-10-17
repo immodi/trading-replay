@@ -2,6 +2,7 @@ import type { Candle, RawCandle } from "@/types/candle";
 import type { CandleSourceConfig, CandleSource } from "@/types/candleSource";
 import type { DataRange } from "@/types/dateRange";
 import { aggregateCandle } from "@/utils/aggregateCandle";
+import { loadJson } from "../opfs";
 
 /**
  * Resolution of the stored dataset. Raw JSON holds 1‑minute bars; larger
@@ -23,26 +24,20 @@ const defaultMap = (raw: RawCandle): Candle => ({
 });
 
 /**
- * Fetch (and cache per URL) a raw candle JSON file, mapping each row to
+ * Fetch (and cache per fileName) a raw candle JSON file, mapping each row to
  * the app's `Candle` shape.
  */
 export async function getData(
-    url: string,
+    srcFileName: string,
     map: (raw: RawCandle) => Candle = defaultMap,
 ): Promise<Candle[]> {
-    const hit = cache.get(url);
+    const hit = cache.get(srcFileName);
     if (hit) return hit;
 
-    const response = await fetch(url);
-
-    if (!response.ok) {
-        throw new Error(`Failed to load data from ${url}.`);
-    }
-
-    const json = (await response.json()) as RawCandle[];
+    const json = await loadJson<RawCandle[]>(srcFileName);
     const data = json.map(map);
 
-    cache.set(url, data);
+    cache.set(srcFileName, data);
     return data;
 }
 
@@ -58,7 +53,7 @@ function utcMidnight(date: Date): Date {
 export function createCandleSource(config: CandleSourceConfig): CandleSource {
     /** Raw 1‑minute candles for a given UTC date. */
     async function loadDay(date: Date): Promise<Candle[]> {
-        const candles = await getData(config.url);
+        const candles = await getData(config.fileName);
 
         const start = utcMidnight(date);
         const end = new Date(start);
@@ -81,7 +76,7 @@ export function createCandleSource(config: CandleSourceConfig): CandleSource {
         timeframe: number,
         maxCandles: number = 200
     ): Promise<Candle[]> {
-        const raw = await getData(config.url);
+        const raw = await getData(config.fileName);
 
         const startTs = utcMidnight(date).getTime() / 1000;
 
@@ -127,10 +122,10 @@ export function createCandleSource(config: CandleSourceConfig): CandleSource {
 
     /** UTC‑aligned date range covered by the whole dataset. */
     async function getRange(): Promise<DataRange> {
-        const candles = await getData(config.url);
+        const candles = await getData(config.fileName);
 
         if (candles.length === 0) {
-            throw new Error(`Candle dataset at ${config.url} is empty.`);
+            throw new Error(`Candle dataset at ${config.fileName} is empty.`);
         }
 
         const first = candles[0];
