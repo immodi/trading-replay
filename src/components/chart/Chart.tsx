@@ -23,7 +23,7 @@ import { GoToLatestButton } from "./GoToLatestButton";
 
 import { Color } from "@/constants/replay";
 import { ReplayToolbar, type ReplayToolbarProps } from "../toolbar/ReplayToolbar";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { ChartSpeed } from "@/constants/chart";
 import { Timeframe } from "@/constants/toolbar";
 import { usePrice } from "@/hooks/usePrice";
@@ -33,6 +33,8 @@ import type { PositionParamters } from "@/types/positionParamters";
 import type { IndicatorSettings } from "@/types/indicator";
 import { useIndicators } from "@/hooks/useIndicators";
 import { useCurrentDataSource } from "@/hooks/useCurrentDataSource";
+import type { CandleSource, CandleSourceConfig } from "@/types/candleSource";
+import { createCandleSource } from "@/data/sources/candleSource";
 
 const chartOptions: DeepPartial<ChartOptions> = {
     layout: {
@@ -65,7 +67,11 @@ const chartOptions: DeepPartial<ChartOptions> = {
     },
 };
 
-export function ChartComponent() {
+type ChartComponentProps = {
+    config: CandleSourceConfig
+};
+
+export function ChartComponent({ config }: ChartComponentProps) {
     const [timeFrameMinutes, setTimeFrameMinutes] = useState(Timeframe.Minute15 as number);
     const [speed, setSpeed] = useState(ChartSpeed.X1 as number);
     const [orderMenu, setOrderMenu] = useState<{
@@ -89,8 +95,12 @@ export function ChartComponent() {
         bracket: true,
     });
 
+    // Must stay referentially stable: useCurrentDataSource keys its effects on
+    // this object, so recreating it each render causes an infinite update loop.
+    const candleSource = useMemo(() => createCandleSource(config), [config]);
     const source = useCurrentDataSource(
         timeFrameMinutes,
+        candleSource
     )
 
     const replay = useReplay(timeFrameMinutes, speed, source.candleData, source.aggregatedCandleHistory);

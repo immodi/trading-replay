@@ -7,7 +7,7 @@ export const MNQ_CONFIG: CandleSourceConfig = {
     symbol: "MNQ",
     /** Dollar value of one index point, per contract. */
     pointValue: 2,
-    url: "/mnq-1m.json",
+    fileName: "mnq-1m.json",
 };
 
 /** The app's default candle source. */
