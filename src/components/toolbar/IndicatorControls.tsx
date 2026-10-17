@@ -32,6 +32,10 @@ export function IndicatorControls({ settings, onChange }: IndicatorControlsProps
         });
     };
 
+    const activeCount = [settings.vwap, settings.ema, settings.sma].filter(
+        (indicator) => indicator.enabled
+    ).length;
+
     return (
         <>
             {/* Toggle button */}
@@ -39,22 +43,84 @@ export function IndicatorControls({ settings, onChange }: IndicatorControlsProps
                 ref={buttonRef}
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-2 rounded border border-[#363A45] bg-[#131722] px-3 py-1.5 text-sm text-gray-300 transition hover:border-gray-500 hover:bg-[#1B2130]"
+                className="
+                    flex
+                    shrink-0
+                    items-center
+                    gap-2
+                    rounded-md
+                    border
+                    border-edge
+                    bg-surface
+                    px-3
+                    py-1.5
+                    text-xs
+                    font-semibold
+                    text-sub
+                    transition
+                    hover:border-edge-strong
+                    hover:text-ink
+                "
             >
-                <span>📊</span> Indicators
-                <span className="text-xs text-gray-500">{isOpen ? "▲" : "▼"}</span>
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    aria-hidden="true"
+                    className="h-4 w-4"
+                    stroke="currentColor"
+                    strokeWidth="1.75"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                >
+                    <path d="M4 16.5l4.5-5 3.5 3 8-9" />
+                    <path d="M4 20h16" />
+                </svg>
+                Indicators
+                {activeCount > 0 && (
+                    <span className="rounded-full border border-accent/40 bg-accent/10 px-1.5 font-mono text-[10px] tabular-nums text-accent">
+                        {activeCount}
+                    </span>
+                )}
+                <svg
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    aria-hidden="true"
+                    className={`h-3 w-3 text-faint transition-transform ${isOpen ? "rotate-180" : ""}`}
+                >
+                    <path
+                        d="M5 7.5l5 5 5-5"
+                        stroke="currentColor"
+                        strokeWidth="1.75"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    />
+                </svg>
             </button>
 
             {/* Dropdown panel - fixed position, no clipping */}
             {isOpen && dropdownPos && (
                 <div
-                    className="fixed z-[999] min-w-[240px] rounded-md border border-[#363A45] bg-[#131722] p-3 shadow-xl"
+                    className="
+                        fixed
+                        z-[999]
+                        min-w-[248px]
+                        rounded-lg
+                        border
+                        border-edge-strong
+                        bg-surface/95
+                        p-3
+                        shadow-2xl
+                        shadow-black/50
+                        backdrop-blur
+                    "
                     style={{
                         top: dropdownPos.top,
                         right: dropdownPos.right,
                     }}
                 >
-                    <div className="text-xs text-gray-400 mb-2">Indicators</div>
+                    <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-faint">
+                        Overlays
+                    </div>
 
                     {/* VWAP */}
                     <IndicatorItem
@@ -65,7 +131,7 @@ export function IndicatorControls({ settings, onChange }: IndicatorControlsProps
                         onColorChange={(color) => update("vwap", { color })}
                     />
 
-                    <div className="my-1 border-t border-[#2a2e39]" />
+                    <div className="my-1 border-t border-edge" />
 
                     {/* EMA */}
                     <IndicatorItem
@@ -79,7 +145,7 @@ export function IndicatorControls({ settings, onChange }: IndicatorControlsProps
                         showPeriod
                     />
 
-                    <div className="my-1 border-t border-[#2a2e39]" />
+                    <div className="my-1 border-t border-edge" />
 
                     {/* SMA */}
                     <IndicatorItem

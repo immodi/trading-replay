@@ -6,38 +6,60 @@ type ReplaySpeedProps = {
 
 export function ReplaySpeedSelect({ setSpeed }: ReplaySpeedProps) {
     return (
-        <div className="flex items-center gap-2">
-            <label className="text-sm text-gray-400">
+        <div className="flex shrink-0 items-center gap-2">
+            <label className="text-[10px] font-semibold uppercase tracking-wider text-faint">
                 Speed
             </label>
 
-            <select
-                onChange={(e) => setSpeed(Number(e.target.value))}
-                defaultValue={ChartSpeed.X1}
-                className="
-                    rounded
-                    border
-                    border-[#363A45]
-                    bg-[#131722]
-                    px-2
-                    py-1
-                    text-sm
-                    text-gray-200
-                    outline-none
-                    transition
-                    hover:border-gray-500
-                    focus:border-blue-500
-                "
-            >
-                {ChartSpeeds.map(speed => (
-                    <option
-                        key={speed.label}
-                        value={speed.interval}
-                    >
-                        {speed.label}
-                    </option>
-                ))}
-            </select>
+            <div className="relative">
+                <select
+                    aria-label="Replay speed"
+                    onChange={(e) => setSpeed(Number(e.target.value))}
+                    defaultValue={ChartSpeed.X1}
+                    className="
+                        cursor-pointer
+                        appearance-none
+                        rounded-md
+                        border
+                        border-edge
+                        bg-surface
+                        py-1
+                        pl-2.5
+                        pr-7
+                        text-xs
+                        font-medium
+                        text-ink
+                        outline-none
+                        transition
+                        hover:border-edge-strong
+                        focus:border-accent/60
+                    "
+                >
+                    {ChartSpeeds.map(speed => (
+                        <option
+                            key={speed.label}
+                            value={speed.interval}
+                        >
+                            {speed.label}
+                        </option>
+                    ))}
+                </select>
+
+                <svg
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    aria-hidden="true"
+                    className="pointer-events-none absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 text-faint"
+                >
+                    <path
+                        d="M5 7.5l5 5 5-5"
+                        stroke="currentColor"
+                        strokeWidth="1.75"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    />
+                </svg>
+            </div>
         </div>
     );
 }

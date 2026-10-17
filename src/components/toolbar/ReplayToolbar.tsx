@@ -2,14 +2,8 @@ import type { PlayDirection } from "@/hooks/useReplay";
 import { ReplayControls } from "./ReplayControls";
 import { ReplaySpeedSelect } from "./ReplaySpeedSelect";
 import { ReplayTimeframeSelect } from "./ReplayTimeframeSelect";
-import { ReplayTradingControls } from "./ReplayTradingControls";
-import type { EnterOrder, Position } from "@/types/position";
-import type { PositionParamters } from "@/types/positionParamters";
-import { ReplayPLDisplay } from "./ReplayPLDisplay";
 import { IndicatorControls } from "./IndicatorControls";
 import { SessionControls } from "./SessionControls";
-import type { IChartApi, ISeriesApi } from "lightweight-charts";
-import type { PriceData } from "@/types/priceData";
 import type { IndicatorSettings } from "@/types/indicator";
 import type { SessionSummary, SessionTrade } from "@/types/session";
 
@@ -20,34 +14,17 @@ export type ReplayToolbarProps = {
     isPlaying: boolean,
     isDone: boolean,
     direction: PlayDirection,
-    priceData: PriceData,
-    pl: number,
-    positionParametersRef: React.RefObject<PositionParamters>;
-    seriesApi: ISeriesApi<"Candlestick">;
-    chartApi: IChartApi;
     indicatorSettings: IndicatorSettings;
 
     setTimeFrame: (timeFrame: number) => void
     setSpeed: (speed: number) => void,
     setChartDate: (date: Date) => void,
 
-    reset: () => void,
     start: (direction: PlayDirection) => void,
     stop: () => void,
     restart: () => void,
     playback: (direction: PlayDirection) => void,
     setIndicatorSettings: (newSettings: IndicatorSettings) => void,
-    enter: (order: EnterOrder) => void,
-    close: {
-        (
-            position: Position,
-        ): void;
-        (
-            position: Position,
-            exitPrice: number,
-        ): void;
-    };
-    closeAll: () => void,
 
     sessionInstrument: string,
     sessionTrades: SessionTrade[],
@@ -56,6 +33,7 @@ export type ReplayToolbarProps = {
     removeSessionTrade: (id: string) => void,
     exportSession: () => void,
 }
+
 export function ReplayToolbar(props: ReplayToolbarProps) {
     const onDateChange = async (
         event: React.ChangeEvent<HTMLInputElement>,
@@ -71,107 +49,79 @@ export function ReplayToolbar(props: ReplayToolbarProps) {
                 relative
                 flex
                 h-12
+                shrink-0
                 items-center
-                gap-4
+                gap-3
                 border-b
-                border-[#363A45]
-                bg-[#1E222D]
+                border-edge
+                bg-canvas
                 px-4
                 overflow-x-auto
                 overflow-y-visible
                 whitespace-nowrap
             "
         >
-            <div
-                className="
-                    flex
-                    items-center
-                    gap-2
-                "
-            >
+            <ReplayControls
+                isPlaying={props.isPlaying}
+                isDone={props.isDone}
+                direction={props.direction}
+                start={props.start}
+                stop={props.stop}
+                restart={props.restart}
+                playback={props.playback}
+            />
 
-                <input
-                    type="date"
-                    defaultValue={props.minDate.toISOString().split("T")[0]}
-                    min={props.minDate.toISOString().split("T")[0]}
-                    max={props.maxDate.toISOString().split("T")[0]}
-                    onChange={onDateChange}
-                    className="
-                        rounded
-                        border
-                        bg-[#131722]
-                        px-2
-                        py-1
-                        text-sm
-                        text-gray-200
-                        outline-none
-                        transition
-                        hover:border-gray-500
-                        focus:border-blue-500
-                    "
-                />
-            </div>
-
-            <div className="h-5 w-px bg-[#363A45]" />
+            <div className="h-5 w-px shrink-0 bg-edge" />
 
             <ReplaySpeedSelect setSpeed={props.setSpeed} />
 
             <ReplayTimeframeSelect setTimeFrame={props.setTimeFrame} />
 
-            <ReplayControls {...props} />
+            <div className="ml-auto flex items-center gap-3 pl-4">
+                <label className="flex items-center gap-2">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-faint">
+                        Date
+                    </span>
+                    <input
+                        type="date"
+                        defaultValue={props.minDate.toISOString().split("T")[0]}
+                        min={props.minDate.toISOString().split("T")[0]}
+                        max={props.maxDate.toISOString().split("T")[0]}
+                        onChange={onDateChange}
+                        className="
+                            rounded-md
+                            border
+                            border-edge
+                            bg-surface
+                            px-2
+                            py-1
+                            text-xs
+                            text-ink
+                            outline-none
+                            transition
+                            [color-scheme:dark]
+                            hover:border-edge-strong
+                            focus:border-accent/60
+                        "
+                    />
+                </label>
 
-            <ReplayTradingControls
-                positionParametersRef={props.positionParametersRef}
-                onBuyMarket={() => {
-                    const { stopLossPoints, takeProfitPoints, quantity, bracket } =
-                        props.positionParametersRef.current;
+                <div className="h-5 w-px shrink-0 bg-edge" />
 
-                    props.enter({
-                        direction: "long",
-                        quantity,
-                        stopLoss: bracket
-                            ? props.priceData.Price - stopLossPoints
-                            : undefined,
-                        takeProfit: bracket
-                            ? props.priceData.Price + takeProfitPoints
-                            : undefined,
-                    });
-                }}
+                <SessionControls
+                    instrument={props.sessionInstrument}
+                    trades={props.sessionTrades}
+                    summary={props.sessionSummary}
+                    hasUnexportedChanges={props.sessionHasUnexportedChanges}
+                    onRemove={props.removeSessionTrade}
+                    onExport={props.exportSession}
+                />
 
-                onSellMarket={() => {
-                    const { stopLossPoints, takeProfitPoints, quantity, bracket } =
-                        props.positionParametersRef.current;
-
-                    props.enter({
-                        direction: "short",
-                        quantity,
-                        stopLoss: bracket
-                            ? props.priceData.Price + stopLossPoints
-                            : undefined,
-                        takeProfit: bracket
-                            ? props.priceData.Price - takeProfitPoints
-                            : undefined,
-                    });
-                }}
-                closeAll={props.closeAll}
-            />
-
-            <ReplayPLDisplay pl={props.pl} reset={props.reset} />
-
-            <SessionControls
-                instrument={props.sessionInstrument}
-                trades={props.sessionTrades}
-                summary={props.sessionSummary}
-                hasUnexportedChanges={props.sessionHasUnexportedChanges}
-                onRemove={props.removeSessionTrade}
-                onExport={props.exportSession}
-            />
-
-            <IndicatorControls
-                settings={props.indicatorSettings}
-                onChange={props.setIndicatorSettings}
-            />
-
+                <IndicatorControls
+                    settings={props.indicatorSettings}
+                    onChange={props.setIndicatorSettings}
+                />
+            </div>
         </div>
     );
 }

@@ -25,9 +25,11 @@ type SummaryStatProps = {
 
 function SummaryStat({ label, value, valueClassName }: SummaryStatProps) {
     return (
-        <div className="rounded border border-[#2a2e39] bg-[#171B26] px-2 py-1.5">
-            <div className="text-[10px] text-gray-500">{label}</div>
-            <div className={`text-xs font-semibold ${valueClassName ?? "text-gray-200"}`}>
+        <div className="rounded-md border border-edge bg-canvas/60 px-2 py-1.5">
+            <div className="text-[10px] font-medium uppercase tracking-wider text-faint">
+                {label}
+            </div>
+            <div className={`mt-0.5 font-mono text-xs font-semibold tabular-nums ${valueClassName ?? "text-ink"}`}>
                 {value}
             </div>
         </div>
@@ -58,10 +60,10 @@ export function SessionControls({
 
     const net = summary.totalNetProfitLoss;
     const netColor = net > 0
-        ? "text-[#26a69a]"
+        ? "text-bull"
         : net < 0
-            ? "text-[#ef5350]"
-            : "text-gray-300";
+            ? "text-bear"
+            : "text-sub";
 
     return (
         <>
@@ -70,10 +72,41 @@ export function SessionControls({
                 ref={buttonRef}
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-2 rounded border border-[#363A45] bg-[#131722] px-3 py-1.5 text-sm text-gray-300 transition hover:border-gray-500 hover:bg-[#1B2130]"
+                className="
+                    flex
+                    shrink-0
+                    items-center
+                    gap-2
+                    rounded-md
+                    border
+                    border-edge
+                    bg-surface
+                    px-3
+                    py-1.5
+                    text-xs
+                    font-semibold
+                    text-sub
+                    transition
+                    hover:border-edge-strong
+                    hover:text-ink
+                "
             >
-                <span>🧾</span> Session
-                <span className="rounded-full bg-[#363A45] px-1.5 text-[10px] text-gray-200">
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    aria-hidden="true"
+                    className="h-4 w-4"
+                    stroke="currentColor"
+                    strokeWidth="1.75"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                >
+                    <path d="M9 4.5h6a1 1 0 0 1 1 1V6H8v-.5a1 1 0 0 1 1-1Z" />
+                    <path d="M8 6H6.5A1.5 1.5 0 0 0 5 7.5v11A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5v-11A1.5 1.5 0 0 0 17.5 6H16" />
+                    <path d="M9 12h6M9 16h4" />
+                </svg>
+                Session
+                <span className="rounded-full border border-edge bg-canvas px-1.5 font-mono text-[10px] tabular-nums text-sub">
                     {summary.tradeCount}
                 </span>
                 {hasUnexportedChanges && summary.tradeCount > 0 && (
@@ -82,27 +115,57 @@ export function SessionControls({
                         className="h-1.5 w-1.5 rounded-full bg-amber-400"
                     />
                 )}
-                <span className="text-xs text-gray-500">{isOpen ? "▲" : "▼"}</span>
+                <svg
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    aria-hidden="true"
+                    className={`h-3 w-3 text-faint transition-transform ${isOpen ? "rotate-180" : ""}`}
+                >
+                    <path
+                        d="M5 7.5l5 5 5-5"
+                        stroke="currentColor"
+                        strokeWidth="1.75"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    />
+                </svg>
             </button>
 
             {/* Dropdown panel — fixed position so it is never clipped */}
             {isOpen && dropdownPos && (
                 <div
-                    className="fixed z-[999] flex w-80 flex-col gap-3 rounded-md border border-[#363A45] bg-[#131722] p-3 shadow-xl"
+                    className="
+                        fixed
+                        z-[999]
+                        flex
+                        w-80
+                        flex-col
+                        gap-3
+                        rounded-lg
+                        border
+                        border-edge-strong
+                        bg-surface/95
+                        p-3
+                        shadow-2xl
+                        shadow-black/50
+                        backdrop-blur
+                    "
                     style={{
                         top: dropdownPos.top,
                         right: dropdownPos.right,
                     }}
                 >
                     <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-gray-200">
+                        <span className="text-xs font-semibold text-ink">
                             Trading session{instrument ? ` · ${instrument}` : ""}
                         </span>
-                        <span className="text-[10px] text-gray-500">In-memory only</span>
+                        <span className="text-[10px] font-medium uppercase tracking-wider text-faint">
+                            In-memory only
+                        </span>
                     </div>
 
-                    <p className="rounded border border-amber-500/30 bg-amber-500/10 px-2 py-1.5 text-[11px] leading-snug text-amber-300">
-                        ⚠️ Nothing is saved. Refreshing, closing the tab, or leaving the
+                    <p className="rounded-md border border-amber-500/30 text-wrap bg-amber-500/10 px-2.5 py-2 text-[11px] leading-snug text-amber-300">
+                        Nothing is saved. Refreshing, closing the tab, or leaving the
                         app before exporting will discard this session.
                     </p>
 
@@ -123,13 +186,27 @@ export function SessionControls({
                         type="button"
                         onClick={onExport}
                         disabled={summary.tradeCount === 0}
-                        className="w-full cursor-pointer rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
+                        className="
+                            w-full
+                            cursor-pointer
+                            rounded-md
+                            bg-accent
+                            px-3
+                            py-1.5
+                            text-xs
+                            font-semibold
+                            text-white
+                            transition
+                            hover:brightness-110
+                            disabled:cursor-not-allowed
+                            disabled:opacity-40
+                        "
                     >
                         Export session JSON
                     </button>
 
                     {trades.length === 0 ? (
-                        <p className="rounded border border-dashed border-[#363A45] px-3 py-4 text-center text-xs text-gray-500">
+                        <p className="rounded-md border border-dashed border-edge px-3 py-4 text-center text-xs text-faint">
                             No completed trades yet.
                         </p>
                     ) : (
@@ -137,40 +214,38 @@ export function SessionControls({
                             {trades.map((trade) => (
                                 <li
                                     key={trade.id}
-                                    className="flex items-center justify-between gap-2 rounded border border-[#2a2e39] bg-[#171B26] px-2 py-1.5"
+                                    className="flex items-center justify-between gap-2 rounded-md border border-edge bg-canvas/60 px-2 py-1.5"
                                 >
                                     <div className="min-w-0">
                                         <div className="flex items-center gap-1.5">
                                             <span
-                                                className={`text-[10px] font-semibold uppercase ${
-                                                    trade.direction === "long"
-                                                        ? "text-[#26a69a]"
-                                                        : "text-[#ef5350]"
-                                                }`}
+                                                className={`text-[10px] font-bold uppercase tracking-wide ${trade.direction === "long"
+                                                    ? "text-bull"
+                                                    : "text-bear"
+                                                    }`}
                                             >
                                                 {trade.direction}
                                             </span>
-                                            <span className="text-[11px] text-gray-400">
+                                            <span className="font-mono text-[11px] tabular-nums text-faint">
                                                 {trade.quantity}×
                                             </span>
                                         </div>
-                                        <div className="truncate text-[11px] text-gray-300">
+                                        <div className="truncate font-mono text-[11px] tabular-nums text-sub">
                                             {trade.entryPrice} → {trade.exitPrice}
                                         </div>
-                                        <div className="truncate text-[10px] text-gray-500">
+                                        <div className="truncate font-mono text-[10px] tabular-nums text-faint">
                                             {formatClock(trade.entryTime)}–{formatClock(trade.exitTime)} UTC
                                         </div>
                                     </div>
 
                                     <div className="flex shrink-0 items-center gap-1.5">
                                         <span
-                                            className={`text-[11px] font-semibold ${
-                                                trade.netProfitLoss > 0
-                                                    ? "text-[#26a69a]"
-                                                    : trade.netProfitLoss < 0
-                                                        ? "text-[#ef5350]"
-                                                        : "text-gray-300"
-                                            }`}
+                                            className={`font-mono text-[11px] font-semibold tabular-nums ${trade.netProfitLoss > 0
+                                                ? "text-bull"
+                                                : trade.netProfitLoss < 0
+                                                    ? "text-bear"
+                                                    : "text-sub"
+                                                }`}
                                         >
                                             {trade.netProfitLoss >= 0 ? "+" : ""}
                                             {trade.netProfitLoss.toFixed(2)}
@@ -179,7 +254,19 @@ export function SessionControls({
                                             type="button"
                                             title="Remove trade from session"
                                             onClick={() => onRemove(trade.id)}
-                                            className="cursor-pointer rounded border border-[#363A45] px-1.5 text-xs text-gray-400 transition hover:border-red-500/60 hover:bg-red-500/10 hover:text-red-300"
+                                            className="
+                                                cursor-pointer
+                                                rounded-md
+                                                border
+                                                border-edge
+                                                px-1.5
+                                                text-xs
+                                                text-sub
+                                                transition
+                                                hover:border-bear/60
+                                                hover:bg-bear/10
+                                                hover:text-bear
+                                            "
                                         >
                                             ×
                                         </button>

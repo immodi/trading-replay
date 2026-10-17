@@ -20,9 +20,11 @@ import { useReplay } from "@/hooks/useReplay";
 import { useGoToLatest } from "@/hooks/useGoToLatest";
 
 import { GoToLatestButton } from "./GoToLatestButton";
+import { MarketHeader } from "./MarketHeader";
 
 import { Color } from "@/constants/replay";
 import { ReplayToolbar, type ReplayToolbarProps } from "../toolbar/ReplayToolbar";
+import { TradingBar } from "../toolbar/TradingBar";
 import { useMemo, useRef, useState } from "react";
 import { ChartSpeed } from "@/constants/chart";
 import { Timeframe } from "@/constants/toolbar";
@@ -43,8 +45,16 @@ const chartOptions: DeepPartial<ChartOptions> = {
             type: ColorType.Solid,
             color: Color.Background,
         },
-        textColor: Color.Text,
+        textColor: Color.MutedText,
+        fontFamily:
+            "Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+        fontSize: 11,
         attributionLogo: false,
+        panes: {
+            separatorColor: Color.Border,
+            separatorHoverColor: "rgba(61, 126, 255, 0.35)",
+            enableResize: true,
+        },
     },
 
     grid: {
@@ -58,13 +68,35 @@ const chartOptions: DeepPartial<ChartOptions> = {
         },
     },
 
-    timeScale: {
-        timeVisible: true,
-        secondsVisible: false,
-    },
-
     crosshair: {
         mode: CrosshairMode.Normal,
+        vertLine: {
+            color: "#4A5568",
+            width: 1,
+            style: LineStyle.Dashed,
+            labelBackgroundColor: "#2A3344",
+        },
+        horzLine: {
+            color: "#4A5568",
+            width: 1,
+            style: LineStyle.Dashed,
+            labelBackgroundColor: "#2A3344",
+        },
+    },
+
+    rightPriceScale: {
+        borderColor: Color.Border,
+        scaleMargins: {
+            top: 0.1,
+            bottom: 0.1,
+        },
+    },
+
+    timeScale: {
+        borderColor: Color.Border,
+        timeVisible: true,
+        secondsVisible: false,
+        rightOffset: 4,
     },
 };
 
@@ -174,16 +206,25 @@ export function ChartComponent({ config }: ChartComponentProps) {
 
     if (source.error) {
         return (
-            <div className="flex w-screen h-screen items-center justify-center bg-[#131722] text-red-400">
-                Failed to load market data: {source.error.message}
+            <div className="flex h-dvh w-screen flex-col items-center justify-center gap-3 bg-canvas text-center">
+                <span className="text-sm font-semibold text-bear">
+                    Failed to load market data
+                </span>
+                <span className="max-w-md text-xs text-sub">{source.error.message}</span>
             </div>
         );
     }
 
     if (!source.dataRange || !source.candleData) {
         return (
-            <div className="flex w-screen h-screen items-center justify-center bg-[#131722] text-gray-300">
-                Loading historical data...
+            <div className="flex h-dvh w-screen flex-col items-center justify-center gap-3 bg-canvas">
+                <span
+                    className="h-6 w-6 animate-spin rounded-full border-2 border-edge-strong border-t-accent"
+                    aria-hidden="true"
+                />
+                <span className="text-xs font-medium tracking-wide text-sub">
+                    Loading historical data…
+                </span>
             </div>
         );
     }
@@ -191,15 +232,10 @@ export function ChartComponent({ config }: ChartComponentProps) {
     const replayToolbarProps: ReplayToolbarProps = {
         minDate: source.dataRange.start,
         maxDate: source.dataRange.end,
-        positionParametersRef: positionParametersRef,
-        priceData: fullPriceData,
-        seriesApi: seriesApi,
-        chartApi: chartRef.current,
         indicatorSettings: indicatorSettings,
 
         isPlaying: replay.isPlaying,
         direction: replay.direction,
-        pl: trade.pl,
         isDone: replay.isDone,
 
         setSpeed: setChartSpeed,
@@ -207,17 +243,10 @@ export function ChartComponent({ config }: ChartComponentProps) {
         setTimeFrame: setTimeFrame,
         setChartDate: setChartDate,
 
-        reset: () => {
-            trade.reset();
-            resetIndicators();
-        },
         stop: replay.stop,
         start: replay.start,
         playback: replay.playback,
         restart: replay.restart,
-        enter: trade.enter,
-        close: trade.close,
-        closeAll: trade.closeAll,
 
         sessionInstrument: config.symbol,
         sessionTrades: session.trades,
@@ -231,12 +260,23 @@ export function ChartComponent({ config }: ChartComponentProps) {
         <div
             onContextMenu={handleContextMenu}
             onClick={() => setOrderMenu(null)}
-            className="flex h-dvh w-full flex-col overflow-hidden bg-[#131722]"
+            className="flex h-dvh w-full flex-col overflow-hidden bg-canvas font-sans"
         >
+            <MarketHeader
+                symbol={config.symbol}
+                pointValue={source.pointValue}
+                commission={source.commission}
+                price={fullPriceData.Price}
+                high={fullPriceData.High}
+                low={fullPriceData.Low}
+                isPlaying={replay.isPlaying}
+                isDone={replay.isDone}
+            />
+
             <ReplayToolbar {...replayToolbarProps} />
 
             <div className="min-h-0 flex-1 p-2">
-                <div className="relative h-full w-full  overflow-hidden rounded-md border border-[#363A45]">
+                <div className="relative h-full w-full overflow-hidden rounded-lg border border-edge bg-canvas">
                     <Chart
                         onInit={handleChartInit}
                         options={chartOptions}
@@ -252,8 +292,14 @@ export function ChartComponent({ config }: ChartComponentProps) {
                                 ref={handleSeriesInit}
                                 data={replay.candles}
                                 options={{
+                                    upColor: Color.Bullish,
+                                    downColor: Color.Bearish,
+                                    borderVisible: false,
+                                    wickUpColor: Color.Bullish,
+                                    wickDownColor: Color.Bearish,
                                     priceLineStyle: LineStyle.Dashed,
-                                    priceLineWidth: 2,
+                                    priceLineWidth: 1,
+                                    priceLineColor: Color.MutedText,
                                 }}
                             />
                         </Pane>
@@ -265,6 +311,8 @@ export function ChartComponent({ config }: ChartComponentProps) {
                                     priceFormat: {
                                         type: "volume",
                                     },
+                                    priceLineVisible: false,
+                                    lastValueVisible: false,
                                 }}
                             />
                         </Pane>
@@ -290,6 +338,18 @@ export function ChartComponent({ config }: ChartComponentProps) {
                     />
                 </div>
             </div>
+
+            <TradingBar
+                positionParametersRef={positionParametersRef}
+                price={fullPriceData.Price}
+                pl={trade.pl}
+                reset={() => {
+                    trade.reset();
+                    resetIndicators();
+                }}
+                enter={trade.enter}
+                closeAll={trade.closeAll}
+            />
         </div>
     );
 }
