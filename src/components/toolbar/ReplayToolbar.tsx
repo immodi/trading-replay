@@ -2,8 +2,6 @@ import type { PlayDirection } from "@/hooks/useReplay";
 import { ReplayControls } from "./ReplayControls";
 import { ReplaySpeedSelect } from "./ReplaySpeedSelect";
 import { ReplayTimeframeSelect } from "./ReplayTimeframeSelect";
-import type { Candle } from "@/types/candle";
-import { loadContinuousMnq } from "@/data/mnq";
 import { ReplayTradingControls } from "./ReplayTradingControls";
 import type { EnterOrder, Position } from "@/types/position";
 import type { PositionParamters } from "@/types/positionParamters";
@@ -29,7 +27,6 @@ export type ReplayToolbarProps = {
 
     setTimeFrame: (timeFrame: number) => void
     setSpeed: (speed: number) => void,
-    setCandleData: (data: Candle[]) => void,
     setChartDate: (date: Date) => void,
 
     reset: () => void,
@@ -56,10 +53,7 @@ export function ReplayToolbar(props: ReplayToolbarProps) {
         event: React.ChangeEvent<HTMLInputElement>,
     ) => {
         const date = new Date(event.target.value);
-        const candleData = await loadContinuousMnq(date);
-
         props.setChartDate(date)
-        props.setCandleData(candleData);
     };
 
 

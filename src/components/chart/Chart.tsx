@@ -23,19 +23,16 @@ import { GoToLatestButton } from "./GoToLatestButton";
 
 import { Color } from "@/constants/replay";
 import { ReplayToolbar, type ReplayToolbarProps } from "../toolbar/ReplayToolbar";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { ChartSpeed } from "@/constants/chart";
 import { Timeframe } from "@/constants/toolbar";
-import type { Candle } from "@/types/candle";
-import type { DataRange } from "@/types/dateRange";
-import { getContinuousMnqRange, getHistory, loadContinuousMnq } from "@/data/mnq";
 import { usePrice } from "@/hooks/usePrice";
 import { useTrade } from "@/hooks/useTrade";
-import { MNQ_POINT_DOLLAR_VALUE } from "@/constants/mnq";
 import { ChartTrading } from "./ChartTrading";
 import type { PositionParamters } from "@/types/positionParamters";
 import type { IndicatorSettings } from "@/types/indicator";
 import { useIndicators } from "@/hooks/useIndicators";
+import { useCurrentDataSource } from "@/hooks/useCurrentDataSource";
 
 const chartOptions: DeepPartial<ChartOptions> = {
     layout: {
@@ -69,7 +66,6 @@ const chartOptions: DeepPartial<ChartOptions> = {
 };
 
 export function ChartComponent() {
-    const [currentDate, setCurrentDate] = useState<Date>(null);
     const [timeFrameMinutes, setTimeFrameMinutes] = useState(Timeframe.Minute15 as number);
     const [speed, setSpeed] = useState(ChartSpeed.X1 as number);
     const [orderMenu, setOrderMenu] = useState<{
@@ -86,9 +82,6 @@ export function ChartComponent() {
             ema: { enabled: false, color: "#FFD93D", period: 14 },
             sma: { enabled: false, color: "#6BCB77", period: 20 },
         });
-    const [dataRange, setDataRange] = useState<DataRange | null>(null);
-    const [candleData, setCandleData] = useState<Candle[] | null>(null);
-    const [aggregatedCandleHistory, setAggregatedCandleHistory] = useState<Candle[]>([]);
     const positionParametersRef = useRef<PositionParamters>({
         takeProfitPoints: 20,
         stopLossPoints: 20,
@@ -96,36 +89,15 @@ export function ChartComponent() {
         bracket: true,
     });
 
-    const replay = useReplay(timeFrameMinutes, speed, candleData, aggregatedCandleHistory);
+    const source = useCurrentDataSource(
+        timeFrameMinutes,
+    )
+
+    const replay = useReplay(timeFrameMinutes, speed, source.candleData, source.aggregatedCandleHistory);
     const fullPriceData = usePrice(replay.candles);
     const sessionPriceData = usePrice(replay.sessionCandles);
-    const trade = useTrade(fullPriceData, MNQ_POINT_DOLLAR_VALUE);
+    const trade = useTrade(fullPriceData, source.pointValue);
 
-    useEffect(() => {
-        async function load() {
-            const range = await getContinuousMnqRange();
-
-            setDataRange(range);
-            setCurrentDate(range.start);
-        }
-        load();
-    }, []);
-
-    useEffect(() => {
-        if (!dataRange || !currentDate) return;
-
-        async function load() {
-            // Load raw 1‑minute candles for the selected date
-            const raw = await loadContinuousMnq(currentDate);
-            setCandleData(raw);
-
-            // Load aggregated history (candles before the selected date)
-            const history = await getHistory(currentDate, timeFrameMinutes, 2000);
-
-            setAggregatedCandleHistory(history);
-        }
-        load();
-    }, [currentDate, timeFrameMinutes, dataRange]);
 
     const handleSeriesInit = (
         ref: SeriesApiRef<"Candlestick", UTCTimestamp> | null,
@@ -158,15 +130,9 @@ export function ChartComponent() {
         return;
     };
 
-    const setChartData = (data: Candle[]) => {
-        setCandleData(data);
-        trade.reset();
-        replay.restart();
-        return;
-    };
-
     const setChartDate = (date: Date) => {
-        setCurrentDate(date);
+        source.setCurrentDate(date);
+        trade.reset();
         return;
     };
 
@@ -189,7 +155,15 @@ export function ChartComponent() {
     });
 
 
-    if (!dataRange || !candleData) {
+    if (source.error) {
+        return (
+            <div className="flex w-screen h-screen items-center justify-center bg-[#131722] text-red-400">
+                Failed to load market data: {source.error.message}
+            </div>
+        );
+    }
+
+    if (!source.dataRange || !source.candleData) {
         return (
             <div className="flex w-screen h-screen items-center justify-center bg-[#131722] text-gray-300">
                 Loading historical data...
@@ -198,8 +172,8 @@ export function ChartComponent() {
     }
 
     const replayToolbarProps: ReplayToolbarProps = {
-        minDate: dataRange.start,
-        maxDate: dataRange.end,
+        minDate: source.dataRange.start,
+        maxDate: source.dataRange.end,
         positionParametersRef: positionParametersRef,
         priceData: fullPriceData,
         seriesApi: seriesApi,
@@ -220,7 +194,6 @@ export function ChartComponent() {
             trade.reset();
             resetIndicators();
         },
-        setCandleData: setChartData,
         stop: replay.stop,
         start: replay.start,
         playback: replay.playback,

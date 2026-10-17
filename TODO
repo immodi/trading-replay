@@ -2,7 +2,7 @@
 
 ## Session
 
-- [ ] Save session to LocalStorage.
+- [ ] Save session to LocalStorage or IndexedDB.
 - [ ] Ability to export session data into CSV.
 - [ ] Restore previous session on startup.
 
