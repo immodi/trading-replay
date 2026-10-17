@@ -2,11 +2,13 @@ import type { UTCTimestamp } from "lightweight-charts";
 
 export type Direction = "long" | "short";
 export type State = "open" | "waiting" | "close";
+export type OrderType = "market" | "stop";
 
 export type Position = {
     id: `${string}-${string}-${string}-${string}-${string}`;
     side: Direction;
     state: State;
+    orderType: OrderType;
     quantity: number;
 
     entryPrice: number;
@@ -18,4 +20,22 @@ export type Position = {
 
     exitPrice?: number;
     exitTime?: number;
+};
+
+export type EnterOrder = {
+    direction: Direction;
+    quantity: number;
+    orderType?: OrderType;
+
+    /**
+     * Required for pending orders ("limit" | "stop").
+     * Defaults to the current market price for "market" orders.
+     */
+    entryPrice?: number;
+
+    /** Optional - omit to place the order without a stop loss. */
+    stopLoss?: number;
+
+    /** Optional - omit to place the order without a take profit. */
+    takeProfit?: number;
 };

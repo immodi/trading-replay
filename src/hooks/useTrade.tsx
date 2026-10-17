@@ -1,6 +1,6 @@
-import type { Direction, Position } from "@/types/position";
+import type { EnterOrder, Position } from "@/types/position";
 import type { PriceData } from "@/types/priceData";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function useTrade(
     priceData: PriceData,
@@ -45,36 +45,29 @@ export function useTrade(
         setPL(totalPL);
     }, [JSON.stringify(positions), pointDollarValue]);
 
+    const prevPriceRef = useRef(priceData);
+
     useEffect(() => {
+        const prevPrice = prevPriceRef.current;
+        prevPriceRef.current = priceData;
+
         setPositions((currentPositions) => {
             const updatedPositions = [...currentPositions];
 
             for (const position of updatedPositions) {
                 if (position.state === "waiting") {
-                    switch (position.side) {
-                        case "long":
-                            if (
-                                priceData.High >=
-                                position.entryPrice
-                                &&
-                                priceData.Low <=
-                                position.entryPrice
-                            ) {
-                                position.state = "open";
-                            }
-                            break;
 
-                        case "short":
-                            if (
-                                priceData.Low <=
-                                position.entryPrice
-                                &&
-                                priceData.High >=
-                                position.entryPrice
-                            ) {
-                                position.state = "open";
-                            }
-                            break;
+                    // Fire only when price crosses the stop, not when it's merely beyond it
+                    const triggered =
+                        // new high reached the level (came from below)
+                        (prevPrice.High < position.entryPrice && priceData.High >= position.entryPrice) ||
+                        // new low reached the level (came from above)
+                        (prevPrice.Low > position.entryPrice && priceData.Low <= position.entryPrice) ||
+                        // price crossed or hit the level between updates (covers gaps and new bars)
+                        (prevPrice.Price - position.entryPrice) * (priceData.Price - position.entryPrice) <= 0;
+
+                    if (triggered) {
+                        position.state = "open";
                     }
                 }
 
@@ -83,7 +76,6 @@ export function useTrade(
                 }
 
                 switch (position.side) {
-
                     case "long": {
                         const hitTP =
                             position.takeProfit !== undefined &&
@@ -152,53 +144,30 @@ export function useTrade(
         });
     }, [priceData.Price, priceData.Time]);
 
-    function enter(direction: Direction, quantity: number): void;
+    function enter(order: EnterOrder) {
+        const {
+            direction,
+            quantity,
+            orderType = "market",
+            stopLoss,
+            takeProfit,
+        } = order;
 
-    function enter(
-        direction: Direction,
-        quantity: number,
-        stopLoss: number,
-        takeProfit: number,
-    ): void;
-
-    function enter(
-        direction: Direction,
-        quantity: number,
-        entryPrice: number,
-        stopLoss: number,
-        takeProfit: number,
-    ): void;
-
-    function enter(
-        direction: Direction,
-        quantity: number,
-        arg3?: number,
-        arg4?: number,
-        arg5?: number,
-    ) {
-        const hasEntryPrice = arg5 !== undefined;
-
-        const entryPrice = hasEntryPrice
-            ? arg3
-            : priceData.Price;
-
-        const stopLoss = hasEntryPrice
-            ? arg4
-            : arg3;
-
-        const takeProfit = hasEntryPrice
-            ? arg5
-            : arg4;
+        const entryPrice =
+            order.entryPrice !== undefined
+                ? order.entryPrice
+                : priceData.Price;
 
         const position: Position = {
             id: crypto.randomUUID(),
             side: direction,
             quantity,
+            orderType,
             entryPrice,
             entryTime: priceData.Time,
-            state: hasEntryPrice
-                ? "waiting"
-                : "open",
+            state: orderType === "market"
+                ? "open"
+                : "waiting",
         };
 
         if (stopLoss !== undefined) {

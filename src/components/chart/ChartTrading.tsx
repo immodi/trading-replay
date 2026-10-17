@@ -7,7 +7,7 @@ import {
 
 import { useEffect, useRef } from "react";
 
-import type { Direction, Position } from "@/types/position";
+import type { Direction, EnterOrder, OrderType, Position } from "@/types/position";
 import type { PositionParamters } from "@/types/positionParamters";
 
 type OrderMenu = {
@@ -32,13 +32,7 @@ type ChartTradingProps = {
             exitPrice: number,
         ): void;
     };
-    enter: (
-        direction: Direction,
-        quantity: number,
-        entryPrice: number,
-        stopLoss: number,
-        takeProfit: number,
-    ) => void;
+    enter: (order: EnterOrder) => void;
 };
 
 export function ChartTrading({
@@ -68,40 +62,32 @@ export function ChartTrading({
         return Number(price.toFixed(2));
     };
 
-    const handleBuyStop = () => {
+    const placeOrder = (direction: Direction, orderType: OrderType) => {
         const price = getPriceFromMenu();
 
         if (price === null) return;
 
-        const { stopLossPoints, takeProfitPoints, quantity } =
+        const { stopLossPoints, takeProfitPoints, quantity, bracket } =
             positionParamtersRef.current;
 
-        enter(
-            "long",
+        const isLong = direction === "long";
+
+        const stopLoss = bracket
+            ? isLong ? price - stopLossPoints : price + stopLossPoints
+            : undefined;
+
+        const takeProfit = bracket
+            ? isLong ? price + takeProfitPoints : price - takeProfitPoints
+            : undefined;
+
+        enter({
+            direction,
             quantity,
-            price,
-            price - stopLossPoints,
-            price + takeProfitPoints,
-        );
-
-        onClose();
-    };
-
-    const handleSellStop = () => {
-        const price = getPriceFromMenu();
-
-        if (price === null) return;
-
-        const { stopLossPoints, takeProfitPoints, quantity } =
-            positionParamtersRef.current;
-
-        enter(
-            "short",
-            quantity,
-            price,
-            price + stopLossPoints,
-            price - takeProfitPoints,
-        );
+            orderType,
+            entryPrice: price,
+            stopLoss,
+            takeProfit,
+        });
 
         onClose();
     };
@@ -136,7 +122,9 @@ export function ChartTrading({
                         ? LineStyle.Dashed
                         : LineStyle.Solid,
                 axisLabelVisible: true,
-                title: `${position.state === "waiting" ? "Pending" : "Entry"} (${position.quantity ?? 1})`,
+                title: `${position.state === "waiting"
+                    ? "Stop"
+                    : "Entry"} (${position.quantity ?? 1})`,
             });
 
             lines.push(entryLine);
@@ -192,7 +180,7 @@ export function ChartTrading({
             <button
                 type="button"
                 className="block w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-[#1B2130]"
-                onClick={handleBuyStop}
+                onClick={() => placeOrder("long", "stop")}
             >
                 Buy Stop
             </button>
@@ -200,7 +188,7 @@ export function ChartTrading({
             <button
                 type="button"
                 className="block w-full px-3 py-2 text-left text-sm text-gray-200 hover:bg-[#1B2130]"
-                onClick={handleSellStop}
+                onClick={() => placeOrder("short", "stop")}
             >
                 Sell Stop
             </button>

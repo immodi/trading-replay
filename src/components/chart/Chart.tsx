@@ -93,6 +93,7 @@ export function ChartComponent() {
         takeProfitPoints: 20,
         stopLossPoints: 20,
         quantity: 1,
+        bracket: true,
     });
 
     const replay = useReplay(timeFrameMinutes, speed, candleData, aggregatedCandleHistory);
@@ -119,7 +120,7 @@ export function ChartComponent() {
             setCandleData(raw);
 
             // Load aggregated history (candles before the selected date)
-            const history = await getHistory(currentDate, timeFrameMinutes, 500);
+            const history = await getHistory(currentDate, timeFrameMinutes, 2000);
 
             setAggregatedCandleHistory(history);
         }

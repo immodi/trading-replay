@@ -10,6 +10,8 @@ interface StateSnapshot {
     minutesInCurrent: number;
 }
 
+export type PlayDirection = "forward" | "backward";
+
 export function useReplay(
     timeFrameMinutes: number,
     chartSpeed: number,
@@ -37,7 +39,7 @@ export function useReplay(
     const initialLengthRef = useRef(initialCandles.length);
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
     const [isDone, setIsDone] = useState<boolean>(false);
-    const [direction, setDirection] = useState<"forward" | "backward">("forward");
+    const [direction, setDirection] = useState<PlayDirection>("forward");
 
     const applyForwardTick = useCallback(
         (state: StateSnapshot, sourceCandle: Candle): StateSnapshot => {
@@ -96,7 +98,7 @@ export function useReplay(
     }, []);
 
     const start = useCallback(
-        (direction: "forward" | "backward") => {
+        (direction: PlayDirection) => {
             if (timeoutRef.current !== null) return;
 
             setIsPlaying(true);
@@ -146,7 +148,7 @@ export function useReplay(
     }, [stop, start]);
 
     const playback = useCallback(
-        (direction: "forward" | "backward") => {
+        (direction: PlayDirection) => {
             stop();
             start(direction);
         },

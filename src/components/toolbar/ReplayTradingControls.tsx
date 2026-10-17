@@ -1,4 +1,5 @@
 import type { PositionParamters } from "@/types/positionParamters";
+import { useState } from "react";
 import type React from "react";
 
 type ReplayTradingControlsProps = {
@@ -14,6 +15,10 @@ export function ReplayTradingControls({
     closeAll,
     positionParametersRef
 }: ReplayTradingControlsProps) {
+    const [bracket, setBracket] = useState(positionParametersRef.current.bracket);
+
+    const inputClassName = "w-16 rounded border bg-[#131722] px-2 py-1 text-sm text-gray-200 outline-none appearance-none focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-40";
+
     return (
         <div className="flex items-center gap-3">
             {/* Input row */}
@@ -27,11 +32,12 @@ export function ReplayTradingControls({
                         type="number"
                         min={1}
                         step={1}
+                        disabled={!bracket}
                         defaultValue={positionParametersRef.current.stopLossPoints}
                         onChange={e => {
                             positionParametersRef.current.stopLossPoints = Number(e.target.value);
                         }}
-                        className="w-16 rounded border bg-[#131722] px-2 py-1 text-sm text-gray-200 outline-none appearance-none focus:border-blue-500"
+                        className={inputClassName}
                     />
                 </div>
 
@@ -44,11 +50,12 @@ export function ReplayTradingControls({
                         type="number"
                         min={1}
                         step={1}
+                        disabled={!bracket}
                         defaultValue={positionParametersRef.current.takeProfitPoints}
                         onChange={e => {
                             positionParametersRef.current.takeProfitPoints = Number(e.target.value);
                         }}
-                        className="w-16 rounded border bg-[#131722] px-2 py-1 text-sm text-gray-200 outline-none appearance-none focus:border-blue-500"
+                        className={inputClassName}
                     />
                 </div>
 
@@ -65,9 +72,28 @@ export function ReplayTradingControls({
                         onChange={e => {
                             positionParametersRef.current.quantity = Number(e.target.value);
                         }}
-                        className="w-16 rounded border bg-[#131722] px-2 py-1 text-sm text-gray-200 outline-none appearance-none focus:border-blue-500"
+                        className={inputClassName}
                     />
                 </div>
+
+                <label
+                    htmlFor="trading-bracket"
+                    className="flex cursor-pointer items-center gap-1 text-xs text-gray-400"
+                    title="Attach stop loss and take profit to new orders"
+                >
+                    <input
+                        id="trading-bracket"
+                        type="checkbox"
+                        checked={bracket}
+                        onChange={e => {
+                            const next = e.target.checked;
+                            setBracket(next);
+                            positionParametersRef.current.bracket = next;
+                        }}
+                        className="h-3.5 w-3.5 cursor-pointer accent-blue-500"
+                    />
+                    Bracket
+                </label>
             </div>
 
             {/* Button group */}
