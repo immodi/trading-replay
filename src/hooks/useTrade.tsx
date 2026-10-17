@@ -1,5 +1,6 @@
 import type { EnterOrder, Position } from "@/types/position";
 import type { PriceData } from "@/types/priceData";
+import { calculatePositionPL } from "@/utils/calculatePositionPL";
 import { useEffect, useRef, useState } from "react";
 
 export function useTrade(
@@ -10,40 +11,10 @@ export function useTrade(
     const [positions, setPositions] = useState<Position[]>([]);
     const [pl, setPL] = useState(0);
 
-    const calculatePL = (
-        position: Position,
-    ): number => {
-        if (
-            position.state !== "close" ||
-            position.exitPrice === undefined
-        ) {
-            return 0;
-        }
-
-        // Commission is charged on entry and again on exit, per contract.
-        const commission =
-            commissionPerContract * 2 * position.quantity;
-
-        switch (position.side) {
-            case "long":
-                return (
-                    (position.exitPrice - position.entryPrice) *
-                    pointDollarValue * position.quantity
-                ) - commission;
-
-            case "short":
-                return (
-                    (position.entryPrice - position.exitPrice) *
-                    pointDollarValue * position.quantity
-                ) - commission;
-        }
-    };
-
-
     useEffect(() => {
         const totalPL = positions.reduce(
             (total, position) =>
-                total + calculatePL(position),
+                total + calculatePositionPL(position, pointDollarValue, commissionPerContract),
             0,
         );
 

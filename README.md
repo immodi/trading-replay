@@ -20,6 +20,10 @@ take-profit & stop-loss, and live P/L — entirely client-side.
 - **Candle replay engine** — play forward/backward through history, 0.25×–100× speed, restart, and go-to-latest.
 - **Multi-timeframe** — aggregate the raw 1-minute series into 1m / 3m / 5m / 15m / 1h / 5h / 1D on the fly.
 - **Trading** — long/short entries; market and stop orders from a chart right-click menu; optional **bracket** (stop-loss / take-profit) with a toggle; live P/L (net of per-side commission) and close-all.
+- **Trading session** — completed trades are collected in memory for the active
+  session with a summary (trade count, net P/L, total commissions) and a
+  reviewable list; remove individual trades or **export the session as JSON** at
+  any time. Nothing is persisted, so export before refreshing or leaving.
 - **Indicators** — VWAP (session-resetting), EMA, and SMA, each toggleable with a configurable colour/period.
 - **Date selection** — jump to any date in the dataset; earlier candles load as aggregated history.
 - **Pluggable data sources** — instruments are described by configs, so adding a dataset doesn't touch the loader.
@@ -159,7 +163,7 @@ src/
   data/
     opfs.ts       # Origin Private File System read/write helpers
     sources/      # pluggable candle sources (generic factory + MNQ config)
-  hooks/          # replay engine, trade engine, data loading, indicators
+  hooks/          # replay engine, trade engine, session tracking, data loading, indicators
   indicators/     # VWAP, EMA, SMA implementations
   types/          # shared domain types
   utils/          # candle aggregation helpers
@@ -178,7 +182,12 @@ scripts/
   timeframe; the snapshot cache makes rewinding O(1).
 - **Trading** — `useTrade` tracks positions and, on each new price, fills stop
   orders on a price *cross* (not merely being beyond the level), then evaluates
-  take-profit / stop-loss for open positions.
+  take-profit / stop-loss for open positions. Its maths live in
+  `utils/calculatePositionPL.ts`, shared with the session.
+- **Session** — `useTradingSession` records each completed position once into an
+  in‑memory list (independent of `Reset`/date changes), sums it up, and exports
+  it as JSON via `buildSessionExport` + `downloadJson`. Nothing is written to
+  storage, so the export is the only durable copy.
 - **Indicators** — recomputed from the current replay slice, so they follow the
   replay rather than the full dataset.
 
