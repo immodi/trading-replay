@@ -86,6 +86,9 @@ export default function SourceView({ config, setConfig, refreshKey }: SourceView
                                     <span className="block truncate text-xs text-gray-500">
                                         {source.fileName}
                                     </span>
+                                    <span className="block truncate text-xs text-gray-500">
+                                        Commission: ${(source.config?.commission ?? 0).toFixed(2)}/side
+                                    </span>
                                 </div>
 
                                 <button

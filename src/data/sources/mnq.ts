@@ -7,6 +7,8 @@ export const MNQ_CONFIG: CandleSourceConfig = {
     symbol: "MNQ",
     /** Dollar value of one index point, per contract. */
     pointValue: 2,
+    /** Commission in dollars per contract, per side. */
+    commission: 0,
     fileName: "mnq-1m.json",
 };
 

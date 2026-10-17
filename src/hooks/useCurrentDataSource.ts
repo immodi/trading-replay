@@ -96,6 +96,7 @@ export function useCurrentDataSource(
         candleData,
         aggregatedCandleHistory,
         pointValue: source.pointValue,
+        commission: source.commission ?? 0,
         error,
     };
 }

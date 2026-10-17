@@ -141,6 +141,7 @@ export function createCandleSource(config: CandleSourceConfig): CandleSource {
         id: config.id,
         symbol: config.symbol,
         pointValue: config.pointValue,
+        commission: config.commission ?? 0,
         loadDay,
         getHistory,
         getRange,

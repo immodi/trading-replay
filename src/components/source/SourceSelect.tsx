@@ -15,7 +15,7 @@ export default function SourceSelect({ config, setConfig, onSaved }: SourceSelec
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const update = (patch: Partial<CandleSourceConfig>) =>
-        setConfig((c) => ({ id: "", symbol: "", pointValue: 0, fileName: "", ...c, ...patch }));
+        setConfig((c) => ({ id: "", symbol: "", pointValue: 0, commission: 0, fileName: "", ...c, ...patch }));
 
     const onFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files;
@@ -50,7 +50,7 @@ export default function SourceSelect({ config, setConfig, onSaved }: SourceSelec
         <section className="space-y-4">
             <h1 className="text-lg font-semibold text-gray-100">Add a source</h1>
 
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-3">
                 <input
                     type="text"
                     placeholder="Symbol"
@@ -79,8 +79,31 @@ export default function SourceSelect({ config, setConfig, onSaved }: SourceSelec
                 <input
                     type="number"
                     placeholder="Point value"
-                    value={config?.pointValue || 0}
+                    value={config?.pointValue || ""}
                     onChange={(e) => update({ pointValue: Number(e.target.value) })}
+                    className="
+                        w-full
+                        rounded-lg
+                        border-[#363A45]
+                        bg-[#131722]
+                        px-3
+                        py-2
+                        text-sm
+                        text-gray-200
+                        outline-none
+                        transition
+                        hover:border-gray-500
+                        focus:ring-1
+                        focus:ring-blue-500/40
+                    "
+                />
+                <input
+                    type="number"
+                    placeholder="Commission / side"
+                    min={0}
+                    step={0.01}
+                    value={config?.commission || ""}
+                    onChange={(e) => update({ commission: Number(e.target.value) })}
                     className="
                         w-full
                         rounded-lg
