@@ -106,7 +106,7 @@ export function ChartComponent({ config }: ChartComponentProps) {
     const replay = useReplay(timeFrameMinutes, speed, source.candleData, source.aggregatedCandleHistory);
     const fullPriceData = usePrice(replay.candles);
     const sessionPriceData = usePrice(replay.sessionCandles);
-    const trade = useTrade(fullPriceData, source.pointValue);
+    const trade = useTrade(fullPriceData, source.pointValue, source.commission);
 
 
     const handleSeriesInit = (

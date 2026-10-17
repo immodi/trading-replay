@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 export function useTrade(
     priceData: PriceData,
     pointDollarValue: number,
+    commissionPerContract: number = 0,
 ) {
     const [positions, setPositions] = useState<Position[]>([]);
     const [pl, setPL] = useState(0);
@@ -19,18 +20,22 @@ export function useTrade(
             return 0;
         }
 
+        // Commission is charged on entry and again on exit, per contract.
+        const commission =
+            commissionPerContract * 2 * position.quantity;
+
         switch (position.side) {
             case "long":
                 return (
                     (position.exitPrice - position.entryPrice) *
                     pointDollarValue * position.quantity
-                );
+                ) - commission;
 
             case "short":
                 return (
                     (position.entryPrice - position.exitPrice) *
                     pointDollarValue * position.quantity
-                );
+                ) - commission;
         }
     };
 
@@ -43,7 +48,7 @@ export function useTrade(
         );
 
         setPL(totalPL);
-    }, [JSON.stringify(positions), pointDollarValue]);
+    }, [JSON.stringify(positions), pointDollarValue, commissionPerContract]);
 
     const prevPriceRef = useRef(priceData);
 

@@ -19,7 +19,7 @@ take-profit & stop-loss, and live P/L — entirely client-side.
   be swapped instantly.
 - **Candle replay engine** — play forward/backward through history, 0.25×–100× speed, restart, and go-to-latest.
 - **Multi-timeframe** — aggregate the raw 1-minute series into 1m / 3m / 5m / 15m / 1h / 5h / 1D on the fly.
-- **Trading** — long/short entries; market and stop orders from a chart right-click menu; optional **bracket** (stop-loss / take-profit) with a toggle; live P/L and close-all.
+- **Trading** — long/short entries; market and stop orders from a chart right-click menu; optional **bracket** (stop-loss / take-profit) with a toggle; live P/L (net of per-side commission) and close-all.
 - **Indicators** — VWAP (session-resetting), EMA, and SMA, each toggleable with a configurable colour/period.
 - **Date selection** — jump to any date in the dataset; earlier candles load as aggregated history.
 - **Pluggable data sources** — instruments are described by configs, so adding a dataset doesn't touch the loader.
@@ -71,13 +71,14 @@ All data is managed from the **Sources** screen:
 
 - **Add a source** — enter a **Symbol** (used as the instrument label and to
   derive its id), a **Point value** (dollars per index point per contract, used
-  for P/L), and pick a raw JSON file.
+  for P/L), a **Commission** (dollars per contract **per side**; a completed
+  trade therefore costs `commission × 2 × quantity`), and pick a raw JSON file.
 - **Stored sources** — every uploaded dataset is listed by symbol and file name.
   Click one to open it in the replay chart, or **Delete** to remove it.
 
 Files are written to the browser's **Origin Private File System (OPFS)** along
 with a small `<file>.meta.json` sidecar holding the source config
-(`id`, `symbol`, `pointValue`, `fileName`). This means:
+(`id`, `symbol`, `pointValue`, `commission`, `fileName`). This means:
 
 - Nothing is uploaded to a server — the data stays on your machine.
 - Storage is **per browser profile and origin**, so datasets are not shared

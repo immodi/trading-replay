@@ -13,6 +13,12 @@ export interface CandleSourceConfig {
     symbol: string;
     /** Dollar value of a single point, used for P/L. */
     pointValue: number;
+    /**
+     * Commission in dollars charged per contract **per side** (enter and
+     * exit), used for P/L. A completed trade therefore costs
+     * `commission * 2 * quantity`.
+     */
+    commission: number;
     /** URL the raw candle JSON is fetched from. */
     fileName: string;
 }
@@ -29,6 +35,8 @@ export interface CandleSource {
     id: string;
     symbol: string;
     pointValue: number;
+    /** Commission in dollars per contract per side, used for P/L. */
+    commission: number;
 
     /** Raw 1‑minute candles for a given UTC date. */
     loadDay(date: Date): Promise<Candle[]>;
