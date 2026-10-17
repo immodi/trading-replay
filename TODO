@@ -2,6 +2,8 @@
 
 ## Session
 
+- [x] Track the current session's completed trades in memory, with a summary and a removable trades list.
+- [x] Export session data (metadata + trades) as JSON.
 - [ ] Save session to LocalStorage or IndexedDB.
 - [ ] Ability to export session data into CSV.
 - [ ] Restore previous session on startup.

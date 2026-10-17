@@ -7,9 +7,11 @@ import type { EnterOrder, Position } from "@/types/position";
 import type { PositionParamters } from "@/types/positionParamters";
 import { ReplayPLDisplay } from "./ReplayPLDisplay";
 import { IndicatorControls } from "./IndicatorControls";
+import { SessionControls } from "./SessionControls";
 import type { IChartApi, ISeriesApi } from "lightweight-charts";
 import type { PriceData } from "@/types/priceData";
 import type { IndicatorSettings } from "@/types/indicator";
+import type { SessionSummary, SessionTrade } from "@/types/session";
 
 export type ReplayToolbarProps = {
     minDate: Date,
@@ -47,6 +49,12 @@ export type ReplayToolbarProps = {
     };
     closeAll: () => void,
 
+    sessionInstrument: string,
+    sessionTrades: SessionTrade[],
+    sessionSummary: SessionSummary,
+    sessionHasUnexportedChanges: boolean,
+    removeSessionTrade: (id: string) => void,
+    exportSession: () => void,
 }
 export function ReplayToolbar(props: ReplayToolbarProps) {
     const onDateChange = async (
@@ -150,6 +158,14 @@ export function ReplayToolbar(props: ReplayToolbarProps) {
 
             <ReplayPLDisplay pl={props.pl} reset={props.reset} />
 
+            <SessionControls
+                instrument={props.sessionInstrument}
+                trades={props.sessionTrades}
+                summary={props.sessionSummary}
+                hasUnexportedChanges={props.sessionHasUnexportedChanges}
+                onRemove={props.removeSessionTrade}
+                onExport={props.exportSession}
+            />
 
             <IndicatorControls
                 settings={props.indicatorSettings}

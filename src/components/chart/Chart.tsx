@@ -28,12 +28,13 @@ import { ChartSpeed } from "@/constants/chart";
 import { Timeframe } from "@/constants/toolbar";
 import { usePrice } from "@/hooks/usePrice";
 import { useTrade } from "@/hooks/useTrade";
+import { useTradingSession } from "@/hooks/useTradingSession";
 import { ChartTrading } from "./ChartTrading";
 import type { PositionParamters } from "@/types/positionParamters";
 import type { IndicatorSettings } from "@/types/indicator";
 import { useIndicators } from "@/hooks/useIndicators";
 import { useCurrentDataSource } from "@/hooks/useCurrentDataSource";
-import type { CandleSource, CandleSourceConfig } from "@/types/candleSource";
+import type { CandleSourceConfig } from "@/types/candleSource";
 import { createCandleSource } from "@/data/sources/candleSource";
 
 const chartOptions: DeepPartial<ChartOptions> = {
@@ -107,6 +108,12 @@ export function ChartComponent({ config }: ChartComponentProps) {
     const fullPriceData = usePrice(replay.candles);
     const sessionPriceData = usePrice(replay.sessionCandles);
     const trade = useTrade(fullPriceData, source.pointValue, source.commission);
+    const session = useTradingSession({
+        positions: trade.positions,
+        instrument: config.symbol,
+        pointValue: source.pointValue,
+        commissionPerSide: source.commission,
+    });
 
 
     const handleSeriesInit = (
@@ -210,7 +217,14 @@ export function ChartComponent({ config }: ChartComponentProps) {
         restart: replay.restart,
         enter: trade.enter,
         close: trade.close,
-        closeAll: trade.closeAll
+        closeAll: trade.closeAll,
+
+        sessionInstrument: config.symbol,
+        sessionTrades: session.trades,
+        sessionSummary: session.summary,
+        sessionHasUnexportedChanges: session.hasUnexportedChanges,
+        removeSessionTrade: session.removeTrade,
+        exportSession: session.exportSession,
     };
 
     return (
