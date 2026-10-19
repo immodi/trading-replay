@@ -27,7 +27,6 @@ function toExportedTrade(trade: SessionTrade): ExportedSessionTrade {
         exitTime: new Date(trade.exitTime * 1000).toISOString(),
         entryTimeUnix: trade.entryTime,
         exitTimeUnix: trade.exitTime,
-        commissionPerSide: trade.commissionPerSide,
         totalCommission: trade.totalCommission,
         grossProfitLoss: trade.grossProfitLoss,
         netProfitLoss: trade.netProfitLoss,
