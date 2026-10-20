@@ -3,7 +3,9 @@ import path from "node:path";
 
 const ROOT = process.cwd();
 const INPUT = path.join(ROOT, "data", "glbx-mdp3-20210710-20260709.ohlcv-1m.csv");
-const OUTPUT = path.join(ROOT, "public", "mnq-1m.json");
+// Keep the generated dataset outside `public/` so Vite never copies it into
+// `dist/` (hosts such as Cloudflare Pages reject files over 25 MiB).
+const OUTPUT = path.join(ROOT, "data", "mnq-1m.json");
 
 const csv = fs.readFileSync(INPUT, "utf8");
 const lines = csv.split("\n");

@@ -1,0 +1,5 @@
+# Cloudflare Pages configuration.
+# Change `name` if you want a different <name>.pages.dev subdomain.
+name = "trade-replay"
+compatibility_date = "2026-10-20"
+pages_build_output_dir = "./dist"
