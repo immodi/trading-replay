@@ -217,6 +217,12 @@ docker build -t tradereplay .
 docker run -p 8080:80 tradereplay
 ```
 
+Or with Compose (set `TRADEREPLAY_PORT` to change the host port, default `8081`):
+
+```bash
+docker compose up -d --build
+```
+
 The image builds a static bundle and serves it with nginx. Datasets are not
 baked into the image — they are uploaded in the browser and stored in OPFS — so
 the same build works for any user.
