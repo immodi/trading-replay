@@ -1,0 +1,2 @@
+# SPA fallback: serve index.html for any unknown path.
+/*    /index.html   200

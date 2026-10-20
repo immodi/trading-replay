@@ -67,7 +67,7 @@ then select it from **Stored sources** to open the replay chart.
 | `pnpm build` | Production build to `dist/` |
 | `pnpm preview` | Serve the production build locally |
 | `pnpm lint` | Run Oxlint |
-| `pnpm convert-data` | Convert the raw Databento CSV into an upload-ready `public/mnq-1m.json` |
+| `pnpm convert-data` | Convert the raw Databento CSV into an upload-ready `data/mnq-1m.json` |
 
 ## Data sources
 
@@ -144,12 +144,14 @@ The included converter reads a Databento GLBX MDP3 1-minute OHLCV CSV and emits
 this JSON:
 
 1. Put `data/glbx-mdp3-<start>-<end>.ohlcv-1m.csv` in `data/`.
-2. Run `pnpm convert-data` to produce `public/mnq-1m.json`.
+2. Run `pnpm convert-data` to produce `data/mnq-1m.json`.
 3. Upload that file from the **Sources** screen.
 
 For each timestamp the converter keeps the contract row with the highest volume
 (a continuous front-month series). Both the raw CSV and the generated JSON are
-large and **not committed**.
+large and **not committed**. The output intentionally lives in `data/` rather
+than `public/`: Vite copies everything in `public/` into `dist/`, and static
+hosts reject oversized assets (Cloudflare Pages caps files at 25 MiB).
 
 ## Project structure
 
@@ -190,6 +192,23 @@ scripts/
   storage, so the export is the only durable copy.
 - **Indicators** — recomputed from the current replay slice, so they follow the
   replay rather than the full dataset.
+
+## Deployment
+
+The app is a static Vite build, so any static host works. This repo includes a
+**Cloudflare Pages** configuration (`wrangler.toml`, `.nvmrc`):
+
+- **Dashboard** — connect the repository, set the build command to
+  `pnpm build`, the output directory to `dist`, and set `NODE_VERSION=22`
+  (the `.nvmrc` file is also read automatically).
+- **CLI** — `pnpm build && pnpm dlx wrangler pages deploy dist --project-name trade-replay`.
+
+`public/_redirects` adds the SPA fallback. Change `name` in `wrangler.toml` if
+the `trade-replay.pages.dev` subdomain is already taken.
+
+> **Netlify note:** `*.netlify.app` edge IPs are blocked by some ISPs (notably in
+> Egypt), so the site can time out for visitors even when the deploy is healthy.
+> A VPN or a different host is required in that case.
 
 ## Docker
 

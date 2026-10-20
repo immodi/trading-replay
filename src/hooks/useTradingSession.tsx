@@ -38,7 +38,6 @@ function toSessionTrade(
         exitPrice: position.exitPrice ?? position.entryPrice,
         entryTime: position.entryTime,
         exitTime: (position.exitTime ?? position.entryTime) as UTCTimestamp,
-        commissionPerSide,
         totalCommission: calculateCommission(position.quantity, commissionPerSide),
         grossProfitLoss: calculateGrossProfitLoss(position, pointValue),
         netProfitLoss: calculatePositionPL(position, pointValue, commissionPerSide),

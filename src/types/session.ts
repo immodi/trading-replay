@@ -13,8 +13,6 @@ export type SessionTrade = {
     entryTime: UTCTimestamp;
     exitTime: UTCTimestamp;
 
-    /** Instrument commission in dollars per contract, per side. */
-    commissionPerSide: number;
     /** `commissionPerSide * 2 * quantity`. */
     totalCommission: number;
     /** Realised P/L before commission, in dollars. */
@@ -45,7 +43,6 @@ export type ExportedSessionTrade = {
     entryTimeUnix: number;
     /** Raw Unix timestamp in seconds, for analysis. */
     exitTimeUnix: number;
-    commissionPerSide: number;
     totalCommission: number;
     grossProfitLoss: number;
     netProfitLoss: number;
