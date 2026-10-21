@@ -65,9 +65,14 @@ export function TradingBar({
                 closeAll={closeAll}
             />
 
-            <span className="ml-auto hidden items-center gap-2 pl-4 text-[11px] text-faint lg:flex">
-                Right-click the chart to place a stop order
-            </span>
+            <div className="ml-auto hidden min-w-0 flex-1 items-center justify-end overflow-hidden pl-4 lg:flex">
+                <span
+                    className="min-w-0 truncate text-[11px] text-faint"
+                    title="Right-click the chart to place a stop order · Shift+drag order lines to edit"
+                >
+                    Right-click the chart to place a stop order · Shift+drag order lines to edit
+                </span>
+            </div>
         </div>
     );
 }

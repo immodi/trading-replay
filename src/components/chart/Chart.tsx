@@ -20,6 +20,7 @@ import { useReplay } from "@/hooks/useReplay";
 import { useGoToLatest } from "@/hooks/useGoToLatest";
 
 import { GoToLatestButton } from "./GoToLatestButton";
+import { LineEditToggle } from "./LineEditToggle";
 import { MarketHeader } from "./MarketHeader";
 
 import { Color } from "@/constants/replay";
@@ -111,6 +112,7 @@ export function ChartComponent({ config }: ChartComponentProps) {
         x: number;
         y: number;
     } | null>(null);
+    const [lineEditMode, setLineEditMode] = useState(false);
     const [seriesApi, setSeriesApi] = useState<
         ISeriesApi<"Candlestick", UTCTimestamp> | null
     >(null);
@@ -326,11 +328,20 @@ export function ChartComponent({ config }: ChartComponentProps) {
                             seriesApi={seriesApi}
                             chartApi={chartRef.current}
                             orderMenu={orderMenu}
+                            lineEditMode={lineEditMode}
                             enter={trade.enter}
                             close={trade.close}
+                            updatePositionPrices={trade.updatePositionPrices}
                             onClose={() => setOrderMenu(null)}
                         />
                     )}
+
+                    <LineEditToggle
+                        active={lineEditMode}
+                        onToggle={() =>
+                            setLineEditMode((enabled) => !enabled)
+                        }
+                    />
 
                     <GoToLatestButton
                         visible={showGoToLatest}

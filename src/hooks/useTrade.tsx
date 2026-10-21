@@ -1,4 +1,4 @@
-import type { EnterOrder, Position } from "@/types/position";
+import type { EnterOrder, Position, PositionPricePatch } from "@/types/position";
 import type { PriceData } from "@/types/priceData";
 import { calculatePositionPL } from "@/utils/calculatePositionPL";
 import { useEffect, useRef, useState } from "react";
@@ -211,6 +211,32 @@ export function useTrade(
         });
     }
 
+    /**
+     * Live-edit a position from its chart price lines. The entry can only be
+     * moved while the order is pending; SL/TP stay editable once it is open.
+     */
+    function updatePositionPrices(
+        id: Position["id"],
+        patch: PositionPricePatch,
+    ) {
+        setPositions((current) =>
+            current.map((position) => {
+                if (position.id !== id || position.state === "close") {
+                    return position;
+                }
+
+                if (
+                    patch.entryPrice !== undefined &&
+                    position.state !== "waiting"
+                ) {
+                    return position;
+                }
+
+                return { ...position, ...patch };
+            }),
+        );
+    }
+
     function reset() {
         setPositions((prev) =>
             prev.filter((position) => position.state !== "close"),
@@ -225,5 +251,6 @@ export function useTrade(
         close,
         closeAll,
         reset,
+        updatePositionPrices,
     };
 }
