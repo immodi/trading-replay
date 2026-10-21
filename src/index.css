@@ -70,3 +70,18 @@ input[type="number"] {
     appearance: textfield;
     -moz-appearance: textfield;
 }
+
+/* Shift+drag edits order lines. The chart library writes an inline cursor on
+   its root element while the crosshair moves, so these rules need
+   `!important` to keep the resize cursor visible. */
+.chart-order-line-hover,
+.chart-order-line-hover *,
+.chart-order-line-dragging,
+.chart-order-line-dragging * {
+    cursor: ns-resize !important;
+}
+
+.chart-order-line-dragging {
+    touch-action: none;
+    user-select: none;
+}

@@ -22,6 +22,11 @@ export type Position = {
     exitTime?: number;
 };
 
+/** Price fields that can be changed by dragging an order's chart lines. */
+export type PositionPricePatch = Partial<
+    Pick<Position, "entryPrice" | "stopLoss" | "takeProfit">
+>;
+
 export type EnterOrder = {
     direction: Direction;
     quantity: number;
