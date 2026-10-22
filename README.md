@@ -20,10 +20,11 @@ take-profit & stop-loss, and live P/L — entirely client-side.
 - **Candle replay engine** — play forward/backward through history, 0.25×–100× speed, restart, and go-to-latest.
 - **Multi-timeframe** — aggregate the raw 1-minute series into 1m / 3m / 5m / 15m / 1h / 5h / 1D on the fly.
 - **Trading** — long/short entries; market and stop orders from a chart right-click menu; optional **bracket** (stop-loss / take-profit) with a toggle; live P/L (net of per-side commission) and close-all.
-- **Trading session** — completed trades are collected in memory for the active
-  session with a summary (trade count, net P/L, total commissions) and a
-  reviewable list; remove individual trades or **export the session as JSON** at
-  any time. Nothing is persisted, so export before refreshing or leaving.
+- **Trading session** — completed trades are collected for the active source
+  with a summary (trade count, net P/L, total commissions) and a reviewable
+  list; remove individual trades or **export the session as JSON** at any time.
+  Sessions, open orders, replay position, timeframe, indicators and trading
+  preferences are saved in the browser and restored automatically, per source.
 - **Indicators** — VWAP (session-resetting), EMA, and SMA, each toggleable with a configurable colour/period.
 - **Date selection** — jump to any date in the dataset; earlier candles load as aggregated history.
 - **Pluggable data sources** — instruments are described by configs, so adding a dataset doesn't touch the loader.
@@ -37,7 +38,7 @@ take-profit & stop-loss, and live P/L — entirely client-side.
 | Build | Vite 8 (React Compiler via Babel) |
 | Styling | Tailwind CSS 4 |
 | Charts | [lightweight-charts](https://github.com/tradingview/lightweight-charts) 5 via `lightweight-charts-react-components` |
-| Storage | Origin Private File System (OPFS) via the File System Access API |
+| Storage | OPFS for datasets, localStorage for sessions and settings |
 | Lint | Oxlint |
 
 ## Getting started

@@ -1,6 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import type { UTCTimestamp } from "lightweight-charts";
 
+import { useStore } from "@/hooks/useStore";
+import type { Store } from "@/store/store";
+import type { PersistedSessionState } from "@/types/persistedSession";
 import type { Position } from "@/types/position";
 import type { SessionSummary, SessionTrade } from "@/types/session";
 import { buildSessionExport } from "@/utils/buildSessionExport";
@@ -20,6 +23,8 @@ type UseTradingSessionOptions = {
     pointValue: number;
     /** Commission in dollars per contract, per side. */
     commissionPerSide: number;
+    /** Persisted session for the active source. */
+    store: Store<PersistedSessionState>;
 };
 
 /** Build the session record for a position that has a realised exit. */
@@ -50,50 +55,103 @@ function fileTimestamp(date: Date): string {
 }
 
 /**
- * Tracks completed trades for the current session entirely in memory. Nothing
- * is persisted: a refresh or restart starts from an empty session.
+ * Tracks completed trades for the active source. Trades are kept in a
+ * singleton store that mirrors them to localStorage, so a refresh restores
+ * the session instead of discarding it.
  */
 export function useTradingSession({
     positions,
     instrument,
     pointValue,
     commissionPerSide,
+    store,
 }: UseTradingSessionOptions) {
-    const [trades, setTrades] = useState<SessionTrade[]>([]);
-    const [hasUnexportedChanges, setHasUnexportedChanges] = useState(false);
+    const state = useStore(store);
+    const trades = state.trades;
+
+    // Seed both guards from the restored session so a reload cannot record a
+    // trade twice or resurrect one the user removed.
+    const recordedIdsRef = useRef<Set<string> | null>(null);
+    const removedIdsRef = useRef<Set<string> | null>(null);
+
+    if (recordedIdsRef.current === null) {
+        recordedIdsRef.current = new Set(
+            state.trades.map((trade) => trade.id),
+        );
+    }
+    if (removedIdsRef.current === null) {
+        removedIdsRef.current = new Set(state.removedTradeIds);
+    }
+
+    const recordedIds = recordedIdsRef.current;
+    const removedIds = removedIdsRef.current;
+
+    const markTradesChanged = useCallback(
+        (current: PersistedSessionState, nextTrades: SessionTrade[]) => ({
+            ...current,
+            trades: nextTrades,
+            tradesUpdatedAt: Date.now(),
+            updatedAt: Date.now(),
+        }),
+        [],
+    );
 
     // Record each completed position exactly once, even if it later disappears
     // from the trade engine (Reset / date change) or the effect re-runs.
-    const recordedIdsRef = useRef<Set<string>>(new Set());
-    // Trades removed by the user must not be re-recorded while their position
-    // is still present in the trade engine.
-    const removedIdsRef = useRef<Set<string>>(new Set());
-
     useEffect(() => {
         const unreported = positions.filter(
             (position) =>
                 position.state === "close" &&
                 position.exitPrice !== undefined &&
-                !recordedIdsRef.current.has(position.id) &&
-                !removedIdsRef.current.has(position.id),
+                !recordedIds.has(position.id) &&
+                !removedIds.has(position.id),
         );
 
         if (unreported.length === 0) return;
 
         const recorded = unreported.map((position) => {
-            recordedIdsRef.current.add(position.id);
-            return toSessionTrade(position, instrument, pointValue, commissionPerSide);
+            recordedIds.add(position.id);
+            return toSessionTrade(
+                position,
+                instrument,
+                pointValue,
+                commissionPerSide,
+            );
         });
 
-        setTrades((current) => [...current, ...recorded]);
-        setHasUnexportedChanges(true);
-    }, [positions, instrument, pointValue, commissionPerSide]);
+        store.update((current) =>
+            markTradesChanged(current, [...current.trades, ...recorded]),
+        );
+        store.save();
+    }, [
+        positions,
+        instrument,
+        pointValue,
+        commissionPerSide,
+        store,
+        recordedIds,
+        removedIds,
+        markTradesChanged,
+    ]);
 
-    const removeTrade = useCallback((id: string) => {
-        removedIdsRef.current.add(id);
-        setTrades((current) => current.filter((trade) => trade.id !== id));
-        setHasUnexportedChanges(true);
-    }, []);
+    const removeTrade = useCallback(
+        (id: string) => {
+            removedIds.add(id);
+            store.update((current) =>
+                markTradesChanged(
+                    {
+                        ...current,
+                        removedTradeIds: current.removedTradeIds.includes(id)
+                            ? current.removedTradeIds
+                            : [...current.removedTradeIds, id],
+                    },
+                    current.trades.filter((trade) => trade.id !== id),
+                ),
+            );
+            store.save();
+        },
+        [markTradesChanged, removedIds, store],
+    );
 
     const summary = useMemo<SessionSummary>(
         () => ({
@@ -109,6 +167,13 @@ export function useTradingSession({
         }),
         [trades],
     );
+
+    // Playback/view writes must not mark the session as unexported, which is
+    // why only trade changes bump `tradesUpdatedAt`.
+    const hasUnexportedChanges =
+        trades.length > 0 &&
+        (state.lastExportedAt === null ||
+            state.tradesUpdatedAt > state.lastExportedAt);
 
     const exportSession = useCallback(() => {
         const payload = buildSessionExport({
@@ -128,22 +193,9 @@ export function useTradingSession({
             payload,
         );
 
-        setHasUnexportedChanges(false);
-    }, [trades, summary, instrument, pointValue, commissionPerSide]);
-
-    // Warn before a refresh / tab close discards a session that was never
-    // exported. The browser shows its own generic message.
-    useEffect(() => {
-        if (!hasUnexportedChanges || trades.length === 0) return;
-
-        const warn = (event: BeforeUnloadEvent) => {
-            event.preventDefault();
-            event.returnValue = "";
-        };
-
-        window.addEventListener("beforeunload", warn);
-        return () => window.removeEventListener("beforeunload", warn);
-    }, [hasUnexportedChanges, trades.length]);
+        store.patch({ lastExportedAt: Date.now() });
+        store.save();
+    }, [trades, summary, instrument, pointValue, commissionPerSide, store]);
 
     return {
         trades,

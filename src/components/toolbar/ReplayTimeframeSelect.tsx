@@ -1,10 +1,11 @@
-import { Timeframe, Timeframes } from "@/constants/toolbar";
+import { Timeframes } from "@/constants/toolbar";
 
 type ReplayTimeframeSelectProps = {
+    timeFrame: number;
     setTimeFrame: (timeFrame: number) => void
 }
 
-export function ReplayTimeframeSelect({ setTimeFrame }: ReplayTimeframeSelectProps) {
+export function ReplayTimeframeSelect({ timeFrame, setTimeFrame }: ReplayTimeframeSelectProps) {
     return (
         <div className="flex shrink-0 items-center gap-2">
             <label className="text-[10px] font-semibold uppercase tracking-wider text-faint">
@@ -14,8 +15,8 @@ export function ReplayTimeframeSelect({ setTimeFrame }: ReplayTimeframeSelectPro
             <div className="relative">
                 <select
                     aria-label="Chart timeframe"
+                    value={timeFrame}
                     onChange={(e) => setTimeFrame(Number(e.target.value))}
-                    defaultValue={Timeframe.Minute15}
                     className="
                         cursor-pointer
                         appearance-none

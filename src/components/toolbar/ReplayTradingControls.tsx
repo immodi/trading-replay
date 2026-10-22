@@ -7,15 +7,26 @@ type ReplayTradingControlsProps = {
     onSellMarket: () => void;
     closeAll: () => void;
     positionParametersRef: React.RefObject<PositionParamters>;
+    /** Called after any order parameter changes, so it can be persisted. */
+    onParametersChange?: () => void;
 };
 
 export function ReplayTradingControls({
     onBuyMarket,
     onSellMarket,
     closeAll,
-    positionParametersRef
+    positionParametersRef,
+    onParametersChange,
 }: ReplayTradingControlsProps) {
     const [bracket, setBracket] = useState(positionParametersRef.current.bracket);
+
+    function updateParameter<K extends keyof PositionParamters>(
+        key: K,
+        value: PositionParamters[K],
+    ) {
+        positionParametersRef.current[key] = value;
+        onParametersChange?.();
+    }
 
     const labelClassName = "text-[10px] font-semibold uppercase tracking-wider text-faint";
 
@@ -55,7 +66,7 @@ export function ReplayTradingControls({
                         disabled={!bracket}
                         defaultValue={positionParametersRef.current.stopLossPoints}
                         onChange={e => {
-                            positionParametersRef.current.stopLossPoints = Number(e.target.value);
+                            updateParameter("stopLossPoints", Number(e.target.value));
                         }}
                         className={inputClassName}
                     />
@@ -73,7 +84,7 @@ export function ReplayTradingControls({
                         disabled={!bracket}
                         defaultValue={positionParametersRef.current.takeProfitPoints}
                         onChange={e => {
-                            positionParametersRef.current.takeProfitPoints = Number(e.target.value);
+                            updateParameter("takeProfitPoints", Number(e.target.value));
                         }}
                         className={inputClassName}
                     />
@@ -90,7 +101,7 @@ export function ReplayTradingControls({
                         step={1}
                         defaultValue={positionParametersRef.current.quantity ?? 1}
                         onChange={e => {
-                            positionParametersRef.current.quantity = Number(e.target.value);
+                            updateParameter("quantity", Number(e.target.value));
                         }}
                         className={inputClassName}
                     />
@@ -126,7 +137,7 @@ export function ReplayTradingControls({
                         onChange={e => {
                             const next = e.target.checked;
                             setBracket(next);
-                            positionParametersRef.current.bracket = next;
+                            updateParameter("bracket", next);
                         }}
                         className="h-3.5 w-3.5 cursor-pointer accent-accent"
                     />

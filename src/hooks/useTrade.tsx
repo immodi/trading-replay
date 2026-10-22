@@ -7,8 +7,13 @@ export function useTrade(
     priceData: PriceData,
     pointDollarValue: number,
     commissionPerContract: number = 0,
+    initialPositions: Position[] = [],
+    /** False while the replay is still being restored; price checks are paused. */
+    isReady: boolean = true,
 ) {
-    const [positions, setPositions] = useState<Position[]>([]);
+    const [positions, setPositions] = useState<Position[]>(
+        () => initialPositions,
+    );
     const [pl, setPL] = useState(0);
 
     useEffect(() => {
@@ -21,11 +26,24 @@ export function useTrade(
         setPL(totalPL);
     }, [JSON.stringify(positions), pointDollarValue, commissionPerContract]);
 
-    const prevPriceRef = useRef(priceData);
+    const prevPriceRef = useRef<PriceData | null>(null);
 
     useEffect(() => {
+        // Restored positions must not be evaluated against the empty/history
+        // price before the replay has been restored to its saved point.
+        if (!isReady) {
+            prevPriceRef.current = null;
+            return;
+        }
+
         const prevPrice = prevPriceRef.current;
         prevPriceRef.current = priceData;
+
+        // Seed the comparison once real replay data exists instead of treating
+        // the jump from "no data" as a price move that triggers orders.
+        if (prevPrice === null || prevPrice.Time === 0 || priceData.Time === 0) {
+            return;
+        }
 
         setPositions((currentPositions) => {
             const updatedPositions = [...currentPositions];
@@ -118,7 +136,7 @@ export function useTrade(
 
             return updatedPositions;
         });
-    }, [priceData.Price, priceData.Time]);
+    }, [priceData.Price, priceData.Time, isReady]);
 
     function enter(order: EnterOrder) {
         const {
