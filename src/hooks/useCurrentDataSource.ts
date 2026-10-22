@@ -12,11 +12,13 @@ function toError(err: unknown): Error {
 export function useCurrentDataSource(
     timeFrameMinutes: number,
     source: CandleSource = mnqSource,
+    initialDate: Date | null = null,
 ) {
     const [currentDate, setCurrentDate] = useState<Date | null>(null);
     const [dataRange, setDataRange] = useState<DataRange | null>(null);
     const [candleData, setCandleData] = useState<Candle[] | null>(null);
     const [aggregatedCandleHistory, setAggregatedCandleHistory] = useState<Candle[]>([]);
+    const [isHistoryLoading, setIsHistoryLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
 
     // Resolve the dataset's date range once per source
@@ -30,7 +32,13 @@ export function useCurrentDataSource(
 
                 setError(null);
                 setDataRange(range);
-                setCurrentDate(range.start);
+
+                const canRestore =
+                    initialDate !== null &&
+                    initialDate.getTime() >= range.start.getTime() &&
+                    initialDate.getTime() <= range.end.getTime();
+
+                setCurrentDate(canRestore ? initialDate : range.start);
             } catch (err) {
                 if (!cancelled) setError(toError(err));
             }
@@ -40,7 +48,7 @@ export function useCurrentDataSource(
         return () => {
             cancelled = true;
         };
-    }, [source]);
+    }, [source, initialDate]);
 
     // Raw 1‑minute candles for the selected date
     useEffect(() => {
@@ -72,6 +80,8 @@ export function useCurrentDataSource(
         const date = currentDate;
         let cancelled = false;
 
+        setIsHistoryLoading(true);
+
         async function load() {
             try {
                 const history = await source.getHistory(date, timeFrameMinutes, 2000);
@@ -81,6 +91,8 @@ export function useCurrentDataSource(
                 setAggregatedCandleHistory(history);
             } catch (err) {
                 if (!cancelled) setError(toError(err));
+            } finally {
+                if (!cancelled) setIsHistoryLoading(false);
             }
         }
 
@@ -92,9 +104,11 @@ export function useCurrentDataSource(
 
     return {
         setCurrentDate,
+        currentDate,
         dataRange,
         candleData,
         aggregatedCandleHistory,
+        isHistoryLoading,
         pointValue: source.pointValue,
         commission: source.commission ?? 0,
         error,

@@ -5,6 +5,7 @@ import { ReplayTradingControls } from "./ReplayTradingControls";
 
 type TradingBarProps = {
     positionParametersRef: React.RefObject<PositionParamters>;
+    onParametersChange?: () => void;
     price: number;
     pl: number;
     reset: () => void;
@@ -14,6 +15,7 @@ type TradingBarProps = {
 
 export function TradingBar({
     positionParametersRef,
+    onParametersChange,
     price,
     pl,
     reset,
@@ -60,6 +62,7 @@ export function TradingBar({
 
             <ReplayTradingControls
                 positionParametersRef={positionParametersRef}
+                onParametersChange={onParametersChange}
                 onBuyMarket={() => openPosition("long")}
                 onSellMarket={() => openPosition("short")}
                 closeAll={closeAll}

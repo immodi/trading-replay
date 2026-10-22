@@ -1,10 +1,11 @@
-import { ChartSpeed, ChartSpeeds } from "@/constants/chart";
+import { ChartSpeeds } from "@/constants/chart";
 
 type ReplaySpeedProps = {
+    speed: number;
     setSpeed: (speed: number) => void
 }
 
-export function ReplaySpeedSelect({ setSpeed }: ReplaySpeedProps) {
+export function ReplaySpeedSelect({ speed, setSpeed }: ReplaySpeedProps) {
     return (
         <div className="flex shrink-0 items-center gap-2">
             <label className="text-[10px] font-semibold uppercase tracking-wider text-faint">
@@ -14,8 +15,8 @@ export function ReplaySpeedSelect({ setSpeed }: ReplaySpeedProps) {
             <div className="relative">
                 <select
                     aria-label="Replay speed"
+                    value={speed}
                     onChange={(e) => setSpeed(Number(e.target.value))}
-                    defaultValue={ChartSpeed.X1}
                     className="
                         cursor-pointer
                         appearance-none

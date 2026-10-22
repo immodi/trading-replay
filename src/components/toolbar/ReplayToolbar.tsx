@@ -10,11 +10,14 @@ import type { SessionSummary, SessionTrade } from "@/types/session";
 export type ReplayToolbarProps = {
     minDate: Date,
     maxDate: Date,
+    currentDate: Date | null,
 
     isPlaying: boolean,
     isDone: boolean,
     direction: PlayDirection,
     indicatorSettings: IndicatorSettings;
+    timeFrameMinutes: number;
+    speed: number;
 
     setTimeFrame: (timeFrame: number) => void
     setSpeed: (speed: number) => void,
@@ -73,9 +76,12 @@ export function ReplayToolbar(props: ReplayToolbarProps) {
 
             <div className="h-5 w-px shrink-0 bg-edge" />
 
-            <ReplaySpeedSelect setSpeed={props.setSpeed} />
+            <ReplaySpeedSelect speed={props.speed} setSpeed={props.setSpeed} />
 
-            <ReplayTimeframeSelect setTimeFrame={props.setTimeFrame} />
+            <ReplayTimeframeSelect
+                timeFrame={props.timeFrameMinutes}
+                setTimeFrame={props.setTimeFrame}
+            />
 
             <div className="ml-auto flex items-center gap-3 pl-4">
                 <label className="flex items-center gap-2">
@@ -84,7 +90,11 @@ export function ReplayToolbar(props: ReplayToolbarProps) {
                     </span>
                     <input
                         type="date"
-                        defaultValue={props.minDate.toISOString().split("T")[0]}
+                        value={
+                            (props.currentDate ?? props.minDate)
+                                .toISOString()
+                                .split("T")[0]
+                        }
                         min={props.minDate.toISOString().split("T")[0]}
                         max={props.maxDate.toISOString().split("T")[0]}
                         onChange={onDateChange}

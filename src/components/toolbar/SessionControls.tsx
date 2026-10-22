@@ -160,13 +160,13 @@ export function SessionControls({
                             Trading session{instrument ? ` · ${instrument}` : ""}
                         </span>
                         <span className="text-[10px] font-medium uppercase tracking-wider text-faint">
-                            In-memory only
+                            Saved locally
                         </span>
                     </div>
 
-                    <p className="rounded-md border border-amber-500/30 text-wrap bg-amber-500/10 px-2.5 py-2 text-[11px] leading-snug text-amber-300">
-                        Nothing is saved. Refreshing, closing the tab, or leaving the
-                        app before exporting will discard this session.
+                    <p className="rounded-md border border-edge text-wrap bg-canvas/60 px-2.5 py-2 text-[11px] leading-snug text-sub">
+                        This session is saved in your browser and restored the next
+                        time you open this source. It never leaves this device.
                     </p>
 
                     <div className="grid grid-cols-3 gap-2">
