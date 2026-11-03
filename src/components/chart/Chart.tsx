@@ -171,6 +171,7 @@ export function ChartComponent({ config }: ChartComponentProps) {
         source.commission,
         persisted.positions,
         replay.hasRestored,
+        replay.index,
     );
     const session = useTradingSession({
         positions: trade.positions,
@@ -178,6 +179,10 @@ export function ChartComponent({ config }: ChartComponentProps) {
         pointValue: source.pointValue,
         commissionPerSide: source.commission,
         store: sessionStore,
+        replayIndex: replay.index,
+        replayDay: source.currentDate
+            ? source.currentDate.toISOString().slice(0, 10)
+            : "",
     });
 
     const positionsSignature = useMemo(

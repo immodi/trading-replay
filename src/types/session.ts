@@ -19,6 +19,15 @@ export type SessionTrade = {
     grossProfitLoss: number;
     /** Realised P/L after commission, in dollars. */
     netProfitLoss: number;
+
+    /**
+     * Replay tick at which the trade was recorded. Used to drop trades that
+     * belong to a future the user has rewound past. Optional for sessions
+     * written by older versions.
+     */
+    replayIndex?: number;
+    /** UTC day of the replay tick (YYYY-MM-DD). */
+    replayDay?: string;
 };
 
 export type SessionSummary = {

@@ -1,7 +1,20 @@
 import type { EnterOrder, Position, PositionPricePatch } from "@/types/position";
 import type { PriceData } from "@/types/priceData";
+import { applyPriceTick } from "@/utils/applyPriceTick";
 import { calculatePositionPL } from "@/utils/calculatePositionPL";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+/** Deep-enough copy so a rewound snapshot never aliases live state. */
+function clonePositions(positions: Position[]): Position[] {
+    return positions.map((position) => ({ ...position }));
+}
+
+type CommitOptions = {
+    /** Drop cached snapshots after the current index; they belong to a future that no longer exists. */
+    invalidateFuture?: boolean;
+    /** Store the committed positions as the snapshot for `atIndex`. */
+    recordSnapshot?: boolean;
+};
 
 export function useTrade(
     priceData: PriceData,
@@ -10,25 +23,64 @@ export function useTrade(
     initialPositions: Position[] = [],
     /** False while the replay is still being restored; price checks are paused. */
     isReady: boolean = true,
+    /** Raw-candle index of the replay tick currently being displayed. */
+    replayIndex: number = 0,
 ) {
     const [positions, setPositions] = useState<Position[]>(
-        () => initialPositions,
+        () => clonePositions(initialPositions),
     );
-    const [pl, setPL] = useState(0);
 
-    useEffect(() => {
-        const totalPL = positions.reduce(
-            (total, position) =>
-                total + calculatePositionPL(position, pointDollarValue, commissionPerContract),
-            0,
-        );
-
-        setPL(totalPL);
-    }, [JSON.stringify(positions), pointDollarValue, commissionPerContract]);
-
+    const positionsRef = useRef<Position[]>(positions);
+    const snapshotsRef = useRef<Map<number, Position[]>>(new Map());
+    const indexRef = useRef<number>(replayIndex);
     const prevPriceRef = useRef<PriceData | null>(null);
 
+    const pl = useMemo(
+        () =>
+            positions.reduce(
+                (total, position) =>
+                    total +
+                    calculatePositionPL(
+                        position,
+                        pointDollarValue,
+                        commissionPerContract,
+                    ),
+                0,
+            ),
+        [positions, pointDollarValue, commissionPerContract],
+    );
+
+    const commitPositions = useCallback(
+        (
+            next: Position[],
+            atIndex: number,
+            {
+                invalidateFuture = true,
+                recordSnapshot = true,
+            }: CommitOptions = {},
+        ) => {
+            positionsRef.current = next;
+            setPositions(next);
+
+            if (!recordSnapshot) return;
+
+            if (invalidateFuture) {
+                for (const key of snapshotsRef.current.keys()) {
+                    if (key > atIndex) {
+                        snapshotsRef.current.delete(key);
+                    }
+                }
+            }
+
+            snapshotsRef.current.set(atIndex, clonePositions(next));
+        },
+        [],
+    );
+
     useEffect(() => {
+        const previousIndex = indexRef.current;
+        indexRef.current = replayIndex;
+
         // Restored positions must not be evaluated against the empty/history
         // price before the replay has been restored to its saved point.
         if (!isReady) {
@@ -36,107 +88,59 @@ export function useTrade(
             return;
         }
 
+        // Rewinding only restores the snapshot belonging to the target tick.
+        // No order is evaluated while the replay moves backwards.
+        if (replayIndex < previousIndex) {
+            const snapshot = snapshotsRef.current.get(replayIndex);
+
+            commitPositions(
+                snapshot === undefined ? [] : clonePositions(snapshot),
+                replayIndex,
+                {
+                    invalidateFuture: false,
+                    recordSnapshot: snapshot === undefined,
+                },
+            );
+            prevPriceRef.current = priceData;
+            return;
+        }
+
+        // The replay index identifies a tick. A same-index render (for
+        // example after a manual edit) must not re-run order execution.
+        if (replayIndex === previousIndex) {
+            if (prevPriceRef.current === null) {
+                prevPriceRef.current = priceData;
+                commitPositions(positionsRef.current, replayIndex, {
+                    invalidateFuture: false,
+                });
+            }
+            return;
+        }
+
         const prevPrice = prevPriceRef.current;
-        prevPriceRef.current = priceData;
 
         // Seed the comparison once real replay data exists instead of treating
         // the jump from "no data" as a price move that triggers orders.
         if (prevPrice === null || prevPrice.Time === 0 || priceData.Time === 0) {
+            prevPriceRef.current = priceData;
+            commitPositions(positionsRef.current, replayIndex);
             return;
         }
 
-        setPositions((currentPositions) => {
-            const updatedPositions = [...currentPositions];
+        const next = applyPriceTick(positionsRef.current, prevPrice, priceData);
 
-            for (const position of updatedPositions) {
-                if (position.state === "waiting") {
-
-                    // Fire only when price crosses the stop, not when it's merely beyond it
-                    const triggered =
-                        // new high reached the level (came from below)
-                        (prevPrice.High < position.entryPrice && priceData.High >= position.entryPrice) ||
-                        // new low reached the level (came from above)
-                        (prevPrice.Low > position.entryPrice && priceData.Low <= position.entryPrice) ||
-                        // price crossed or hit the level between updates (covers gaps and new bars)
-                        (prevPrice.Price - position.entryPrice) * (priceData.Price - position.entryPrice) <= 0;
-
-                    if (triggered) {
-                        position.state = "open";
-                    }
-                }
-
-                if (position.state !== "open") {
-                    continue;
-                }
-
-                switch (position.side) {
-                    case "long": {
-                        const hitTP =
-                            position.takeProfit !== undefined &&
-                            priceData.High >=
-                            position.takeProfit;
-
-                        const hitSL =
-                            position.stopLoss !== undefined &&
-                            priceData.Low <=
-                            position.stopLoss;
-
-                        if (hitTP && hitSL) {
-                            close(
-                                position,
-                                position.stopLoss!,
-                            );
-                        } else if (hitSL) {
-                            close(
-                                position,
-                                position.stopLoss!,
-                            );
-                        } else if (hitTP) {
-                            close(
-                                position,
-                                position.takeProfit!,
-                            );
-                        }
-
-                        break;
-                    }
-
-                    case "short": {
-                        const hitTP =
-                            position.takeProfit !== undefined &&
-                            priceData.Low <=
-                            position.takeProfit;
-
-                        const hitSL =
-                            position.stopLoss !== undefined &&
-                            priceData.High >=
-                            position.stopLoss;
-
-                        if (hitTP && hitSL) {
-                            close(
-                                position,
-                                position.stopLoss!,
-                            );
-                        } else if (hitSL) {
-                            close(
-                                position,
-                                position.stopLoss!,
-                            );
-                        } else if (hitTP) {
-                            close(
-                                position,
-                                position.takeProfit!,
-                            );
-                        }
-
-                        break;
-                    }
-                }
-            }
-
-            return updatedPositions;
-        });
-    }, [priceData.Price, priceData.Time, isReady]);
+        prevPriceRef.current = priceData;
+        commitPositions(next, replayIndex);
+    }, [
+        priceData,
+        priceData.Price,
+        priceData.High,
+        priceData.Low,
+        priceData.Time,
+        isReady,
+        replayIndex,
+        commitPositions,
+    ]);
 
     function enter(order: EnterOrder) {
         const {
@@ -172,10 +176,7 @@ export function useTrade(
             position.takeProfit = takeProfit;
         }
 
-        setPositions((current) => [
-            ...current,
-            position,
-        ]);
+        commitPositions([...positionsRef.current, position], replayIndex);
     }
 
 
@@ -185,48 +186,45 @@ export function useTrade(
         position: Position,
         exitPrice?: number,
     ) {
-        setPositions((currentPositions) =>
-            currentPositions.map((currentPosition) => {
-                // Match on id: positions sharing an entry time/price must not
-                // be closed (or have their realised exit price rewritten) together.
-                if (currentPosition.id !== position.id) {
-                    return currentPosition;
-                }
+        const next = positionsRef.current.map((currentPosition) => {
+            // Match on id: positions sharing an entry time/price must not
+            // be closed (or have their realised exit price rewritten) together.
+            if (currentPosition.id !== position.id) {
+                return currentPosition;
+            }
 
-                // Never re-close a position: that would overwrite its realised P/L.
-                if (currentPosition.state === "close") {
-                    return currentPosition;
-                }
+            // Never re-close a position: that would overwrite its realised P/L.
+            if (currentPosition.state === "close") {
+                return currentPosition;
+            }
 
-                const positionExitPrice = exitPrice ?? priceData.Price;
-                return {
-                    ...currentPosition,
-                    state: "close",
-                    exitTime: priceData.Time,
-                    exitPrice: currentPosition.state !== "waiting" ? positionExitPrice : undefined,
-                };
-            }),
-        );
+            const positionExitPrice = exitPrice ?? priceData.Price;
+            return {
+                ...currentPosition,
+                state: "close" as const,
+                exitTime: priceData.Time,
+                exitPrice: currentPosition.state !== "waiting" ? positionExitPrice : undefined,
+            };
+        });
+
+        commitPositions(next, replayIndex);
     }
 
     function closeAll() {
-        setPositions((currentPositions) => {
-            const updatedPositions =
-                currentPositions.map((position) => {
-                    if (position.state === "close") {
-                        return position;
-                    }
+        const next = positionsRef.current.map((position) => {
+            if (position.state === "close") {
+                return position;
+            }
 
-                    return {
-                        ...position,
-                        state: "close" as const,
-                        exitTime: priceData.Time,
-                        exitPrice: position.state !== "waiting" ? priceData.Price : undefined,
-                    };
-                });
-
-            return updatedPositions;
+            return {
+                ...position,
+                state: "close" as const,
+                exitTime: priceData.Time,
+                exitPrice: position.state !== "waiting" ? priceData.Price : undefined,
+            };
         });
+
+        commitPositions(next, replayIndex);
     }
 
     /**
@@ -237,28 +235,33 @@ export function useTrade(
         id: Position["id"],
         patch: PositionPricePatch,
     ) {
-        setPositions((current) =>
-            current.map((position) => {
-                if (position.id !== id || position.state === "close") {
-                    return position;
-                }
+        const next = positionsRef.current.map((position) => {
+            if (position.id !== id || position.state === "close") {
+                return position;
+            }
 
-                if (
-                    patch.entryPrice !== undefined &&
-                    position.state !== "waiting"
-                ) {
-                    return position;
-                }
+            if (
+                patch.entryPrice !== undefined &&
+                position.state !== "waiting"
+            ) {
+                return position;
+            }
 
-                return { ...position, ...patch };
-            }),
-        );
+            return { ...position, ...patch };
+        });
+
+        commitPositions(next, replayIndex);
     }
 
+    /**
+     * Clear every working order and position and forget the rewind history.
+     * A date/source change starts an independent replay, so nothing from the
+     * previous day may be evaluated against the new day's prices.
+     */
     function reset() {
-        setPositions((prev) =>
-            prev.filter((position) => position.state !== "close"),
-        );
+        snapshotsRef.current.clear();
+        prevPriceRef.current = null;
+        commitPositions([], replayIndex, { invalidateFuture: false });
     }
 
     return {

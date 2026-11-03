@@ -25,6 +25,10 @@ type UseTradingSessionOptions = {
     commissionPerSide: number;
     /** Persisted session for the active source. */
     store: Store<PersistedSessionState>;
+    /** Raw-candle index of the replay tick currently being displayed. */
+    replayIndex: number;
+    /** UTC day (YYYY-MM-DD) of the tick currently being displayed. */
+    replayDay: string;
 };
 
 /** Build the session record for a position that has a realised exit. */
@@ -33,6 +37,8 @@ function toSessionTrade(
     instrument: string,
     pointValue: number,
     commissionPerSide: number,
+    replayIndex: number,
+    replayDay: string,
 ): SessionTrade {
     return {
         id: position.id,
@@ -46,6 +52,8 @@ function toSessionTrade(
         totalCommission: calculateCommission(position.quantity, commissionPerSide),
         grossProfitLoss: calculateGrossProfitLoss(position, pointValue),
         netProfitLoss: calculatePositionPL(position, pointValue, commissionPerSide),
+        replayIndex,
+        replayDay,
     };
 }
 
@@ -65,6 +73,8 @@ export function useTradingSession({
     pointValue,
     commissionPerSide,
     store,
+    replayIndex,
+    replayDay,
 }: UseTradingSessionOptions) {
     const state = useStore(store);
     const trades = state.trades;
@@ -116,6 +126,8 @@ export function useTradingSession({
                 instrument,
                 pointValue,
                 commissionPerSide,
+                replayIndex,
+                replayDay,
             );
         });
 
@@ -131,6 +143,59 @@ export function useTradingSession({
         store,
         recordedIds,
         removedIds,
+        markTradesChanged,
+        replayIndex,
+        replayDay,
+    ]);
+
+    // Rewinding removes completed trades that belong to the part of the
+    // replay the user has just left behind. The trade engine reopens the
+    // matching positions from its snapshot; the session list must agree.
+    const previousReplayRef = useRef<{ index: number; day: string } | null>(
+        null,
+    );
+
+    useEffect(() => {
+        const previous = previousReplayRef.current;
+        previousReplayRef.current = { index: replayIndex, day: replayDay };
+
+        if (
+            previous === null ||
+            previous.day !== replayDay ||
+            replayIndex >= previous.index
+        ) {
+            return;
+        }
+
+        const staleIds = new Set(
+            state.trades
+                .filter(
+                    (trade) =>
+                        trade.replayDay === replayDay &&
+                        (trade.replayIndex ?? -1) > replayIndex,
+                )
+                .map((trade) => trade.id),
+        );
+
+        if (staleIds.size === 0) return;
+
+        for (const id of staleIds) {
+            recordedIds.delete(id);
+        }
+
+        store.update((current) =>
+            markTradesChanged(
+                current,
+                current.trades.filter((trade) => !staleIds.has(trade.id)),
+            ),
+        );
+        store.save();
+    }, [
+        replayIndex,
+        replayDay,
+        state.trades,
+        store,
+        recordedIds,
         markTradesChanged,
     ]);
 
