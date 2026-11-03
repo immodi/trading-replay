@@ -24,6 +24,43 @@ const defaultMap = (raw: RawCandle): Candle => ({
 });
 
 /**
+ * Reject malformed ordering before any binary-search range selection or
+ * first/last date-range assumptions. This intentionally does not sort.
+ */
+export function assertChronologicalCandles(candles: Candle[]): void {
+    let previousTime: number | null = null;
+    let invalidCount = 0;
+    const samples: string[] = [];
+
+    for (const candle of candles) {
+        const time = candle.time;
+
+        if (
+            !Number.isFinite(time) ||
+            (previousTime !== null && time <= previousTime)
+        ) {
+            invalidCount += 1;
+
+            if (samples.length < 5) {
+                samples.push(
+                    Number.isFinite(time)
+                        ? new Date(time * 1000).toISOString()
+                        : String(time),
+                );
+            }
+        }
+
+        if (Number.isFinite(time)) previousTime = time;
+    }
+
+    if (invalidCount > 0) {
+        throw new Error(
+            `Candle dataset is not strictly chronological: ${invalidCount} duplicate, non-increasing, or non-finite timestamp(s). First: ${samples.join(", ")}`,
+        );
+    }
+}
+
+/**
  * Fetch (and cache per fileName) a raw candle JSON file, mapping each row to
  * the app's `Candle` shape.
  */
@@ -41,6 +78,8 @@ export async function getData(
     }
 
     const data = json.map(map);
+
+    assertChronologicalCandles(data);
 
     cache.set(srcFileName, data);
     return data;

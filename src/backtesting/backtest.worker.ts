@@ -131,6 +131,7 @@ async function handle(request: BacktestWorkerRequest): Promise<void> {
             baseBarsProcessed: packed.length / PACKED_BAR_STRIDE,
             strategyBarsProcessed: result.dataQuality.strategyBarsProcessed,
             inRangeStrategyBars: result.dataQuality.inRangeStrategyBars,
+            warmup: result.dataQuality.warmup,
             warnings: [...request.dataQuality.warnings, ...additionalWarnings],
         };
 

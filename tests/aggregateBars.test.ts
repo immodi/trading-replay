@@ -168,5 +168,6 @@ test("range selection includes enough pre-start strategy buckets", async () => {
 
     assert.equal(range.from, 3);
     assert.equal(range.dropFirstAggregate, true);
+    assert.equal(range.availableWarmupBars, 6);
     assert.equal(range.empty, false);
 });

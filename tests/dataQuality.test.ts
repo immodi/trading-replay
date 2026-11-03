@@ -92,3 +92,57 @@ test("gaps, discontinuities, and partial buckets are warnings", () => {
     );
     assert.ok(report.warnings.some((issue) => issue.type === "partial_aggregate"));
 });
+
+test("negative volume and non-minute-aligned timestamps are hard errors", () => {
+    const negativeVolume = analyzeDataQuality(
+        [candle(BASE, 100, 101, 99, 100, -1)],
+        BASE,
+        BASE + 86_400,
+        1,
+    );
+    const misaligned = analyzeDataQuality(
+        [candle(BASE + 30, 100, 101, 99, 100)],
+        BASE,
+        BASE + 86_400,
+        1,
+    );
+
+    assert.ok(
+        negativeVolume.hardErrors.some(
+            (issue) => issue.type === "negative_volume",
+        ),
+    );
+    assert.ok(
+        misaligned.hardErrors.some(
+            (issue) => issue.type === "misaligned_base_timestamp",
+        ),
+    );
+});
+
+test("zero volume remains valid", () => {
+    const report = analyzeDataQuality(
+        [candle(BASE, 100, 101, 99, 100, 0)],
+        BASE,
+        BASE + 86_400,
+        1,
+    );
+
+    assert.deepEqual(report.hardErrors, []);
+});
+
+test("warm-up availability is reported", () => {
+    const report = analyzeDataQuality(
+        [candle(BASE, 100, 101, 99, 100)],
+        BASE,
+        BASE + 86_400,
+        1,
+        { requestedBars: 50, availableBars: 17 },
+    );
+
+    assert.deepEqual(report.warmup, {
+        requestedBars: 50,
+        availableBars: 17,
+        actualBars: 17,
+        insufficient: true,
+    });
+});

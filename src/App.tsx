@@ -13,7 +13,10 @@ const isValidConfig = (
     config !== null &&
     config.symbol !== "" &&
     config.id !== "" &&
-    config.pointValue !== 0 &&
+    Number.isFinite(config.pointValue) &&
+    config.pointValue > 0 &&
+    Number.isFinite(config.commission ?? 0) &&
+    (config.commission ?? 0) >= 0 &&
     config.fileName !== "";
 
 function App() {

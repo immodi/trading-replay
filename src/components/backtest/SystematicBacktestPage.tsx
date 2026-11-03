@@ -156,10 +156,12 @@ function SummaryCard({ label, value }: { label: string; value: string }) {
 function ParameterInput({
     parameter,
     value,
+    disabled = false,
     onChange,
 }: {
     parameter: StrategyParameter;
     value: unknown;
+    disabled?: boolean;
     onChange: (value: unknown) => void;
 }) {
     return (
@@ -171,6 +173,7 @@ function ParameterInput({
                     min={parameter.min}
                     max={parameter.max}
                     step={parameter.step}
+                    disabled={disabled}
                     value={
                         typeof value === "number" ? value : parameter.default
                     }
@@ -179,6 +182,7 @@ function ParameterInput({
             ) : parameter.type === "boolean" ? (
                 <input
                     type="checkbox"
+                    disabled={disabled}
                     checked={Boolean(value ?? parameter.default)}
                     onChange={(event) => onChange(event.target.checked)}
                 />
@@ -186,6 +190,7 @@ function ParameterInput({
                 <input
                     className={inputClass}
                     type="text"
+                    disabled={disabled}
                     value={typeof value === "string" ? value : parameter.default}
                     onChange={(event) => onChange(event.target.value)}
                 />
@@ -221,6 +226,7 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
     const [validationError, setValidationError] = useState<string | null>(null);
     const [isValidating, setIsValidating] = useState(false);
     const [warningsAcknowledged, setWarningsAcknowledged] = useState(false);
+    const [warmupAcknowledged, setWarmupAcknowledged] = useState(false);
 
     const [runState, setRunState] = useState<
         "idle" | "running" | "completed" | "failed" | "cancelled"
@@ -235,6 +241,14 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
 
     const workerRef = useRef<Worker | null>(null);
     const watchdogRef = useRef<number | null>(null);
+
+    const invalidateResult = () => {
+        setResult(null);
+        setSnapshot(null);
+        setRunError(null);
+        setProgress(null);
+        setRunState("idle");
+    };
 
     const stopWorker = () => {
         workerRef.current?.terminate();
@@ -369,6 +383,10 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                 startTs,
                 endTsExclusive,
                 timeframeMinutes,
+                {
+                    requestedBars: effectiveWarmup,
+                    availableBars: selection.availableWarmupBars,
+                },
             );
 
             return {
@@ -406,11 +424,13 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
 
     useEffect(() => {
         setWarningsAcknowledged(false);
+        setWarmupAcknowledged(false);
     }, [qualitySignature]);
 
     const quality = selectedRange.range?.quality ?? null;
     const hardErrors = quality?.hardErrors ?? [];
     const warnings = quality?.warnings ?? [];
+    const warmup = quality?.warmup ?? null;
     const hardErrorCount = hardErrors.reduce(
         (total, issue) => total + (issue.count ?? 1),
         0,
@@ -421,6 +441,8 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
     );
     const hasUnacknowledgedWarnings =
         warnings.length > 0 && !warningsAcknowledged;
+    const hasUnacknowledgedWarmup =
+        !!warmup?.insufficient && !warmupAcknowledged;
 
     const dateBoundsError = useMemo(() => {
         if (dataRange && startDate && endDate) {
@@ -439,6 +461,11 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
         return null;
     }, [dataRange, startDate, endDate]);
 
+    const instrumentError =
+        Number.isFinite(config.pointValue) && config.pointValue > 0
+            ? null
+            : "Instrument point value must be finite and greater than zero.";
+
     const canRun =
         !isLoadingData &&
         !loadError &&
@@ -446,6 +473,7 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
         !!strategyFile &&
         !!metadata &&
         !validationError &&
+        !instrumentError &&
         !!normalizedParameters.values &&
         !normalizedParameters.error &&
         !!selectedRange.range &&
@@ -453,6 +481,7 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
         !dateBoundsError &&
         hardErrors.length === 0 &&
         !hasUnacknowledgedWarnings &&
+        !hasUnacknowledgedWarmup &&
         !isValidating &&
         runState !== "running";
 
@@ -721,6 +750,7 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
     const setParam = (key: string, value: unknown) => {
         setParams((current) => ({ ...current, [key]: value }));
         setRunError(null);
+        invalidateResult();
     };
 
     const progressPct =
@@ -804,6 +834,7 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                                     className={inputClass}
                                     type="date"
                                     value={startDate}
+                                    disabled={runState === "running"}
                                     min={
                                         dataRange
                                             ? formatUtcDate(dataRange.start)
@@ -814,9 +845,10 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                                             ? formatUtcDate(dataRange.end)
                                             : undefined
                                     }
-                                    onChange={(event) =>
-                                        setStartDate(event.target.value)
-                                    }
+                                    onChange={(event) => {
+                                        setStartDate(event.target.value);
+                                        invalidateResult();
+                                    }}
                                 />
                             </Field>
                             <Field label="End date (UTC)">
@@ -824,6 +856,7 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                                     className={inputClass}
                                     type="date"
                                     value={endDate}
+                                    disabled={runState === "running"}
                                     min={
                                         dataRange
                                             ? formatUtcDate(dataRange.start)
@@ -834,20 +867,23 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                                             ? formatUtcDate(dataRange.end)
                                             : undefined
                                     }
-                                    onChange={(event) =>
-                                        setEndDate(event.target.value)
-                                    }
+                                    onChange={(event) => {
+                                        setEndDate(event.target.value);
+                                        invalidateResult();
+                                    }}
                                 />
                             </Field>
                             <Field label="Timeframe">
                                 <select
                                     className={inputClass}
                                     value={timeframeMinutes}
-                                    onChange={(event) =>
+                                    disabled={runState === "running"}
+                                    onChange={(event) => {
                                         setTimeframeMinutes(
                                             Number(event.target.value),
-                                        )
-                                    }
+                                        );
+                                        invalidateResult();
+                                    }}
                                 >
                                     {[1, 5, 15, 30, 60].map((minutes) => (
                                         <option key={minutes} value={minutes}>
@@ -867,14 +903,16 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                                     min={0}
                                     step={0.01}
                                     value={commissionPerSide}
-                                    onChange={(event) =>
+                                    disabled={runState === "running"}
+                                    onChange={(event) => {
                                         setCommissionPerSide(
                                             Math.max(
                                                 0,
                                                 Number(event.target.value),
                                             ),
-                                        )
-                                    }
+                                        );
+                                        invalidateResult();
+                                    }}
                                 />
                             </Field>
                             <Field label="Slippage (points / side)">
@@ -884,14 +922,16 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                                     min={0}
                                     step={0.25}
                                     value={slippagePointsPerSide}
-                                    onChange={(event) =>
+                                    disabled={runState === "running"}
+                                    onChange={(event) => {
                                         setSlippagePointsPerSide(
                                             Math.max(
                                                 0,
                                                 Number(event.target.value),
                                             ),
-                                        )
-                                    }
+                                        );
+                                        invalidateResult();
+                                    }}
                                 />
                             </Field>
                             <Field label="Starting capital ($)">
@@ -901,14 +941,16 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                                     min={1}
                                     step={100}
                                     value={startingCapital}
-                                    onChange={(event) =>
+                                    disabled={runState === "running"}
+                                    onChange={(event) => {
                                         setStartingCapital(
                                             Math.max(
                                                 1,
                                                 Number(event.target.value),
                                             ),
-                                        )
-                                    }
+                                        );
+                                        invalidateResult();
+                                    }}
                                 />
                             </Field>
                             <Field label="Maximum open positions">
@@ -919,7 +961,8 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                                     max={20}
                                     step={1}
                                     value={maxOpenPositions}
-                                    onChange={(event) =>
+                                    disabled={runState === "running"}
+                                    onChange={(event) => {
                                         setMaxOpenPositions(
                                             Math.max(
                                                 1,
@@ -930,8 +973,9 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                                                     ),
                                                 ),
                                             ),
-                                        )
-                                    }
+                                        );
+                                        invalidateResult();
+                                    }}
                                 />
                             </Field>
                             <Field
@@ -948,9 +992,11 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                                     min={0}
                                     max={MAX_WARMUP_BARS}
                                     step={1}
-                                    disabled={!metadata}
+                                    disabled={
+                                        !metadata || runState === "running"
+                                    }
                                     value={warmupBars ?? metadata?.warmupBars ?? 0}
-                                    onChange={(event) =>
+                                    onChange={(event) => {
                                         setWarmupBars(
                                             Math.max(
                                                 0,
@@ -961,8 +1007,9 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                                                     ),
                                                 ),
                                             ),
-                                        )
-                                    }
+                                        );
+                                        invalidateResult();
+                                    }}
                                 />
                             </Field>
                         </div>
@@ -972,6 +1019,11 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                             sizing, and it caps a single entry at{" "}
                             {MAX_CONTRACTS_PER_ENTRY} contracts.
                         </p>
+                        {instrumentError ? (
+                            <p className="mt-2 text-xs text-bear">
+                                {instrumentError}
+                            </p>
+                        ) : null}
                         {dateBoundsError ? (
                             <p className="mt-2 text-xs text-bear">{dateBoundsError}</p>
                         ) : null}
@@ -1064,6 +1116,10 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                                                                 key={parameter.key}
                                                                 parameter={parameter}
                                                                 value={params[parameter.key]}
+                                                                disabled={
+                                                                    runState ===
+                                                                    "running"
+                                                                }
                                                                 onChange={(value) =>
                                                                     setParam(
                                                                         parameter.key,
@@ -1094,6 +1150,10 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                                                                     key={parameter.key}
                                                                     parameter={parameter}
                                                                     value={params[parameter.key]}
+                                                                    disabled={
+                                                                        runState ===
+                                                                        "running"
+                                                                    }
                                                                     onChange={(value) =>
                                                                         setParam(
                                                                             parameter.key,
@@ -1151,7 +1211,40 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                                 <span className="rounded-full border border-edge-strong px-2 py-1 text-sub">
                                     {warningCount} warnings
                                 </span>
+                                {warmup ? (
+                                    <span className="rounded-full border border-edge-strong px-2 py-1 text-sub">
+                                        Warm-up {warmup.actualBars}/
+                                        {warmup.requestedBars}
+                                    </span>
+                                ) : null}
                             </div>
+
+                            {warmup?.insufficient ? (
+                                <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3">
+                                    <div className="text-xs font-semibold text-amber-300">
+                                        Insufficient warm-up history
+                                    </div>
+                                    <p className="mt-1 text-[11px] text-amber-100/90">
+                                        Requested {warmup.requestedBars} warm-up
+                                        bars, but only {warmup.availableBars} are
+                                        available before the selected start date.
+                                        The run will use {warmup.actualBars}.
+                                    </p>
+                                    <label className="mt-3 flex items-center gap-2 text-[11px] text-amber-100">
+                                        <input
+                                            type="checkbox"
+                                            checked={warmupAcknowledged}
+                                            onChange={(event) =>
+                                                setWarmupAcknowledged(
+                                                    event.target.checked,
+                                                )
+                                            }
+                                        />
+                                        I understand the strategy will receive
+                                        fewer warm-up bars than requested.
+                                    </label>
+                                </div>
+                            ) : null}
 
                             {hardErrors.length > 0 ? (
                                 <div className="rounded-lg border border-bear/40 bg-bear/10 p-3">
@@ -1198,7 +1291,9 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                                 </div>
                             ) : null}
 
-                            {hardErrors.length === 0 && warnings.length === 0 ? (
+                            {hardErrors.length === 0 &&
+                            warnings.length === 0 &&
+                            !warmup?.insufficient ? (
                                 <p className="rounded-lg border border-bull/40 bg-bull/10 p-3 text-xs text-bull">
                                     No data-quality issues detected by the
                                     preflight checks.
@@ -1296,7 +1391,7 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                                     value={formatMoney(result.summary.expectancyPerTrade)}
                                 />
                             </div>
-                            <div className="mt-3 grid gap-2 text-[11px] text-sub sm:grid-cols-3">
+                            <div className="mt-3 grid gap-2 text-[11px] text-sub sm:grid-cols-4">
                                 <div>
                                     Starting equity:{" "}
                                     <span className="text-ink">
@@ -1317,6 +1412,20 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                                     Pending actions at end:{" "}
                                     <span className="text-ink">
                                         {result.summary.pendingActionsAtEnd}
+                                    </span>
+                                </div>
+                                <div>
+                                    Warm-up used:{" "}
+                                    <span className="text-ink">
+                                        {
+                                            result.dataQuality.warmup
+                                                .actualBars
+                                        }
+                                        /
+                                        {
+                                            result.dataQuality.warmup
+                                                .requestedBars
+                                        }
                                     </span>
                                 </div>
                             </div>

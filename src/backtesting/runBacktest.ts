@@ -263,6 +263,45 @@ export function runBacktest({
         throw new BacktestError("No bars exist in the selected date range.");
     }
 
+    const pointValue = config.instrument.pointValue;
+    const commissionPerSide = config.instrument.commissionPerSide;
+    const slippage = config.slippagePointsPerSide;
+
+    if (!Number.isFinite(pointValue) || pointValue <= 0) {
+        throw new BacktestError(
+            "Instrument pointValue must be finite and greater than zero.",
+        );
+    }
+
+    if (!Number.isFinite(commissionPerSide) || commissionPerSide < 0) {
+        throw new BacktestError(
+            "Instrument commissionPerSide must be finite and non-negative.",
+        );
+    }
+
+    if (
+        !Number.isFinite(config.startingCapital) ||
+        config.startingCapital <= 0
+    ) {
+        throw new BacktestError(
+            "Starting capital must be finite and greater than zero.",
+        );
+    }
+
+    if (!Number.isFinite(slippage) || slippage < 0) {
+        throw new BacktestError(
+            "Slippage must be finite and non-negative.",
+        );
+    }
+
+    if (
+        !Number.isFinite(config.startTs) ||
+        !Number.isFinite(config.endTsExclusive) ||
+        config.endTsExclusive <= config.startTs
+    ) {
+        throw new BacktestError("Invalid UTC date range.");
+    }
+
     const warmupBars = Number.isFinite(config.warmupBars)
         ? Math.max(0, Math.floor(config.warmupBars))
         : 0;
@@ -272,10 +311,12 @@ export function runBacktest({
     const maxOpenPositions = Number.isFinite(config.maxOpenPositions)
         ? Math.max(1, Math.floor(config.maxOpenPositions))
         : 1;
+    const availableWarmupBars = firstInRangeIndex;
+    const actualWarmupBars = Math.min(warmupBars, availableWarmupBars);
 
     const warmupStartIndex = Math.max(
         0,
-        firstInRangeIndex - warmupBars,
+        firstInRangeIndex - actualWarmupBars,
     );
     const totalCalls = lastInRangeIndex - warmupStartIndex + 1;
     const lastBar = bars[lastInRangeIndex];
@@ -298,9 +339,6 @@ export function runBacktest({
 
     const instrument = Object.freeze({ ...config.instrument });
     const params = Object.freeze({ ...config.parameters });
-    const pointValue = config.instrument.pointValue;
-    const commissionPerSide = config.instrument.commissionPerSide;
-    const slippage = config.slippagePointsPerSide;
 
     function equityAt(close: number): {
         equity: number;
@@ -819,6 +857,12 @@ export function runBacktest({
             baseBarsProcessed: 0,
             strategyBarsProcessed: totalCalls,
             inRangeStrategyBars: lastInRangeIndex - firstInRangeIndex + 1,
+            warmup: {
+                requestedBars: warmupBars,
+                availableBars: availableWarmupBars,
+                actualBars: actualWarmupBars,
+                insufficient: actualWarmupBars < warmupBars,
+            },
             warnings: [],
             hardErrors: [],
         },
@@ -832,6 +876,8 @@ export function runBacktest({
             forcedClose: "last bar close with adverse slippage",
             drawdown: "bar-close mark-to-market",
             positionSizing: "strategy-supplied quantity per entry (contracts)",
+            openingGapPriority:
+                "queued market entries/exits are processed before existing bracket checks at the same bar open",
         },
     };
 }

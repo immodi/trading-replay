@@ -51,10 +51,13 @@ export function analyzeDataQuality(
     startTs: number,
     endTsExclusive: number,
     timeframeMinutes: number,
+    warmup?: { requestedBars: number; availableBars: number },
 ): DataQualityReport {
     const nonFinite: IssueCounter = { count: 0, samples: [] };
     const invalidOhlc: IssueCounter = { count: 0, samples: [] };
     const nonIncreasing: IssueCounter = { count: 0, samples: [] };
+    const negativeVolume: IssueCounter = { count: 0, samples: [] };
+    const misalignedTimestamp: IssueCounter = { count: 0, samples: [] };
     const gaps: IssueCounter = { count: 0, samples: [] };
     const discontinuities: IssueCounter = { count: 0, samples: [] };
     const partialBuckets: IssueCounter = { count: 0, samples: [] };
@@ -85,6 +88,14 @@ export function analyzeDataQuality(
 
         if (candle.time >= startTs && candle.time < endTsExclusive) {
             baseBarsInRange += 1;
+        }
+
+        if (candle.volume < 0) {
+            bump(negativeVolume, candle.time);
+        }
+
+        if (!Number.isInteger(candle.time) || candle.time % 60 !== 0) {
+            bump(misalignedTimestamp, candle.time);
         }
 
         if (
@@ -149,6 +160,16 @@ export function analyzeDataQuality(
             "Candle timestamps are duplicate or not increasing.",
             nonIncreasing,
         ),
+        toIssue(
+            "negative_volume",
+            "Candle volume is negative.",
+            negativeVolume,
+        ),
+        toIssue(
+            "misaligned_base_timestamp",
+            "Candle timestamp is not aligned to the 1-minute base resolution.",
+            misalignedTimestamp,
+        ),
     ].filter((issue): issue is DataQualityIssue => issue !== null);
 
     const discontinuityIssue = toIssue(
@@ -175,11 +196,27 @@ export function analyzeDataQuality(
         ),
     ].filter((issue): issue is DataQualityIssue => issue !== null);
 
+    const requestedBars = Math.max(
+        0,
+        Math.floor(warmup?.requestedBars ?? 0),
+    );
+    const availableBars = Math.max(
+        0,
+        Math.floor(warmup?.availableBars ?? 0),
+    );
+    const actualBars = Math.min(requestedBars, availableBars);
+
     return {
         baseBarsInRange,
         baseBarsProcessed: candles.length,
         strategyBarsProcessed: 0,
         inRangeStrategyBars: 0,
+        warmup: {
+            requestedBars,
+            availableBars,
+            actualBars,
+            insufficient: actualBars < requestedBars,
+        },
         warnings,
         hardErrors,
     };

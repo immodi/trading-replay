@@ -57,6 +57,7 @@ export interface BaseRangeSelection {
     firstInRangeIndex: number;
     endIndex: number;
     dropFirstAggregate: boolean;
+    availableWarmupBars: number;
     empty: boolean;
 }
 
@@ -76,6 +77,7 @@ export function selectBaseRange(
     const endIndex = lowerBound(candles, endTsExclusive);
     const neededBuckets = maxLookbackBars + warmupBars + 2;
     let from = firstInRangeIndex;
+    let availableWarmupBars = 0;
 
     if (neededBuckets > 0 && firstInRangeIndex > 0) {
         const seenBuckets = new Set<number>();
@@ -107,6 +109,11 @@ export function selectBaseRange(
                 from -= 1;
             }
         }
+
+        availableWarmupBars = Math.max(
+            0,
+            seenBuckets.size - (from > 0 ? 1 : 0),
+        );
     }
 
     return {
@@ -115,6 +122,7 @@ export function selectBaseRange(
         firstInRangeIndex,
         endIndex,
         dropFirstAggregate: from > 0,
+        availableWarmupBars,
         empty: firstInRangeIndex >= endIndex,
     };
 }

@@ -227,11 +227,19 @@ export interface DataQualityIssue {
     count?: number;
 }
 
+export interface WarmupReport {
+    requestedBars: number;
+    availableBars: number;
+    actualBars: number;
+    insufficient: boolean;
+}
+
 export interface DataQualityReport {
     baseBarsInRange: number;
     baseBarsProcessed: number;
     strategyBarsProcessed: number;
     inRangeStrategyBars: number;
+    warmup: WarmupReport;
     warnings: DataQualityIssue[];
     hardErrors: DataQualityIssue[];
 }
@@ -244,6 +252,7 @@ export interface ExecutionAssumptions {
     forcedClose: string;
     drawdown: string;
     positionSizing: string;
+    openingGapPriority: string;
 }
 
 export interface BacktestResult {

@@ -646,3 +646,184 @@ test("a Promise-returning onBar fails the run, including during warm-up", () => 
         /Promise/,
     );
 });
+
+test("warm-up report exposes insufficient available history", () => {
+    const bars = barsFrom([
+        [100, 101, 99, 100],
+        [100, 101, 99, 100],
+        [100, 101, 99, 100],
+        [100, 101, 99, 100],
+        [100, 101, 99, 100],
+    ]);
+    const seen: Array<{ index: number; warmup: boolean }> = [];
+
+    const result = runBacktest({
+        bars,
+        config: config({ startTs: bars[3].time, warmupBars: 50 }),
+        strategy: strategy((context) => {
+            seen.push({ index: context.index, warmup: context.isWarmup });
+            return context.isWarmup
+                ? { type: "enter", side: "long" }
+                : null;
+        }),
+    });
+
+    assert.deepEqual(result.dataQuality.warmup, {
+        requestedBars: 50,
+        availableBars: 3,
+        actualBars: 3,
+        insufficient: true,
+    });
+    assert.deepEqual(seen, [
+        { index: 0, warmup: true },
+        { index: 1, warmup: true },
+        { index: 2, warmup: true },
+        { index: 3, warmup: false },
+        { index: 4, warmup: false },
+    ]);
+    assert.equal(result.trades.length, 0);
+});
+
+test("warm-up report reports exactly the requested bars when available", () => {
+    const bars = barsFrom(Array.from({ length: 60 }, () => [100, 101, 99, 100] as [number, number, number, number]));
+    let warmupCalls = 0;
+    let inRangeCalls = 0;
+
+    const result = runBacktest({
+        bars,
+        config: config({ startTs: bars[55].time, warmupBars: 50 }),
+        strategy: strategy((context) => {
+            if (context.isWarmup) warmupCalls += 1;
+            else inRangeCalls += 1;
+            return null;
+        }),
+    });
+
+    assert.deepEqual(result.dataQuality.warmup, {
+        requestedBars: 50,
+        availableBars: 55,
+        actualBars: 50,
+        insufficient: false,
+    });
+    assert.equal(warmupCalls, 50);
+    assert.equal(inRangeCalls, 5);
+});
+
+test("invalid instrument point values are rejected before simulation", () => {
+    const bars = barsFrom([
+        [100, 101, 99, 100],
+        [100, 101, 99, 100],
+    ]);
+
+    for (const pointValue of [0, -2, Number.NaN, Number.POSITIVE_INFINITY]) {
+        assert.throws(
+            () =>
+                runBacktest({
+                    bars,
+                    config: config({
+                        instrument: {
+                            id: "test",
+                            symbol: "TEST",
+                            pointValue,
+                            commissionPerSide: 0,
+                        },
+                    }),
+                    strategy: strategy(() => null),
+                }),
+            /pointValue/,
+        );
+    }
+});
+
+test("ending equity reconciles with net P&L and the final equity point", () => {
+    const bars = barsFrom([
+        [100, 101, 99, 100],
+        [100, 101, 99, 100],
+        [110, 111, 109, 110],
+    ]);
+
+    const result = runBacktest({
+        bars,
+        config: config({
+            instrument: {
+                id: "test",
+                symbol: "TEST",
+                pointValue: 2,
+                commissionPerSide: 1.5,
+            },
+            slippagePointsPerSide: 0.5,
+        }),
+        strategy: strategy((context) => {
+            if (context.index === 0) {
+                return { type: "enter", side: "long", quantity: 2 };
+            }
+            if (context.index === 1) {
+                return { type: "exit", positionId: context.positions[0].id };
+            }
+            return null;
+        }),
+    });
+
+    approx(
+        result.summary.endingEquity,
+        result.summary.startingEquity + result.summary.netPnl,
+    );
+    approx(
+        result.equityCurve[result.equityCurve.length - 1].equity,
+        result.summary.endingEquity,
+    );
+});
+
+test("drawdown tracks unrealized losses at bar close", () => {
+    const bars = barsFrom([
+        [100, 101, 99, 100],
+        [100, 101, 99, 100],
+        [90, 91, 89, 90],
+    ]);
+
+    const result = runBacktest({
+        bars,
+        config: config(),
+        strategy: strategy((context) =>
+            context.index === 0
+                ? { type: "enter", side: "long" }
+                : null,
+        ),
+    });
+
+    assert.ok(result.summary.maxDrawdown > 0);
+    assert.ok(
+        result.summary.maxDrawdownPct !== null &&
+            result.summary.maxDrawdownPct > 0,
+    );
+});
+
+test("queued entries are processed before existing bracket checks (opening-gap priority)", () => {
+    const bars = barsFrom([
+        [100, 101, 99, 100],
+        [100, 101, 99, 100],
+        [90, 95, 89, 91],
+    ]);
+
+    const result = runBacktest({
+        bars,
+        config: config({ maxOpenPositions: 1 }),
+        strategy: strategy((context) => {
+            if (context.index === 0) {
+                return {
+                    type: "enter",
+                    side: "long",
+                    stopLossPoints: 5,
+                };
+            }
+            if (context.index === 1) {
+                return { type: "enter", side: "long" };
+            }
+            return null;
+        }),
+    });
+
+    assert.equal(result.trades.length, 1);
+    assert.equal(result.trades[0].exitReason, "stop_loss");
+    assert.equal(result.summary.rejectedActions.max_open_positions, 1);
+});

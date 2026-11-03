@@ -26,7 +26,17 @@ export default function SourceSelect({ config, setConfig, onSaved }: SourceSelec
         }
     };
 
-    const canSave = file !== null && config !== null && !isSaving;
+    const canSave =
+        file !== null &&
+        config !== null &&
+        !isSaving &&
+        config.symbol.trim() !== "" &&
+        config.id.trim() !== "" &&
+        config.fileName.trim() !== "" &&
+        Number.isFinite(config.pointValue) &&
+        config.pointValue > 0 &&
+        Number.isFinite(config.commission ?? 0) &&
+        (config.commission ?? 0) >= 0;
 
     const onSave = async () => {
         if (!canSave || !file || !config) return;
@@ -79,6 +89,8 @@ export default function SourceSelect({ config, setConfig, onSaved }: SourceSelec
                 <input
                     type="number"
                     placeholder="Point value"
+                    min={0}
+                    step="any"
                     value={config?.pointValue || ""}
                     onChange={(e) => update({ pointValue: Number(e.target.value) })}
                     className="
