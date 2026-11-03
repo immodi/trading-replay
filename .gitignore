@@ -24,8 +24,10 @@ dist-ssr
 *.sw?
 
 
-glbx-mdp3-20210710-20260709.ohlcv-1m.csv
-mnq-1m.json
+# Raw Databento feeds and generated datasets (large; kept local)
+data/*.csv
+data/**/*.csv
+data/*-1m.json
 
 # Private/local strategy files
 /strategies/

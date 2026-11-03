@@ -70,7 +70,7 @@ then select it from **Stored sources** to open the replay chart.
 | `pnpm preview` | Serve the production build locally |
 | `pnpm lint` | Run Oxlint |
 | `pnpm test` | Run the Node test runner (converter, bucketing, trade-tick, backtest-engine, data-quality, and export tests) |
-| `pnpm convert-data` | Convert the raw Databento CSV into an upload-ready `data/mnq-1m.json` |
+| `pnpm convert-data` | Convert every instrument under `data/` into upload-ready JSON (e.g. `data/mnq-1m.json`, `data/mes-1m.json`) |
 
 ## Data sources
 
@@ -143,21 +143,34 @@ Rules the loader relies on:
 
 ### Generating the file from a CSV
 
-The included converter reads a Databento GLBX MDP3 1-minute OHLCV CSV and emits
-this JSON:
+The included converter reads one or more Databento GLBX MDP3 1-minute OHLCV
+CSVs, merges the windows in date order, and emits one JSON file per
+instrument:
 
-1. Put `data/glbx-mdp3-<start>-<end>.ohlcv-1m.csv` in `data/`.
-2. Run `pnpm convert-data` to produce `data/mnq-1m.json`.
-3. Upload that file from the **Sources** screen.
+```
+data/
+  mnq/
+    glbx-mdp3-<start>-<end>.ohlcv-1m.csv
+  mes/
+    glbx-mdp3-<start>-<end>.ohlcv-1m.csv
+  mnq-1m.json   # generated
+  mes-1m.json   # generated
+```
 
-For each UTC date the converter keeps the outright MNQ contract with the
-highest daily volume (a continuous front-month series). Calendar spreads are
-excluded. The active contract only rolls **forward**: it switches to a later
-expiry when that contract trades more than the current one on a date, and it
-never switches back because one day's volume ranking changed. The converter
-validates every emitted bar (finite OHLCV, valid high/low bounds, unique
-chronological timestamps) and reports unusually large adjacent price moves so
-data errors are visible.
+1. Put each instrument's `glbx-mdp3-<start>-<end>.ohlcv-1m.csv` windows in a
+   `data/<instrument>/` directory.
+2. Run `pnpm convert-data` to produce `data/<instrument>-1m.json` for every
+   instrument directory, or `pnpm convert-data mes` to convert one.
+3. Upload the generated JSON file from the **Sources** screen.
+
+For each UTC date the converter keeps the outright contract of the requested
+instrument with the highest daily volume (a continuous front-month series).
+Calendar spreads are excluded. The active contract only rolls **forward**: it
+switches to a later expiry when that contract trades more than the current one
+on a date, and it never switches back because one day's volume ranking changed.
+The converter validates every emitted bar (finite OHLCV, valid high/low bounds,
+unique chronological timestamps) and reports unusually large adjacent price
+moves so data errors are visible.
 
 Both the raw CSV and the generated JSON are
 large and **not committed**. The output intentionally lives in `data/` rather

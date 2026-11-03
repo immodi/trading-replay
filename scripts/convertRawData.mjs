@@ -4,17 +4,86 @@ import readline from "node:readline";
 import { pathToFileURL } from "node:url";
 
 const ROOT = process.cwd();
-const DEFAULT_INPUT = path.join(
-    ROOT,
-    "data",
-    "glbx-mdp3-20210710-20260709.ohlcv-1m.csv",
-);
-// Keep the generated dataset outside `public/` so Vite never copies it into
+const DATA_DIRECTORY = path.join(ROOT, "data");
+// Databento exports are split into one file per download window, e.g.
+// glbx-mdp3-20210710-20260709.ohlcv-1m.csv. Merge every window in date order.
+const INPUT_PATTERN = /^glbx-mdp3-\d{8}-\d{8}\.ohlcv-1m\.csv$/;
+const MONTH_CODE_PATTERN = "[FGHJKMNQUVXZ]";
+// Keep the generated datasets outside `public/` so Vite never copies them into
 // `dist/` (hosts such as Cloudflare Pages reject files over 25 MiB).
-const DEFAULT_OUTPUT = path.join(ROOT, "data", "mnq-1m.json");
 
-/** Outright MNQ futures only; calendar spreads are deliberately excluded. */
-const OUTRIGHT_SYMBOL = /^MNQ[FGHJKMNQUVXZ]\d$/;
+/** All Databento CSV windows in `directory`, oldest window first. */
+function csvWindows(directory) {
+    let entries = [];
+
+    try {
+        entries = fs.readdirSync(directory);
+    } catch {
+        return [];
+    }
+
+    return entries
+        .filter((entry) => INPUT_PATTERN.test(entry))
+        .sort()
+        .map((entry) => path.join(directory, entry));
+}
+
+/** Databento CSV windows for an instrument, oldest window first. */
+export function defaultInputs(symbol = "MNQ") {
+    const root = symbol.toUpperCase();
+    const instrumentDirectory = path.join(DATA_DIRECTORY, root.toLowerCase());
+    const fromInstrumentDirectory = csvWindows(instrumentDirectory);
+
+    if (fromInstrumentDirectory.length > 0) {
+        return fromInstrumentDirectory;
+    }
+
+    // Backwards compatibility for feeds placed directly in `data/`.
+    return csvWindows(DATA_DIRECTORY);
+}
+
+/**
+ * Instrument roots discovered from subdirectories of `data/`, e.g. `data/mnq`
+ * and `data/mes` yield `["MES", "MNQ"]`.
+ */
+export function discoverInstruments() {
+    let entries = [];
+
+    try {
+        entries = fs.readdirSync(DATA_DIRECTORY, { withFileTypes: true });
+    } catch {
+        return [];
+    }
+
+    return entries
+        .filter(
+            (entry) =>
+                entry.isDirectory() && /^[a-z]+$/i.test(entry.name),
+        )
+        .filter(
+            (entry) =>
+                csvWindows(path.join(DATA_DIRECTORY, entry.name)).length > 0,
+        )
+        .map((entry) => entry.name.toUpperCase())
+        .sort();
+}
+
+/** Upload-ready JSON path for an instrument root. */
+function defaultOutput(symbol) {
+    return path.join(DATA_DIRECTORY, `${symbol.toLowerCase()}-1m.json`);
+}
+
+function escapeRegExp(value) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** Outright futures only; calendar spreads are deliberately excluded. */
+function outrightPattern(symbol) {
+    return new RegExp(
+        `^${escapeRegExp(symbol.toUpperCase())}${MONTH_CODE_PATTERN}\\d$`,
+    );
+}
+
 
 const MONTH_CODES = {
     F: 1,
@@ -35,8 +104,8 @@ const MONTH_CODES = {
 const SUSPICIOUS_JUMP_RATIO = 0.02;
 
 /** Parse the expiry month/year encoded in an outright symbol, e.g. MNQZ6. */
-export function parseOutrightSymbol(symbol) {
-    if (!OUTRIGHT_SYMBOL.test(symbol)) return null;
+export function parseOutrightSymbol(symbol, rootSymbol = "MNQ") {
+    if (!outrightPattern(rootSymbol).test(symbol)) return null;
 
     const monthCode = symbol.at(-2);
     const yearDigit = Number(symbol.at(-1));
@@ -52,8 +121,8 @@ export function parseOutrightSymbol(symbol) {
  * A symbol only carries one year digit, so the year is inferred from the
  * first date on which the contract appears in the dataset.
  */
-export function contractExpiryKey(symbol, firstSeenDate) {
-    const info = parseOutrightSymbol(symbol);
+export function contractExpiryKey(symbol, firstSeenDate, rootSymbol = "MNQ") {
+    const info = parseOutrightSymbol(symbol, rootSymbol);
     if (info === null) return Number.POSITIVE_INFINITY;
 
     const firstYear = Number(firstSeenDate.slice(0, 4));
@@ -211,54 +280,74 @@ function toCandle(columns, lastTime) {
 }
 
 /**
- * Convert a Databento GLBX MDP3 1-minute CSV into the compact JSON array the
- * app consumes. The output is a continuous front-month series built from
- * outright contracts with a daily-volume, forward-only roll policy.
+ * Convert one or more Databento GLBX MDP3 1-minute CSVs into the compact JSON
+ * array the app consumes. The output is a continuous front-month series built
+ * from outright contracts with a daily-volume, forward-only roll policy.
+ * Multiple CSV windows are merged in the order they are supplied (which must
+ * be chronological).
  */
 export async function convertCsvToJson({
-    input = DEFAULT_INPUT,
-    output = DEFAULT_OUTPUT,
+    input,
+    inputs,
+    symbol = "MNQ",
+    output,
     log = console.log,
 } = {}) {
+    const root = symbol.toUpperCase();
+    const outrightSymbol = outrightPattern(root);
+    const inputFiles =
+        inputs ?? (input === undefined ? defaultInputs(root) : [input]);
+    const outputFile = output ?? defaultOutput(root);
+
+    if (inputFiles.length === 0) {
+        throw new Error(
+            `No Databento CSV files found for ${root} in ${DATA_DIRECTORY}`,
+        );
+    }
+
     const dailyVolumes = new Map();
     const firstSeen = new Map();
     const dates = new Set();
 
-    await forEachCsvRow(input, (columns) => {
-        const symbol = columns[9];
+    for (const fileName of inputFiles) {
+        await forEachCsvRow(fileName, (columns) => {
+            const rowSymbol = columns[9];
 
-        if (!OUTRIGHT_SYMBOL.test(symbol)) return;
+            if (!outrightSymbol.test(rowSymbol)) return;
 
-        const date = columns[0].slice(0, 10);
-        const volume = Number(columns[8]);
+            const date = columns[0].slice(0, 10);
+            const volume = Number(columns[8]);
 
-        if (!Number.isFinite(volume) || volume < 0) {
-            throw new Error(`Invalid volume at ${columns[0]}`);
-        }
+            if (!Number.isFinite(volume) || volume < 0) {
+                throw new Error(`Invalid volume at ${columns[0]}`);
+            }
 
-        if (!firstSeen.has(symbol)) {
-            firstSeen.set(symbol, date);
-        }
+            if (!firstSeen.has(rowSymbol)) {
+                firstSeen.set(rowSymbol, date);
+            }
 
-        let volumes = dailyVolumes.get(symbol);
+            let volumes = dailyVolumes.get(rowSymbol);
 
-        if (volumes === undefined) {
-            volumes = new Map();
-            dailyVolumes.set(symbol, volumes);
-        }
+            if (volumes === undefined) {
+                volumes = new Map();
+                dailyVolumes.set(rowSymbol, volumes);
+            }
 
-        volumes.set(date, (volumes.get(date) ?? 0) + volume);
-        dates.add(date);
-    });
+            volumes.set(date, (volumes.get(date) ?? 0) + volume);
+            dates.add(date);
+        });
+    }
 
     if (dates.size === 0) {
-        throw new Error(`No outright MNQ futures rows found in ${input}`);
+        throw new Error(
+            `No outright ${root} futures rows found in ${inputFiles.join(", ")}`,
+        );
     }
 
     const contracts = [...firstSeen.keys()].sort(
         (a, b) =>
-            contractExpiryKey(a, firstSeen.get(a)) -
-            contractExpiryKey(b, firstSeen.get(b)),
+            contractExpiryKey(a, firstSeen.get(a), root) -
+            contractExpiryKey(b, firstSeen.get(b), root),
     );
 
     const activeByDate = planActiveContracts({
@@ -285,47 +374,53 @@ export async function convertCsvToJson({
     let previousSymbol = null;
     const jumpWarnings = [];
 
-    await forEachCsvRow(input, (columns) => {
-        const symbol = columns[9];
+    for (const fileName of inputFiles) {
+        await forEachCsvRow(fileName, (columns) => {
+            const rowSymbol = columns[9];
 
-        if (!OUTRIGHT_SYMBOL.test(symbol)) return;
+            if (!outrightSymbol.test(rowSymbol)) return;
 
-        const date = columns[0].slice(0, 10);
+            const date = columns[0].slice(0, 10);
 
-        if (activeByDate.get(date) !== symbol) return;
+            if (activeByDate.get(date) !== rowSymbol) return;
 
-        const candle = toCandle(
-            columns,
-            previousCandle === null ? Number.NEGATIVE_INFINITY : previousCandle.time,
-        );
+            const candle = toCandle(
+                columns,
+                previousCandle === null
+                    ? Number.NEGATIVE_INFINITY
+                    : previousCandle.time,
+            );
 
-        if (previousCandle !== null) {
-            const move = Math.abs(candle.close - previousCandle.close);
-            const ratio = move / previousCandle.close;
+            if (previousCandle !== null) {
+                const move = Math.abs(candle.close - previousCandle.close);
+                const ratio = move / previousCandle.close;
 
-            if (ratio > SUSPICIOUS_JUMP_RATIO) {
-                jumpWarnings.push({
-                    time: new Date(candle.time * 1000).toISOString(),
-                    from: previousCandle.close,
-                    to: candle.close,
-                    ratio,
-                    roll: rollDateSet.has(date) && previousSymbol !== symbol,
-                });
+                if (ratio > SUSPICIOUS_JUMP_RATIO) {
+                    jumpWarnings.push({
+                        time: new Date(candle.time * 1000).toISOString(),
+                        from: previousCandle.close,
+                        to: candle.close,
+                        ratio,
+                        roll:
+                            rollDateSet.has(date) &&
+                            previousSymbol !== rowSymbol,
+                    });
+                }
             }
-        }
 
-        if (candle.time % 60 !== 0) {
-            throw new Error(`Candle is not minute-aligned: ${columns[0]}`);
-        }
+            if (candle.time % 60 !== 0) {
+                throw new Error(`Candle is not minute-aligned: ${columns[0]}`);
+            }
 
-        previousCandle = candle;
-        previousSymbol = symbol;
-        candles.push(candle);
-    });
+            previousCandle = candle;
+            previousSymbol = rowSymbol;
+            candles.push(candle);
+        });
+    }
 
-    fs.mkdirSync(path.dirname(output), { recursive: true });
+    fs.mkdirSync(path.dirname(outputFile), { recursive: true });
 
-    const stream = fs.createWriteStream(output, { encoding: "utf8" });
+    const stream = fs.createWriteStream(outputFile, { encoding: "utf8" });
     stream.write("[");
 
     for (let index = 0; index < candles.length; index++) {
@@ -342,6 +437,8 @@ export async function convertCsvToJson({
         stream.once("error", reject);
     });
 
+    log(`Instrument: ${root}`);
+    log(`Inputs: ${inputFiles.length} CSV file(s)`);
     log(`Contracts: ${contracts.join(", ")}`);
     log(`Rolls: ${rollDates.length}`);
 
@@ -349,7 +446,7 @@ export async function convertCsvToJson({
         log(`  ${roll.date}: ${roll.from} -> ${roll.to}`);
     }
 
-    log(`Saved ${candles.length} candles to ${output}`);
+    log(`Saved ${candles.length} candles to ${outputFile}`);
 
     if (jumpWarnings.length > 0) {
         log(
@@ -367,6 +464,7 @@ export async function convertCsvToJson({
     }
 
     return {
+        symbol: root,
         candles: candles.length,
         contracts,
         rollDates,
@@ -374,12 +472,43 @@ export async function convertCsvToJson({
     };
 }
 
+/**
+ * Convert every instrument directory found under `data/` (e.g. `data/mnq`,
+ * `data/mes`) into its own upload-ready JSON file.
+ */
+export async function convertAllInstruments({ log = console.log } = {}) {
+    const symbols = discoverInstruments();
+
+    if (symbols.length === 0) {
+        throw new Error(`No instrument directories found in ${DATA_DIRECTORY}`);
+    }
+
+    const results = [];
+
+    for (const symbol of symbols) {
+        log(`\n=== ${symbol} ===`);
+        results.push(await convertCsvToJson({ symbol, log }));
+    }
+
+    return results;
+}
+
 const invokedDirectly =
     process.argv[1] !== undefined &&
     pathToFileURL(process.argv[1]).href === import.meta.url;
 
 if (invokedDirectly) {
-    convertCsvToJson().catch((error) => {
+    const symbols = process.argv.slice(2);
+    const run =
+        symbols.length === 0
+            ? convertAllInstruments()
+            : (async () => {
+                  for (const symbol of symbols) {
+                      await convertCsvToJson({ symbol });
+                  }
+              })();
+
+    run.catch((error) => {
         console.error(error);
         process.exitCode = 1;
     });
