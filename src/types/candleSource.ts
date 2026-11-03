@@ -41,6 +41,9 @@ export interface CandleSource {
     /** Raw 1‑minute candles for a given UTC date. */
     loadDay(date: Date): Promise<Candle[]>;
 
+    /** The entire ordered base-timeframe dataset, including history fields. */
+    loadAll(): Promise<Candle[]>;
+
     /**
      * Candles aggregated to `timeframe` minutes, from the start of the
      * dataset up to (but not including) the given UTC date.

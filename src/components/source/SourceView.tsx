@@ -12,9 +12,11 @@ type SourceViewProps = {
     setConfig: React.Dispatch<React.SetStateAction<CandleSourceConfig | null>>;
     /** Bumped by the uploader so the list reloads after every save. */
     refreshKey: number;
+    /** Called when the user picks a stored source. */
+    onSelect?: (config: CandleSourceConfig) => void;
 };
 
-export default function SourceView({ config, setConfig, refreshKey }: SourceViewProps) {
+export default function SourceView({ config, setConfig, refreshKey, onSelect: onSourceSelect }: SourceViewProps) {
     const [sources, setSources] = useState<StoredSource[]>([]);
 
     const refresh = useCallback(async () => {
@@ -36,7 +38,10 @@ export default function SourceView({ config, setConfig, refreshKey }: SourceView
 
     const onSelect = (fileName: string) => {
         const selected = sources.find((source) => source.fileName === fileName);
-        if (selected?.config) setConfig(selected.config);
+        if (selected?.config) {
+            setConfig(selected.config);
+            onSourceSelect?.(selected.config);
+        }
     };
 
     const onDelete = async (fileName: string) => {

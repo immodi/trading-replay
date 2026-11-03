@@ -1,4 +1,4 @@
-import type { Candle } from "@/data/generateCandles";
+import type { Candle } from "@/types/candle";
 
 export default function getCandleWindow(
     source: Candle[],

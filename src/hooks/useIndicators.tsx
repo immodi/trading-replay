@@ -47,6 +47,8 @@ export function useIndicators({
     };
 
     // --- Create / remove series and initialise indicators ---
+    // The history arrays are refreshed by the separate effects below; adding
+    // them here would recreate the indicator instances on every replay tick.
     useEffect(() => {
         if (!chartApi) return;
 
@@ -100,14 +102,15 @@ export function useIndicators({
             vwapSeries.current = null;
             vwap.current = null;
         }
+        // oxlint-disable-next-line react-hooks/exhaustive-deps
     }, [chartApi, settings]); // Dependencies: no history arrays; we refresh via separate effect
 
     // --- Refresh indicators when data changes ---
     useEffect(() => {
         if (!chartApi) return;
 
-        const fullHistory = fullPriceData.History;
-        const sessionHistory = sessionPriceData.History;
+        const fullHistory = fullPriceData.History ?? [];
+        const sessionHistory = sessionPriceData.History ?? [];
 
         refreshIndicator(ema.current, emaSeries.current, fullHistory);
         refreshIndicator(sma.current, smaSeries.current, fullHistory);
@@ -117,8 +120,8 @@ export function useIndicators({
     // --- Also refresh on every tick (priceData object change) ---
     useEffect(() => {
         if (!fullPriceData.Time) return; // fullPriceData has latest time
-        const fullHistory = fullPriceData.History;
-        const sessionHistory = sessionPriceData.History;
+        const fullHistory = fullPriceData.History ?? [];
+        const sessionHistory = sessionPriceData.History ?? [];
 
         refreshIndicator(ema.current, emaSeries.current, fullHistory);
         refreshIndicator(sma.current, smaSeries.current, fullHistory);
@@ -127,8 +130,10 @@ export function useIndicators({
 
     // --- Reset function ---
     const reset = (fullHistoryOverride: PriceData[] = []) => {
-        const fullHist = fullHistoryOverride.length ? fullHistoryOverride : fullPriceData.History;
-        const sessionHist = sessionPriceData.History;
+        const fullHist = fullHistoryOverride.length
+            ? fullHistoryOverride
+            : (fullPriceData.History ?? []);
+        const sessionHist = sessionPriceData.History ?? [];
 
         refreshIndicator(ema.current, emaSeries.current, fullHist);
         refreshIndicator(sma.current, smaSeries.current, fullHist);

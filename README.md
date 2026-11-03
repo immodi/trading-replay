@@ -28,6 +28,7 @@ take-profit & stop-loss, and live P/L — entirely client-side.
 - **Indicators** — VWAP (session-resetting), EMA, and SMA, each toggleable with a configurable colour/period.
 - **Date selection** — jump to any date in the dataset; earlier candles load as aggregated history.
 - **Pluggable data sources** — instruments are described by configs, so adding a dataset doesn't touch the loader.
+- **Systematic backtest** — upload a single self-contained JavaScript strategy, run it across an inclusive UTC date range and 1/5/15/30/60-minute timeframe in a Web Worker, then review summary metrics, a daily equity curve, and the closed-trade list. Results are in memory and exportable as JSON.
 - **Client-side only** — no backend, no accounts; your datasets never leave the browser.
 
 ## Tech stack
@@ -68,7 +69,7 @@ then select it from **Stored sources** to open the replay chart.
 | `pnpm build` | Production build to `dist/` |
 | `pnpm preview` | Serve the production build locally |
 | `pnpm lint` | Run Oxlint |
-| `pnpm test` | Run the Node test runner (converter, bucketing and trade-tick tests) |
+| `pnpm test` | Run the Node test runner (converter, bucketing, trade-tick, backtest-engine, data-quality, and export tests) |
 | `pnpm convert-data` | Convert the raw Databento CSV into an upload-ready `data/mnq-1m.json` |
 
 ## Data sources
@@ -168,9 +169,11 @@ hosts reject oversized assets (Cloudflare Pages caps files at 25 MiB).
 ```
 src/
   components/
+    backtest/     # systematic backtest form, results, export
     chart/        # lightweight-charts wrapper + replay/trading overlay
     source/       # upload / select / delete datasets (OPFS-backed)
     toolbar/      # replay, speed, timeframe, trading and indicator controls
+  backtesting/    # pure simulation engine, aggregation, validation, worker
   constants/      # speeds, timeframes, colours
   data/
     opfs.ts       # Origin Private File System read/write helpers
@@ -179,6 +182,8 @@ src/
   indicators/     # VWAP, EMA, SMA implementations
   types/          # shared domain types
   utils/          # candle aggregation helpers
+public/
+  examples/strategies/  # downloadable example strategy modules
 scripts/
   convertRawData.mjs   # CSV -> JSON data pipeline
 ```
@@ -204,6 +209,28 @@ scripts/
   storage, so the export is the only durable copy.
 - **Indicators** — recomputed from the current replay slice, so they follow the
   replay rather than the full dataset.
+
+## Systematic backtest
+
+Open a source, switch to **Systematic Backtest**, upload a `.js`/`.mjs` strategy
+module, validate it, choose the UTC date range, timeframe, costs, capital, and
+warm-up, then run it. The strategy is called once per completed bar and can
+return market entries, strategy exits, or `exitAll`; stop-loss and take-profit
+brackets are optional. Contract quantity is chosen by the strategy for every
+entry, so it can implement fixed-contract, fixed-dollar-risk, or any other
+sizing rule.
+
+The engine fills market actions at the next bar open, checks brackets against
+each bar's OHLC, and marks open positions to each bar close. It runs in a Web
+Worker with progress, cancellation, and a no-progress watchdog. Completed runs
+stay in memory and can be downloaded as versioned JSON; nothing is persisted.
+
+A commented example is available at
+[`public/examples/strategies/sma-cross.js`](./public/examples/strategies/sma-cross.js),
+and the same file is linked from the page. The strategy API is documented in
+[`systematic-backtesting-spec.md`](./systematic-backtesting-spec.md). Uploaded
+strategy code is trusted code: the Web Worker is not a hardened security
+sandbox.
 
 ## Deployment
 

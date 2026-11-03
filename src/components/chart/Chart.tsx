@@ -362,7 +362,7 @@ export function ChartComponent({ config }: ChartComponentProps) {
 
     if (source.error) {
         return (
-            <div className="flex h-dvh w-screen flex-col items-center justify-center gap-3 bg-canvas text-center">
+            <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-canvas text-center">
                 <span className="text-sm font-semibold text-bear">
                     Failed to load market data
                 </span>
@@ -373,7 +373,7 @@ export function ChartComponent({ config }: ChartComponentProps) {
 
     if (!source.dataRange || !source.candleData || !replay.hasRestored) {
         return (
-            <div className="flex h-dvh w-screen flex-col items-center justify-center gap-3 bg-canvas">
+            <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-canvas">
                 <span
                     className="h-6 w-6 animate-spin rounded-full border-2 border-edge-strong border-t-accent"
                     aria-hidden="true"
@@ -419,7 +419,7 @@ export function ChartComponent({ config }: ChartComponentProps) {
         <div
             onContextMenu={handleContextMenu}
             onClick={() => setOrderMenu(null)}
-            className="flex h-dvh w-full flex-col overflow-hidden bg-canvas font-sans"
+            className="flex h-full w-full flex-col overflow-hidden bg-canvas font-sans"
         >
             <MarketHeader
                 symbol={config.symbol}

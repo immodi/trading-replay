@@ -56,6 +56,11 @@ function utcMidnight(date: Date): Date {
 }
 
 export function createCandleSource(config: CandleSourceConfig): CandleSource {
+    /** Entire ordered base dataset, backed by the shared loader cache. */
+    async function loadAll(): Promise<Candle[]> {
+        return getData(config.fileName);
+    }
+
     /** Raw 1‑minute candles for a given UTC date. */
     async function loadDay(date: Date): Promise<Candle[]> {
         const candles = await getData(config.fileName);
@@ -131,6 +136,7 @@ export function createCandleSource(config: CandleSourceConfig): CandleSource {
         pointValue: config.pointValue,
         commission: config.commission ?? 0,
         loadDay,
+        loadAll,
         getHistory,
         getRange,
     };

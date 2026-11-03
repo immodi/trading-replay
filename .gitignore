@@ -26,3 +26,6 @@ dist-ssr
 
 glbx-mdp3-20210710-20260709.ohlcv-1m.csv
 mnq-1m.json
+
+# Private/local strategy files
+/strategies/
