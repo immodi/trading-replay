@@ -18,7 +18,7 @@ take-profit & stop-loss, and live P/L — entirely client-side.
   open it, or delete it again. Datasets are kept locally in the browser and can
   be swapped instantly.
 - **Candle replay engine** — play forward/backward through history, 0.25×–100× speed, restart, and go-to-latest.
-- **Multi-timeframe** — aggregate the raw 1-minute series into 1m / 3m / 5m / 15m / 1h / 5h / 1D on the fly.
+- **Multi-timeframe** — aggregate the raw 1-minute series into 1m / 3m / 5m / 15m / 1h / 5h / 1D on the fly. Aggregation buckets candles by their UTC timestamp (anchored at UTC midnight) rather than by counting rows, so data gaps and session breaks do not shift or stretch a bar.
 - **Trading** — long/short entries; market and stop orders from a chart right-click menu; optional **bracket** (stop-loss / take-profit) with a toggle; live P/L (net of per-side commission) and close-all.
 - **Trading session** — completed trades are collected for the active source
   with a summary (trade count, net P/L, total commissions) and a reviewable
@@ -68,6 +68,7 @@ then select it from **Stored sources** to open the replay chart.
 | `pnpm build` | Production build to `dist/` |
 | `pnpm preview` | Serve the production build locally |
 | `pnpm lint` | Run Oxlint |
+| `pnpm test` | Run the Node test runner (converter, bucketing and trade-tick tests) |
 | `pnpm convert-data` | Convert the raw Databento CSV into an upload-ready `data/mnq-1m.json` |
 
 ## Data sources
@@ -190,10 +191,12 @@ scripts/
   queryable dataset (`loadDay`, `getHistory`, `getRange`) over the raw JSON.
 - **Replay** — `useReplay` holds the source 1-minute candles and a cache of
   snapshots. Each tick advances a pointer, aggregating minutes into the active
-  timeframe; the snapshot cache makes rewinding O(1).
-- **Trading** — `useTrade` tracks positions and, on each new price, fills stop
-  orders on a price *cross* (not merely being beyond the level), then evaluates
-  take-profit / stop-loss for open positions. Its maths live in
+  timeframe by UTC timestamp bucket; the snapshot cache makes rewinding O(1).
+- **Trading** — `useTrade` tracks positions and, on each replay tick, fills stop
+  orders on a direction-aware price *cross* (not merely being beyond the level),
+  then evaluates take-profit / stop-loss for open positions. Position snapshots
+  are keyed to the replay index, so rewinding restores the state that belonged
+  to the displayed candle instead of keeping a future exit. Its maths live in
   `utils/calculatePositionPL.ts`, shared with the session.
 - **Session** — `useTradingSession` records each completed position once into an
   in‑memory list (independent of `Reset`/date changes), sums it up, and exports

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Color } from "@/constants/replay";
 import { aggregateCandle } from "@/utils/aggregateCandle";
+import { bucketStart } from "@/utils/candleBucket";
 import type { Candle } from "@/types/candle";
 import type { PlayDirection } from "@/types/replay";
 
@@ -10,7 +11,6 @@ export type { PlayDirection } from "@/types/replay";
 interface StateSnapshot {
     candles: Candle[];
     currentCandle: Candle | null;
-    minutesInCurrent: number;
 }
 
 export type ReplayOptions = {
@@ -68,7 +68,6 @@ export function useReplay(
     const initialSnapshot: StateSnapshot = {
         candles: initialCandles,
         currentCandle: null,
-        minutesInCurrent: 0,
     };
 
     const stateCacheRef = useRef<StateSnapshot[]>([initialSnapshot]);
@@ -86,25 +85,43 @@ export function useReplay(
 
     const applyForwardTick = useCallback(
         (state: StateSnapshot, sourceCandle: Candle): StateSnapshot => {
-            let { candles, currentCandle, minutesInCurrent } = state;
+            let { candles, currentCandle } = state;
+
+            const bucket = bucketStart(
+                sourceCandle.time,
+                timeFrameRef.current,
+            );
 
             if (currentCandle === null) {
-                currentCandle = { ...sourceCandle };
+                currentCandle = {
+                    ...sourceCandle,
+                    time: bucket as Candle["time"],
+                    highHistory: [],
+                    lowHistory: [],
+                };
                 candles = [...candles, currentCandle];
-                minutesInCurrent = 1;
-            } else {
+            } else if (bucket > currentCandle.time) {
+                // The previous bucket is complete; start a new candle. This
+                // relies on timestamps, not on how many source rows arrived,
+                // so gaps never stretch or shift a higher-timeframe bar.
+                currentCandle = {
+                    ...sourceCandle,
+                    time: bucket as Candle["time"],
+                    highHistory: [],
+                    lowHistory: [],
+                };
+                candles = [...candles, currentCandle];
+            } else if (bucket === currentCandle.time) {
                 const nextCandle = aggregateCandle(currentCandle, sourceCandle);
                 currentCandle = nextCandle;
                 candles = [...candles.slice(0, -1), nextCandle];
-                minutesInCurrent++;
+            } else {
+                // Out-of-order source rows cannot be placed into an already
+                // closed bucket, so ignore them instead of corrupting the bar.
+                return state;
             }
 
-            if (minutesInCurrent === timeFrameRef.current) {
-                currentCandle = null;
-                minutesInCurrent = 0;
-            }
-
-            return { candles, currentCandle, minutesInCurrent };
+            return { candles, currentCandle };
         },
         [timeFrameRef]
     );
@@ -191,7 +208,6 @@ export function useReplay(
             let snapshot: StateSnapshot = {
                 candles: initialCandlesRef.current,
                 currentCandle: null,
-                minutesInCurrent: 0,
             };
 
             const cache: StateSnapshot[] = [snapshot];
@@ -223,7 +239,6 @@ export function useReplay(
         const initSnapshot: StateSnapshot = {
             candles: initialCandlesRef.current,
             currentCandle: null,
-            minutesInCurrent: 0,
         };
         indexRef.current = 0;
         stateCacheRef.current = [initSnapshot];

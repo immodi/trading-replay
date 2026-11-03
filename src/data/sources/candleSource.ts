@@ -1,7 +1,7 @@
 import type { Candle, RawCandle } from "@/types/candle";
 import type { CandleSourceConfig, CandleSource } from "@/types/candleSource";
 import type { DataRange } from "@/types/dateRange";
-import { aggregateCandle } from "@/utils/aggregateCandle";
+import { aggregateCandlesByTimeframe } from "@/utils/candleBucket";
 import { loadJson } from "../opfs";
 
 /**
@@ -35,6 +35,11 @@ export async function getData(
     if (hit) return hit;
 
     const json = await loadJson<RawCandle[]>(srcFileName);
+
+    if (json === null) {
+        throw new Error(`Candle dataset at ${srcFileName} is missing.`);
+    }
+
     const data = json.map(map);
 
     cache.set(srcFileName, data);
@@ -89,30 +94,13 @@ export function createCandleSource(config: CandleSourceConfig): CandleSource {
             return candlesBeforeDay.slice(-maxCandles);
         }
 
-        // Aggregate raw candles into `timeframe`‑minute blocks
-        const aggregated: Candle[] = [];
-        let current: Candle | null = null;
-        let count = 0;
-
-        for (const minute of candlesBeforeDay) {
-            if (current === null) {
-                current = { ...minute, highHistory: [], lowHistory: [] };
-                count = 1;
-            } else {
-                current = aggregateCandle(current, minute);
-                count++;
-            }
-
-            if (count === timeframe) {
-                aggregated.push(current);
-                current = null;
-                count = 0;
-            }
-        }
-
-        if (current !== null) {
-            aggregated.push(current);
-        }
+        // Aggregate raw candles into UTC timestamp buckets. Using buckets
+        // (instead of every N rows) keeps bars aligned to real interval
+        // boundaries even when the source data contains gaps.
+        const aggregated = aggregateCandlesByTimeframe(
+            candlesBeforeDay,
+            timeframe,
+        );
 
         // Keep only the most recent `maxCandles` candles
         return aggregated.length > maxCandles
