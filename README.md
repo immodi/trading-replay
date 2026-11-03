@@ -148,8 +148,16 @@ this JSON:
 2. Run `pnpm convert-data` to produce `data/mnq-1m.json`.
 3. Upload that file from the **Sources** screen.
 
-For each timestamp the converter keeps the contract row with the highest volume
-(a continuous front-month series). Both the raw CSV and the generated JSON are
+For each UTC date the converter keeps the outright MNQ contract with the
+highest daily volume (a continuous front-month series). Calendar spreads are
+excluded. The active contract only rolls **forward**: it switches to a later
+expiry when that contract trades more than the current one on a date, and it
+never switches back because one day's volume ranking changed. The converter
+validates every emitted bar (finite OHLCV, valid high/low bounds, unique
+chronological timestamps) and reports unusually large adjacent price moves so
+data errors are visible.
+
+Both the raw CSV and the generated JSON are
 large and **not committed**. The output intentionally lives in `data/` rather
 than `public/`: Vite copies everything in `public/` into `dist/`, and static
 hosts reject oversized assets (Cloudflare Pages caps files at 25 MiB).
