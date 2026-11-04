@@ -1,7 +1,11 @@
 import { STORAGE_SCHEMA_VERSION, sessionStoreKey } from "@/constants/storage";
+import {
+    INDICATOR_COLORS,
+    indicatorCatalogEntry,
+} from "@/constants/indicators";
 import { createDefaultView } from "@/constants/workspace";
 import { getStore, type Store } from "@/store/store";
-import type { IndicatorSettings } from "@/types/indicator";
+import type { IndicatorConfig, IndicatorType } from "@/types/indicator";
 import type {
     PersistedPlayback,
     PersistedSessionState,
@@ -80,42 +84,90 @@ function normalisePlayback(
     };
 }
 
-function normaliseIndicatorSettings(
-    value: unknown,
-    fallback: IndicatorSettings,
-): IndicatorSettings {
-    if (!isRecord(value)) return fallback;
+const LEGACY_INDICATOR_TYPES: IndicatorType[] = ["vwap", "ema", "sma"];
+const HEX_COLOR = /^#[0-9a-f]{6}$/i;
 
-    const vwap = isRecord(value.vwap) ? value.vwap : {};
-    const ema = isRecord(value.ema) ? value.ema : {};
-    const sma = isRecord(value.sma) ? value.sma : {};
+function normaliseColor(value: unknown, fallback: string): string {
+    return typeof value === "string" && HEX_COLOR.test(value)
+        ? value
+        : fallback;
+}
+
+function normaliseIndicator(
+    value: unknown,
+    index: number,
+): IndicatorConfig | null {
+    if (!isRecord(value)) return null;
+
+    const type = value.type;
+    if (type !== "vwap" && type !== "ema" && type !== "sma") return null;
+
+    const entry = indicatorCatalogEntry(type);
+    const minimumPeriod = type === "vwap" ? 0 : 1;
 
     return {
-        vwap: {
-            enabled:
-                typeof vwap.enabled === "boolean"
-                    ? vwap.enabled
-                    : fallback.vwap.enabled,
-            color:
-                typeof vwap.color === "string" ? vwap.color : fallback.vwap.color,
-        },
-        ema: {
-            enabled:
-                typeof ema.enabled === "boolean"
-                    ? ema.enabled
-                    : fallback.ema.enabled,
-            color: typeof ema.color === "string" ? ema.color : fallback.ema.color,
-            period: finiteNumber(ema.period, fallback.ema.period),
-        },
-        sma: {
-            enabled:
-                typeof sma.enabled === "boolean"
-                    ? sma.enabled
-                    : fallback.sma.enabled,
-            color: typeof sma.color === "string" ? sma.color : fallback.sma.color,
-            period: finiteNumber(sma.period, fallback.sma.period),
-        },
+        id:
+            typeof value.id === "string" && value.id.length > 0
+                ? value.id
+                : `${type}-${index + 1}`,
+        type,
+        enabled:
+            typeof value.enabled === "boolean" ? value.enabled : true,
+        color: normaliseColor(
+            value.color,
+            INDICATOR_COLORS[index % INDICATOR_COLORS.length],
+        ),
+        period: Math.max(
+            minimumPeriod,
+            Math.floor(finiteNumber(value.period, entry.defaultPeriod)),
+        ),
     };
+}
+
+/** Upgrade the one-instance-per-type object into the current array model. */
+function normaliseLegacyIndicators(
+    value: Record<string, unknown>,
+): IndicatorConfig[] {
+    return LEGACY_INDICATOR_TYPES.flatMap((type) => {
+        const stored = value[type];
+        if (!isRecord(stored)) return [];
+
+        const indicator = normaliseIndicator({ ...stored, type }, 0);
+        return indicator ? [{ ...indicator, id: type }] : [];
+    });
+}
+
+function normaliseIndicators(
+    value: unknown,
+    fallback: IndicatorConfig[],
+): IndicatorConfig[] {
+    // Current shape: an ordered list of indicator instances.
+    if (Array.isArray(value)) {
+        const seen = new Set<string>();
+        const indicators: IndicatorConfig[] = [];
+
+        value.forEach((stored, index) => {
+            const indicator = normaliseIndicator(stored, index);
+            if (!indicator) return;
+
+            let id = indicator.id;
+            let duplicate = 2;
+            while (seen.has(id)) {
+                id = `${indicator.id}-${duplicate}`;
+                duplicate += 1;
+            }
+
+            seen.add(id);
+            indicators.push(id === indicator.id ? indicator : { ...indicator, id });
+        });
+
+        return indicators;
+    }
+
+    // Previous shape: one object with `vwap`/`ema`/`sma` entries.
+    if (isRecord(value)) return normaliseLegacyIndicators(value);
+
+    return fallback;
 }
 
 function normalisePositionParameters(
@@ -145,9 +197,11 @@ function normaliseView(value: unknown, fallback: PersistedView): PersistedView {
             finiteNumber(value.timeframeMinutes, fallback.timeframeMinutes),
         ),
         speed: Math.max(1, finiteNumber(value.speed, fallback.speed)),
-        indicatorSettings: normaliseIndicatorSettings(
-            value.indicatorSettings,
-            fallback.indicatorSettings,
+        indicators: normaliseIndicators(
+            value.indicators !== undefined
+                ? value.indicators
+                : value.indicatorSettings,
+            fallback.indicators,
         ),
         positionParameters: normalisePositionParameters(
             value.positionParameters,

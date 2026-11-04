@@ -34,7 +34,7 @@ import { useTradingSession } from "@/hooks/useTradingSession";
 import { getSessionStore } from "@/store/sessionStore";
 import { ChartTrading } from "./ChartTrading";
 import type { PositionParamters } from "@/types/positionParamters";
-import type { IndicatorSettings } from "@/types/indicator";
+import type { IndicatorConfig } from "@/types/indicator";
 import { useIndicators } from "@/hooks/useIndicators";
 import { useCurrentDataSource } from "@/hooks/useCurrentDataSource";
 import type { CandleSourceConfig } from "@/types/candleSource";
@@ -127,8 +127,9 @@ export function ChartComponent({ config }: ChartComponentProps) {
         ISeriesApi<"Candlestick", UTCTimestamp> | null
     >(null);
 
-    const [indicatorSettings, setIndicatorSettings] =
-        useState<IndicatorSettings>(() => persisted.view.indicatorSettings);
+    const [indicators, setIndicators] = useState<IndicatorConfig[]>(
+        () => persisted.view.indicators,
+    );
     const positionParametersRef = useRef<PositionParamters>(
         persisted.view.positionParameters,
     );
@@ -218,7 +219,7 @@ export function ChartComponent({ config }: ChartComponentProps) {
         if (
             current.timeframeMinutes === timeFrameMinutes &&
             current.speed === speed &&
-            current.indicatorSettings === indicatorSettings
+            current.indicators === indicators
         ) {
             return;
         }
@@ -228,12 +229,12 @@ export function ChartComponent({ config }: ChartComponentProps) {
                 ...current,
                 timeframeMinutes: timeFrameMinutes,
                 speed,
-                indicatorSettings,
+                indicators,
             },
             updatedAt: Date.now(),
         });
         sessionStore.save();
-    }, [timeFrameMinutes, speed, indicatorSettings, sessionStore]);
+    }, [timeFrameMinutes, speed, indicators, sessionStore]);
 
     useEffect(() => {
         if (!replay.hasRestored || !source.currentDate) return;
@@ -334,12 +335,12 @@ export function ChartComponent({ config }: ChartComponentProps) {
         trade.reset();
     };
 
-    const handleIndicatorChange = (newSettings: IndicatorSettings) => {
-        setIndicatorSettings(newSettings);
+    const handleIndicatorChange = (newIndicators: IndicatorConfig[]) => {
+        setIndicators(newIndicators);
 
         const current = sessionStore.get();
         sessionStore.patch({
-            view: { ...current.view, indicatorSettings: newSettings },
+            view: { ...current.view, indicators: newIndicators },
             updatedAt: Date.now(),
         });
         sessionStore.save();
@@ -356,7 +357,7 @@ export function ChartComponent({ config }: ChartComponentProps) {
         chartApi: chartRef.current,
         fullPriceData,
         sessionPriceData,
-        settings: indicatorSettings,
+        settings: indicators,
     });
 
 
@@ -391,14 +392,14 @@ export function ChartComponent({ config }: ChartComponentProps) {
         currentDate: source.currentDate,
         timeFrameMinutes,
         speed,
-        indicatorSettings: indicatorSettings,
+        indicators,
 
         isPlaying: replay.isPlaying,
         direction: replay.direction,
         isDone: replay.isDone,
 
         setSpeed: setChartSpeed,
-        setIndicatorSettings: handleIndicatorChange,
+        setIndicators: handleIndicatorChange,
         setTimeFrame: setTimeFrame,
         setChartDate: setChartDate,
 

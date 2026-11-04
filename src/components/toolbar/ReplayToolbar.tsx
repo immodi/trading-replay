@@ -4,7 +4,7 @@ import { ReplaySpeedSelect } from "./ReplaySpeedSelect";
 import { ReplayTimeframeSelect } from "./ReplayTimeframeSelect";
 import { IndicatorControls } from "./IndicatorControls";
 import { SessionControls } from "./SessionControls";
-import type { IndicatorSettings } from "@/types/indicator";
+import type { IndicatorConfig } from "@/types/indicator";
 import type { SessionSummary, SessionTrade } from "@/types/session";
 
 export type ReplayToolbarProps = {
@@ -15,7 +15,7 @@ export type ReplayToolbarProps = {
     isPlaying: boolean,
     isDone: boolean,
     direction: PlayDirection,
-    indicatorSettings: IndicatorSettings;
+    indicators: IndicatorConfig[];
     timeFrameMinutes: number;
     speed: number;
 
@@ -27,7 +27,7 @@ export type ReplayToolbarProps = {
     stop: () => void,
     restart: () => void,
     playback: (direction: PlayDirection) => void,
-    setIndicatorSettings: (newSettings: IndicatorSettings) => void,
+    setIndicators: (indicators: IndicatorConfig[]) => void,
 
     sessionInstrument: string,
     sessionTrades: SessionTrade[],
@@ -128,8 +128,8 @@ export function ReplayToolbar(props: ReplayToolbarProps) {
                 />
 
                 <IndicatorControls
-                    settings={props.indicatorSettings}
-                    onChange={props.setIndicatorSettings}
+                    indicators={props.indicators}
+                    onChange={props.setIndicators}
                 />
             </div>
         </div>

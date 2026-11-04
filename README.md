@@ -25,7 +25,7 @@ take-profit & stop-loss, and live P/L — entirely client-side.
   list; remove individual trades or **export the session as JSON** at any time.
   Sessions, open orders, replay position, timeframe, indicators and trading
   preferences are saved in the browser and restored automatically, per source.
-- **Indicators** — VWAP (session-resetting), EMA, and SMA, each toggleable with a configurable colour/period.
+- **Indicators** — VWAP (session-resetting), EMA, and SMA. Each overlay is an independent instance, so you can add several EMAs/SMAs with their own colour and period, then show/hide or remove them individually.
 - **Date selection** — jump to any date in the dataset; earlier candles load as aggregated history.
 - **Pluggable data sources** — instruments are described by configs, so adding a dataset doesn't touch the loader.
 - **Systematic backtest** — upload a single self-contained JavaScript strategy, run it across an inclusive UTC date range and 1/5/15/30/60-minute timeframe in a Web Worker, then review summary metrics, a daily equity curve, and the closed-trade list. Results are in memory and exportable as JSON.
