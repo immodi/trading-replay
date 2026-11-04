@@ -14,6 +14,7 @@ import type {
     ExitAllAction,
     ExitReason,
     HistoryApi,
+    ModifyAction,
     OpenPositionView,
     StrategyAction,
     StrategyInstance,
@@ -131,10 +132,78 @@ function validateEnter(raw: Record<string, unknown>): ActionResult {
     };
 }
 
+type LevelField =
+    | { provided: false; value?: undefined; valid: true }
+    | { provided: true; value: number | null; valid: boolean };
+
+function levelField(raw: Record<string, unknown>, key: string): LevelField {
+    if (!(key in raw)) return { provided: false, valid: true };
+
+    const value = raw[key];
+
+    if (value === null) return { provided: true, value: null, valid: true };
+
+    if (typeof value === "number" && Number.isFinite(value)) {
+        return { provided: true, value, valid: true };
+    }
+
+    return { provided: true, value: null, valid: false };
+}
+
+function validateModify(raw: Record<string, unknown>): ActionResult {
+    if (typeof raw.positionId !== "string" || raw.positionId === "") {
+        return reject("invalid_position_id");
+    }
+
+    const stopPoints = levelField(raw, "stopLossPoints");
+    const stopPrice = levelField(raw, "stopLossPrice");
+    const targetPoints = levelField(raw, "takeProfitPoints");
+    const targetPrice = levelField(raw, "takeProfitPrice");
+
+    if (
+        !stopPoints.valid ||
+        !stopPrice.valid ||
+        !targetPoints.valid ||
+        !targetPrice.valid
+    ) {
+        return reject("invalid_bracket");
+    }
+
+    if (
+        (stopPoints.provided && stopPrice.provided) ||
+        (targetPoints.provided && targetPrice.provided)
+    ) {
+        return reject("conflicting_bracket");
+    }
+
+    if (
+        !stopPoints.provided &&
+        !stopPrice.provided &&
+        !targetPoints.provided &&
+        !targetPrice.provided
+    ) {
+        return reject("empty_modify");
+    }
+
+    const action: ModifyAction = {
+        type: "modify",
+        positionId: raw.positionId,
+    };
+
+    if (stopPoints.provided) action.stopLossPoints = stopPoints.value;
+    if (stopPrice.provided) action.stopLossPrice = stopPrice.value;
+    if (targetPoints.provided) action.takeProfitPoints = targetPoints.value;
+    if (targetPrice.provided) action.takeProfitPrice = targetPrice.value;
+
+    return { action };
+}
+
 function validateAction(raw: unknown): ActionResult {
     if (!isRecord(raw)) return reject("malformed_action");
 
     if (raw.type === "enter") return validateEnter(raw);
+
+    if (raw.type === "modify") return validateModify(raw);
 
     if (raw.type === "exit") {
         if (typeof raw.positionId !== "string" || raw.positionId === "") {
@@ -568,6 +637,55 @@ export function runBacktest({
         };
     }
 
+    function modifyLevel(
+        position: OpenPosition,
+        kind: "stop" | "target",
+        points: number | null | undefined,
+        price: number | null | undefined,
+    ): number | null | undefined {
+        if (points === null || price === null) return null;
+        if (points === undefined) return price;
+
+        const sign =
+            (position.side === "long") === (kind === "target") ? 1 : -1;
+
+        return position.entryPrice + sign * points;
+    }
+
+    function processModify(action: ModifyAction): void {
+        const position = openPositions.find(
+            (candidate) => candidate.id === action.positionId,
+        );
+
+        if (!position) {
+            increment(rejectedActions, "unknown_position");
+            return;
+        }
+
+        const stopLoss = modifyLevel(
+            position,
+            "stop",
+            action.stopLossPoints,
+            action.stopLossPrice,
+        );
+        const takeProfit = modifyLevel(
+            position,
+            "target",
+            action.takeProfitPoints,
+            action.takeProfitPrice,
+        );
+
+        if (stopLoss !== undefined) {
+            if (stopLoss === null) delete position.stopLossPrice;
+            else position.stopLossPrice = stopLoss;
+        }
+
+        if (takeProfit !== undefined) {
+            if (takeProfit === null) delete position.takeProfitPrice;
+            else position.takeProfitPrice = takeProfit;
+        }
+    }
+
     function processEntry(
         action: EnterAction,
         bar: BacktestBar,
@@ -613,11 +731,21 @@ export function runBacktest({
         const actions = queuedActions;
         queuedActions = [];
 
-        // Stable partition: exits first, then entries; preserve order in each group.
-        const exits = actions.filter((action) => action.type !== "enter");
+        // Stable partition: modifiers first, then exits, then entries;
+        // preserve order within each group.
+        const modifies = actions.filter(
+            (action): action is ModifyAction => action.type === "modify",
+        );
+        const exits = actions.filter(
+            (action) => action.type === "exit" || action.type === "exitAll",
+        );
         const entries = actions.filter(
             (action): action is EnterAction => action.type === "enter",
         );
+
+        for (const action of modifies) {
+            processModify(action);
+        }
 
         for (const action of exits) {
             if (action.type === "exit") processExit(action, bar, simIndex);

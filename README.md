@@ -228,10 +228,40 @@ scripts/
 Open a source, switch to **Systematic Backtest**, upload a `.js`/`.mjs` strategy
 module, validate it, choose the UTC date range, timeframe, costs, capital, and
 warm-up, then run it. The strategy is called once per completed bar and can
-return market entries, strategy exits, or `exitAll`; stop-loss and take-profit
+return market entries, strategy exits (`exit`/`exitAll`), or `modify` actions
+that update an open position's stop-loss/take-profit; stop-loss and take-profit
 brackets are optional. Contract quantity is chosen by the strategy for every
 entry, so it can implement fixed-contract, fixed-dollar-risk, or any other
 sizing rule.
+
+### Modifying an open position
+
+`onBar` can return a `modify` action to change the brackets of a position that
+is still open:
+
+```js
+return {
+    type: "modify",
+    positionId: context.positions[0].id,
+    // Points are measured from the position's entry fill, using the same
+    // long/short convention as `enter`. 0 = breakeven; negative locks profit.
+    stopLossPoints: 0,
+    // Absolute prices are also supported:
+    // takeProfitPrice: 110,
+    // A null level removes that bracket:
+    // takeProfitPrice: null,
+};
+```
+
+- Omitted fields are left unchanged; `null` removes that bracket.
+- Do not combine a points field and a price field for the same bracket
+  (`conflicting_bracket`).
+- Like entries and exits, the action is applied at the next bar open. If a
+  modified stop is already beyond that open (for example after a gap), normal
+  bracket handling exits at the open with adverse slippage.
+- Rejections, including `unknown_position`, `empty_modify`, `invalid_bracket`
+  (malformed values), and `conflicting_bracket`, are counted in
+  `summary.rejectedActions`.
 
 The engine fills market actions at the next bar open, checks brackets against
 each bar's OHLC, and marks open positions to each bar close. It runs in a Web

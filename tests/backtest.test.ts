@@ -336,6 +336,207 @@ test("stop-loss, take-profit, unbracketed, and entry-candle behavior", () => {
     assert.equal(unbracketed.trades[0].exitReason, "strategy_exit");
 });
 
+test("modify updates stop-loss and take-profit by points from entry", () => {
+    const longBars = barsFrom([
+        [100, 101, 99, 100],
+        [100, 102, 99, 101],
+        [101, 105, 96, 97],
+    ]);
+
+    const long = runBacktest({
+        bars: longBars,
+        config: config(),
+        strategy: strategy((context) => {
+            if (context.index === 0) {
+                return {
+                    type: "enter",
+                    side: "long",
+                    stopLossPoints: 10,
+                    takeProfitPoints: 20,
+                };
+            }
+
+            if (context.index === 1) {
+                assert.equal(context.positions[0].stopLossPrice, 90);
+                assert.equal(context.positions[0].takeProfitPrice, 120);
+
+                return {
+                    type: "modify",
+                    positionId: context.positions[0].id,
+                    stopLossPoints: 3,
+                    takeProfitPoints: 8,
+                };
+            }
+
+            return null;
+        }),
+    });
+
+    assert.equal(long.trades[0].exitReason, "stop_loss");
+    assert.equal(long.trades[0].exitPrice, 97);
+    assert.equal(long.trades[0].stopLossPrice, 97);
+    assert.equal(long.trades[0].takeProfitPrice, 108);
+
+    const shortBars = barsFrom([
+        [100, 101, 99, 100],
+        [100, 102, 99, 101],
+        [99, 106, 98, 100],
+    ]);
+
+    const short = runBacktest({
+        bars: shortBars,
+        config: config(),
+        strategy: strategy((context) => {
+            if (context.index === 0) {
+                return {
+                    type: "enter",
+                    side: "short",
+                    stopLossPoints: 10,
+                    takeProfitPoints: 20,
+                };
+            }
+
+            if (context.index === 1) {
+                return {
+                    type: "modify",
+                    positionId: context.positions[0].id,
+                    stopLossPoints: 5,
+                    takeProfitPoints: 5,
+                };
+            }
+
+            return null;
+        }),
+    });
+
+    assert.equal(short.trades[0].exitReason, "stop_loss");
+    assert.equal(short.trades[0].exitPrice, 105);
+    assert.equal(short.trades[0].stopLossPrice, 105);
+    assert.equal(short.trades[0].takeProfitPrice, 95);
+});
+
+test("modify can move a stop to breakeven and clear a take-profit", () => {
+    const bars = barsFrom([
+        [100, 101, 99, 100],
+        [100, 103, 100, 102],
+        [102, 103, 100, 101],
+    ]);
+
+    const result = runBacktest({
+        bars,
+        config: config(),
+        strategy: strategy((context) => {
+            if (context.index === 0) {
+                return {
+                    type: "enter",
+                    side: "long",
+                    stopLossPoints: 10,
+                    takeProfitPoints: 20,
+                };
+            }
+
+            if (context.index === 1) {
+                return {
+                    type: "modify",
+                    positionId: context.positions[0].id,
+                    stopLossPrice: 100,
+                    takeProfitPrice: null,
+                };
+            }
+
+            return null;
+        }),
+    });
+
+    assert.equal(result.trades[0].exitReason, "stop_loss");
+    assert.equal(result.trades[0].exitPrice, 100);
+    assert.equal(result.trades[0].stopLossPrice, 100);
+    assert.equal(result.trades[0].takeProfitPrice, undefined);
+});
+
+test("a modified stop beyond the next open exits at that open", () => {
+    const bars = barsFrom([
+        [100, 101, 99, 100],
+        [100, 101, 99, 100],
+        [90, 92, 89, 91],
+    ]);
+
+    const result = runBacktest({
+        bars,
+        config: config(),
+        strategy: strategy((context) => {
+            if (context.index === 0) {
+                return {
+                    type: "enter",
+                    side: "long",
+                    stopLossPoints: 20,
+                };
+            }
+
+            if (context.index === 1) {
+                return {
+                    type: "modify",
+                    positionId: context.positions[0].id,
+                    stopLossPoints: 5,
+                };
+            }
+
+            return null;
+        }),
+    });
+
+    assert.equal(result.trades[0].exitReason, "stop_loss");
+    assert.equal(result.trades[0].exitPrice, 90);
+    assert.equal(result.trades[0].stopLossPrice, 95);
+});
+
+test("invalid modify actions are rejected and leave brackets unchanged", () => {
+    const bars = barsFrom([
+        [100, 101, 99, 100],
+        [100, 101, 99, 100],
+        [100, 101, 99, 100],
+    ]);
+
+    const result = runBacktest({
+        bars,
+        config: config(),
+        strategy: strategy((context) => {
+            if (context.index === 0) {
+                return { type: "enter", side: "long" };
+            }
+
+            if (context.index === 1 && context.positions.length > 0) {
+                const positionId = context.positions[0].id;
+
+                return [
+                    {
+                        type: "modify",
+                        positionId: "position-999999",
+                        stopLossPrice: 90,
+                    },
+                    {
+                        type: "modify",
+                        positionId,
+                        stopLossPoints: 5,
+                        stopLossPrice: 95,
+                    },
+                    {
+                        type: "modify",
+                        positionId,
+                    },
+                ];
+            }
+
+            return null;
+        }),
+    });
+
+    assert.equal(result.summary.rejectedActions.unknown_position, 1);
+    assert.equal(result.summary.rejectedActions.conflicting_bracket, 1);
+    assert.equal(result.summary.rejectedActions.empty_modify, 1);
+    assert.equal(result.trades[0].stopLossPrice, undefined);
+});
+
 test("stop gaps use the bar open when it is worse than the stop", () => {
     const bars = barsFrom([
         [100, 101, 99, 100],

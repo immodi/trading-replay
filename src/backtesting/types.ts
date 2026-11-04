@@ -95,7 +95,26 @@ export interface ExitAllAction {
     reason?: string;
 }
 
-export type StrategyAction = EnterAction | ExitAction | ExitAllAction;
+/**
+ * Updates the brackets of an already-open position. Points are measured from
+ * the position's entry price using the same long/short convention as `enter`;
+ * negative or zero points are allowed (e.g. 0 moves a stop to breakeven).
+ * A `null` level removes that bracket. Omitted levels are left unchanged.
+ */
+export interface ModifyAction {
+    type: "modify";
+    positionId: string;
+    stopLossPoints?: number | null;
+    takeProfitPoints?: number | null;
+    stopLossPrice?: number | null;
+    takeProfitPrice?: number | null;
+}
+
+export type StrategyAction =
+    | EnterAction
+    | ExitAction
+    | ExitAllAction
+    | ModifyAction;
 
 export interface StrategyInstance {
     onBar(context: BarContext): StrategyAction | StrategyAction[] | null | undefined;
