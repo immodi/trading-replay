@@ -51,6 +51,17 @@ export function useReplay(
 
     const srcRef = useRef<Candle[]>(source ?? []);
     const indexRef = useRef<number>(0);
+    const hasRestoredRef = useRef(false);
+
+    // Position to re-apply after the aggregated history for a new timeframe
+    // arrives. Raw indices are timeframe-independent, so keeping the index
+    // keeps the chart on the same instant in time.
+    const resumeRef = useRef<{
+        index: number;
+        direction: PlayDirection;
+        source: Candle[];
+        wasPlaying: boolean;
+    } | null>(null);
 
     // Captured once: later store writes must not re-trigger a restore.
     const restoreTargetRef = useRef<{
@@ -235,6 +246,7 @@ export function useReplay(
     /** Reset to the beginning without playing. */
     const resetToStart = useCallback(() => {
         stop();
+        resumeRef.current = null;
 
         const initSnapshot: StateSnapshot = {
             candles: initialCandlesRef.current,
@@ -276,6 +288,9 @@ export function useReplay(
 
         lastSourceRef.current = source;
         srcRef.current = source;
+        // A different day (or dataset) invalidates any pending timeframe
+        // resume: the raw index no longer points at the same candles.
+        resumeRef.current = null;
         restart();
     }, [source, restart]);
 
@@ -284,8 +299,18 @@ export function useReplay(
 
         lastInitialCandlesRef.current = initialCandles;
         initialCandlesRef.current = initialCandles;
+
+        const resume = resumeRef.current;
+        if (resume && resume.source === srcRef.current) {
+            resumeRef.current = null;
+            applyRestore({ index: resume.index, direction: resume.direction });
+
+            if (resume.wasPlaying) start(resume.direction);
+            return;
+        }
+
         restart();
-    }, [initialCandles, restart]);
+    }, [initialCandles, restart, applyRestore, start]);
 
     useEffect(() => {
         speedRef.current = chartSpeed;
@@ -296,8 +321,24 @@ export function useReplay(
 
         if (lastTimeFrameRef.current === timeFrameMinutes) return;
         lastTimeFrameRef.current = timeFrameMinutes;
-        restart();
-    }, [timeFrameMinutes, restart]);
+
+        // The first load follows the normal startup/restore path.
+        if (!hasRestoredRef.current) {
+            restart();
+            return;
+        }
+
+        // Switching timeframe rebuilds the snapshot cache from raw candles,
+        // which would otherwise rewind to the start. Remember where we are and
+        // re-apply it once the history for the new timeframe has loaded.
+        resumeRef.current = {
+            index: indexRef.current,
+            direction: directionRef.current,
+            source: srcRef.current,
+            wasPlaying: timeoutRef.current !== null,
+        };
+        stop();
+    }, [timeFrameMinutes, restart, stop]);
 
     // Cancel the playback timer on unmount; StrictMode's simulated remount
     // resumes from where it stopped instead of silently pausing forever.
@@ -321,6 +362,7 @@ export function useReplay(
         }
 
         setHasRestored(true);
+        hasRestoredRef.current = true;
     }, [options.restoreReady, source, hasRestored, applyRestore]);
 
     // StrictMode remount: resume playback that the simulated unmount stopped.
