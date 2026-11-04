@@ -12,11 +12,11 @@ importers:
         specifier: ^4.3.2
         version: 4.3.3(vite@8.1.5(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.1))
       lightweight-charts:
-        specifier: ^5.2.0
-        version: 5.2.0
+        specifier: ^5.2.1
+        version: 5.2.1
       lightweight-charts-react-components:
         specifier: ^2.5.0
-        version: 2.5.0(lightweight-charts@5.2.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+        version: 2.5.0(lightweight-charts@5.2.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       react:
         specifier: ^19.2.7
         version: 19.2.7
@@ -866,8 +866,8 @@ packages:
       react: '>=18.2 <20'
       react-dom: '>=18.2 <20'
 
-  lightweight-charts@5.2.0:
-    resolution: {integrity: sha512-ey3Vas8UhV06ni+LT9TA1nEe4y8So4Mi6CL/oarNHFMyTktz/xy8e8+oh04Q//eO3t6etvFXgayz2fClyFQb5w==}
+  lightweight-charts@5.2.1:
+    resolution: {integrity: sha512-IVwoK1RLFiLPubaKIjNbtjWLnpPMqiABSrTay6whmNa8L1+19292VtHJ+BWyPUuLCwF0tcQlhEWd1CLB2a1nsQ==}
 
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
@@ -1603,13 +1603,13 @@ snapshots:
       lightningcss-win32-arm64-msvc: 1.32.0
       lightningcss-win32-x64-msvc: 1.32.0
 
-  lightweight-charts-react-components@2.5.0(lightweight-charts@5.2.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
+  lightweight-charts-react-components@2.5.0(lightweight-charts@5.2.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
     dependencies:
-      lightweight-charts: 5.2.0
+      lightweight-charts: 5.2.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
 
-  lightweight-charts@5.2.0:
+  lightweight-charts@5.2.1:
     dependencies:
       fancy-canvas: 2.1.0
 

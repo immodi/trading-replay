@@ -36,6 +36,7 @@ import { ChartTrading } from "./ChartTrading";
 import type { PositionParamters } from "@/types/positionParamters";
 import type { IndicatorConfig } from "@/types/indicator";
 import { useIndicators } from "@/hooks/useIndicators";
+import { IndicatorSeries } from "./IndicatorSeries";
 import { useCurrentDataSource } from "@/hooks/useCurrentDataSource";
 import type { CandleSourceConfig } from "@/types/candleSource";
 import { createCandleSource } from "@/data/sources/candleSource";
@@ -104,6 +105,28 @@ const chartOptions: DeepPartial<ChartOptions> = {
 type ChartComponentProps = {
     config: CandleSourceConfig
 };
+
+// Module-level constants keep the chart from re-applying series options on
+// every replay tick. Re-applying options invalidates the pane views, which can
+// race with overlay data updates while the crosshair is active.
+const candlestickSeriesOptions = {
+    upColor: Color.Bullish,
+    downColor: Color.Bearish,
+    borderVisible: false,
+    wickUpColor: Color.Bullish,
+    wickDownColor: Color.Bearish,
+    priceLineStyle: LineStyle.Dashed,
+    priceLineWidth: 1,
+    priceLineColor: Color.MutedText,
+} as const;
+
+const volumeSeriesOptions = {
+    priceFormat: {
+        type: "volume",
+    },
+    priceLineVisible: false,
+    lastValueVisible: false,
+} as const;
 
 export function ChartComponent({ config }: ChartComponentProps) {
     // One singleton store per stored source: trades, positions, playback and
@@ -353,8 +376,7 @@ export function ChartComponent({ config }: ChartComponentProps) {
         goToLatest,
     } = useGoToLatest();
 
-    const { reset: resetIndicators } = useIndicators({
-        chartApi: chartRef.current,
+    const indicatorLines = useIndicators({
         fullPriceData,
         sessionPriceData,
         settings: indicators,
@@ -451,29 +473,22 @@ export function ChartComponent({ config }: ChartComponentProps) {
                             <CandlestickSeries
                                 ref={handleSeriesInit}
                                 data={replay.candles}
-                                options={{
-                                    upColor: Color.Bullish,
-                                    downColor: Color.Bearish,
-                                    borderVisible: false,
-                                    wickUpColor: Color.Bullish,
-                                    wickDownColor: Color.Bearish,
-                                    priceLineStyle: LineStyle.Dashed,
-                                    priceLineWidth: 1,
-                                    priceLineColor: Color.MutedText,
-                                }}
+                                options={candlestickSeriesOptions}
                             />
+
+                            {indicatorLines.map(({ config, data }) => (
+                                <IndicatorSeries
+                                    key={config.id}
+                                    config={config}
+                                    data={data}
+                                />
+                            ))}
                         </Pane>
 
                         <Pane stretchFactor={1}>
                             <HistogramSeries
                                 data={replay.volume}
-                                options={{
-                                    priceFormat: {
-                                        type: "volume",
-                                    },
-                                    priceLineVisible: false,
-                                    lastValueVisible: false,
-                                }}
+                                options={volumeSeriesOptions}
                             />
                         </Pane>
                     </Chart>
@@ -515,7 +530,6 @@ export function ChartComponent({ config }: ChartComponentProps) {
                 pl={trade.pl}
                 reset={() => {
                     trade.reset();
-                    resetIndicators();
                 }}
                 enter={trade.enter}
                 closeAll={trade.closeAll}
