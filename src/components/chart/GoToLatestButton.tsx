@@ -19,7 +19,7 @@ export function GoToLatestButton({
             className="
                 absolute
                 bottom-12
-                right-20
+                left-3
                 z-50
                 flex
                 h-9
