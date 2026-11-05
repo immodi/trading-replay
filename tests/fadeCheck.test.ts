@@ -63,7 +63,7 @@ test("manual fade check fails when the stop is too wide or RSI divergence is abs
     assert.ok(result.divergence !== null && result.divergence <= 0.5);
 });
 
-test("relaxed profile accepts a 1.0 ATR stop that the base profile rejects", () => {
+test("relaxed profile accepts a stop that the base profile rejects", () => {
     const input = {
         side: "short" as const,
         trend: "bearish" as const,
@@ -72,7 +72,7 @@ test("relaxed profile accepts a 1.0 ATR stop that the base profile rejects", () 
         atr: 1,
         boundaryRsi: 68,
         currentRsi: 66.5,
-        stopExtreme: 93.25,
+        stopExtreme: 93.1,
         entryPrice: 92.5,
         touchesOk: true,
         failedBreakout: true,

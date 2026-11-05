@@ -482,7 +482,8 @@ export function FadeCalculatorPage() {
                         />
                         <span className="text-[10px] text-faint">
                             {profileConfig.timeLabel} · stop ≤{" "}
-                            {profileConfig.maxStopAtr} ATR
+                            {profileConfig.maxStopAtr} ATR · buffer{" "}
+                            {profileConfig.stopBufferPoints} pt
                         </span>
                     </div>
 

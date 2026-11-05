@@ -9,6 +9,7 @@ export type FadeProfile = {
     id: FadeProfileId;
     label: string;
     maxStopAtr: number;
+    stopBufferPoints: number;
     /** Last candle that may trigger a signal. */
     lastSignalMinute: number;
     timeLabel: string;
@@ -19,6 +20,7 @@ export const FADE_PROFILES = {
         id: "base",
         label: "Base",
         maxStopAtr: 0.8,
+        stopBufferPoints: 0.25,
         lastSignalMinute: 14 * 60 + 20,
         timeLabel: "13:00–14:20 ET",
     },
@@ -26,6 +28,7 @@ export const FADE_PROFILES = {
         id: "relaxed",
         label: "Relaxed",
         maxStopAtr: 1.2,
+        stopBufferPoints: 0.5,
         lastSignalMinute: 14 * 60 + 50,
         timeLabel: "13:00–14:50 ET",
     },
@@ -359,9 +362,9 @@ function evaluateFadeSetup(
             : null;
     const stopPrice =
         side === "short" && stopExtreme !== null
-            ? stopExtreme + 0.25
+            ? stopExtreme + profile.stopBufferPoints
             : side === "long" && stopExtreme !== null
-              ? stopExtreme - 0.25
+              ? stopExtreme - profile.stopBufferPoints
               : null;
     const stopDistance =
         stopPrice !== null ? Math.abs(entryPrice - stopPrice) : null;
