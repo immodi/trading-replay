@@ -34,6 +34,7 @@ import { useTradingSession } from "@/hooks/useTradingSession";
 import { getSessionStore } from "@/store/sessionStore";
 import { ChartTrading } from "./ChartTrading";
 import { FadeCheckPanel } from "./FadeCheckPanel";
+import { StrategyPanelHost } from "./StrategyPanelHost";
 import type { PositionParamters } from "@/types/positionParamters";
 import type { IndicatorConfig } from "@/types/indicator";
 import type { ChartTimezone } from "@/constants/timezone";
@@ -151,6 +152,9 @@ export function ChartComponent({ config }: ChartComponentProps) {
     const [chartTimezone, setChartTimezone] = useState<ChartTimezone>(
         () => persisted.view.chartTimezone,
     );
+    const [activeStrategyPanel, setActiveStrategyPanel] = useState<
+        string | null
+    >("fade");
     const [orderMenu, setOrderMenu] = useState<{
         x: number;
         y: number;
@@ -576,11 +580,26 @@ export function ChartComponent({ config }: ChartComponentProps) {
                     </div>
                 </div>
 
-                <FadeCheckPanel
-                    bars={fullPriceData.History ?? []}
-                    timeframeMinutes={timeFrameMinutes}
-                    pointValue={source.pointValue}
-                    commissionRoundTrip={(source.commission ?? 0) * 2}
+                <StrategyPanelHost
+                    panels={[
+                        {
+                            id: "fade",
+                            label: "Fade Check",
+                            content: (
+                                <FadeCheckPanel
+                                    bars={fullPriceData.History ?? []}
+                                    timeframeMinutes={timeFrameMinutes}
+                                    pointValue={source.pointValue}
+                                    commissionRoundTrip={
+                                        (source.commission ?? 0) * 2
+                                    }
+                                />
+                            ),
+                        },
+                    ]}
+                    activeId={activeStrategyPanel}
+                    onShow={setActiveStrategyPanel}
+                    onHide={() => setActiveStrategyPanel(null)}
                 />
             </div>
 
