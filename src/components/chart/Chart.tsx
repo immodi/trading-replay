@@ -541,11 +541,11 @@ export function ChartComponent({ config }: ChartComponentProps) {
 
             <ReplayToolbar {...replayToolbarProps} />
 
-            <div className="flex min-h-0 flex-1">
-                <div className="min-h-0 flex-1 p-2">
+            <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
+                <div className="min-h-0 min-w-0 flex-1 p-2">
                     <div
                         ref={chartContainerRef}
-                        className="relative h-full w-full overflow-hidden rounded-lg border border-edge bg-canvas"
+                        className="relative h-full w-full min-w-0 overflow-hidden rounded-lg border border-edge bg-canvas"
                     >
                     <Chart
                         onInit={handleChartInit}
