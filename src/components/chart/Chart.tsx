@@ -4,6 +4,7 @@ import {
     LineStyle,
     type ChartOptions,
     type DeepPartial,
+    type IChartApi,
     type ISeriesApi,
     type UTCTimestamp,
 } from "lightweight-charts";
@@ -154,7 +155,7 @@ export function ChartComponent({ config }: ChartComponentProps) {
     );
     const [activeStrategyPanel, setActiveStrategyPanel] = useState<
         string | null
-    >("fade");
+    >(() => persisted.view.activeStrategyPanel);
     const [orderMenu, setOrderMenu] = useState<{
         x: number;
         y: number;
@@ -163,6 +164,10 @@ export function ChartComponent({ config }: ChartComponentProps) {
     const [seriesApi, setSeriesApi] = useState<
         ISeriesApi<"Candlestick", UTCTimestamp> | null
     >(null);
+    const [readyChartApi, setReadyChartApi] = useState<IChartApi | null>(
+        null,
+    );
+    const chartContainerRef = useRef<HTMLDivElement | null>(null);
 
     const [indicators, setIndicators] = useState<IndicatorConfig[]>(
         () => persisted.view.indicators,
@@ -257,6 +262,7 @@ export function ChartComponent({ config }: ChartComponentProps) {
             current.timeframeMinutes === timeFrameMinutes &&
             current.speed === speed &&
             current.chartTimezone === chartTimezone &&
+            current.activeStrategyPanel === activeStrategyPanel &&
             current.indicators === indicators
         ) {
             return;
@@ -268,12 +274,20 @@ export function ChartComponent({ config }: ChartComponentProps) {
                 timeframeMinutes: timeFrameMinutes,
                 speed,
                 chartTimezone,
+                activeStrategyPanel,
                 indicators,
             },
             updatedAt: Date.now(),
         });
         sessionStore.save();
-    }, [timeFrameMinutes, speed, chartTimezone, indicators, sessionStore]);
+    }, [
+        timeFrameMinutes,
+        speed,
+        chartTimezone,
+        activeStrategyPanel,
+        indicators,
+        sessionStore,
+    ]);
 
     useEffect(() => {
         if (!replay.hasRestored || !source.currentDate) return;
@@ -386,11 +400,40 @@ export function ChartComponent({ config }: ChartComponentProps) {
     };
 
     const {
-        handleChartInit,
+        handleChartInit: initChart,
         showGoToLatest,
         chartRef,
         goToLatest,
     } = useGoToLatest();
+
+    const handleChartInit = (chartApi: IChartApi) => {
+        initChart(chartApi);
+        setReadyChartApi(chartApi);
+    };
+
+    // The chart canvas does not follow CSS flex changes on its own. Resize it
+    // whenever the strategy panel opens/closes or the window changes.
+    useEffect(() => {
+        if (!readyChartApi) return;
+
+        const container = chartContainerRef.current;
+        if (!container) return;
+
+        const resize = () => {
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            if (width > 0 && height > 0) {
+                readyChartApi.resize(width, height, true);
+            }
+        };
+
+        resize();
+
+        const observer = new ResizeObserver(resize);
+        observer.observe(container);
+
+        return () => observer.disconnect();
+    }, [readyChartApi]);
 
     const indicatorLines = useIndicators({
         fullPriceData,
@@ -500,7 +543,10 @@ export function ChartComponent({ config }: ChartComponentProps) {
 
             <div className="flex min-h-0 flex-1">
                 <div className="min-h-0 flex-1 p-2">
-                    <div className="relative h-full w-full overflow-hidden rounded-lg border border-edge bg-canvas">
+                    <div
+                        ref={chartContainerRef}
+                        className="relative h-full w-full overflow-hidden rounded-lg border border-edge bg-canvas"
+                    >
                     <Chart
                         onInit={handleChartInit}
                         options={chartOptions}

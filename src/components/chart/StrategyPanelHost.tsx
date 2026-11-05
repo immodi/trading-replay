@@ -74,12 +74,11 @@ export function StrategyPanelHost({
                     flex
                     w-6
                     shrink-0
-                    items-start
+                    items-center
                     justify-center
                     border-l
                     border-edge
                     bg-canvas
-                    pt-3
                     text-faint
                     transition
                     hover:bg-raised

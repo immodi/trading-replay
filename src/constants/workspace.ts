@@ -23,6 +23,7 @@ export function createDefaultView() {
         timeframeMinutes: DEFAULT_TIMEFRAME_MINUTES,
         speed: DEFAULT_CHART_SPEED,
         chartTimezone: DEFAULT_CHART_TIMEZONE,
+        activeStrategyPanel: "fade",
         indicators: [] as IndicatorConfig[],
         positionParameters: { ...DEFAULT_POSITION_PARAMETERS },
     };
