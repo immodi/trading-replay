@@ -2,8 +2,10 @@ import type { PlayDirection } from "@/hooks/useReplay";
 import { ReplayControls } from "./ReplayControls";
 import { ReplaySpeedSelect } from "./ReplaySpeedSelect";
 import { ReplayTimeframeSelect } from "./ReplayTimeframeSelect";
+import { ReplayTimezoneSelect } from "./ReplayTimezoneSelect";
 import { IndicatorControls } from "./IndicatorControls";
 import { SessionControls } from "./SessionControls";
+import type { ChartTimezone } from "@/constants/timezone";
 import type { IndicatorConfig } from "@/types/indicator";
 import type { SessionSummary, SessionTrade } from "@/types/session";
 
@@ -18,9 +20,11 @@ export type ReplayToolbarProps = {
     indicators: IndicatorConfig[];
     timeFrameMinutes: number;
     speed: number;
+    chartTimezone: ChartTimezone;
 
     setTimeFrame: (timeFrame: number) => void
     setSpeed: (speed: number) => void,
+    setChartTimezone: (timezone: ChartTimezone) => void,
     setChartDate: (date: Date) => void,
 
     start: (direction: PlayDirection) => void,
@@ -81,6 +85,11 @@ export function ReplayToolbar(props: ReplayToolbarProps) {
             <ReplayTimeframeSelect
                 timeFrame={props.timeFrameMinutes}
                 setTimeFrame={props.setTimeFrame}
+            />
+
+            <ReplayTimezoneSelect
+                timezone={props.chartTimezone}
+                setTimezone={props.setChartTimezone}
             />
 
             <div className="ml-auto flex items-center gap-3 pl-4">

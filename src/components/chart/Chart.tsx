@@ -35,14 +35,19 @@ import { getSessionStore } from "@/store/sessionStore";
 import { ChartTrading } from "./ChartTrading";
 import type { PositionParamters } from "@/types/positionParamters";
 import type { IndicatorConfig } from "@/types/indicator";
+import type { ChartTimezone } from "@/constants/timezone";
 import { indicatorPlacement } from "@/constants/indicators";
+import {
+    createChartTickMarkFormatter,
+    createChartTimeFormatter,
+} from "@/utils/chartTime";
 import { useIndicators } from "@/hooks/useIndicators";
 import { IndicatorSeries } from "./IndicatorSeries";
 import { useCurrentDataSource } from "@/hooks/useCurrentDataSource";
 import type { CandleSourceConfig } from "@/types/candleSource";
 import { createCandleSource } from "@/data/sources/candleSource";
 
-const chartOptions: DeepPartial<ChartOptions> = {
+const baseChartOptions: DeepPartial<ChartOptions> = {
     layout: {
         background: {
             type: ColorType.Solid,
@@ -142,6 +147,9 @@ export function ChartComponent({ config }: ChartComponentProps) {
         () => persisted.view.timeframeMinutes,
     );
     const [speed, setSpeed] = useState<number>(() => persisted.view.speed);
+    const [chartTimezone, setChartTimezone] = useState<ChartTimezone>(
+        () => persisted.view.chartTimezone,
+    );
     const [orderMenu, setOrderMenu] = useState<{
         x: number;
         y: number;
@@ -243,6 +251,7 @@ export function ChartComponent({ config }: ChartComponentProps) {
         if (
             current.timeframeMinutes === timeFrameMinutes &&
             current.speed === speed &&
+            current.chartTimezone === chartTimezone &&
             current.indicators === indicators
         ) {
             return;
@@ -253,12 +262,13 @@ export function ChartComponent({ config }: ChartComponentProps) {
                 ...current,
                 timeframeMinutes: timeFrameMinutes,
                 speed,
+                chartTimezone,
                 indicators,
             },
             updatedAt: Date.now(),
         });
         sessionStore.save();
-    }, [timeFrameMinutes, speed, indicators, sessionStore]);
+    }, [timeFrameMinutes, speed, chartTimezone, indicators, sessionStore]);
 
     useEffect(() => {
         if (!replay.hasRestored || !source.currentDate) return;
@@ -390,6 +400,22 @@ export function ChartComponent({ config }: ChartComponentProps) {
         ({ config }) => indicatorPlacement(config.type) === "pane",
     );
 
+    const chartOptions = useMemo<DeepPartial<ChartOptions>>(
+        () => ({
+            ...baseChartOptions,
+            localization: {
+                ...(baseChartOptions.localization ?? {}),
+                timeFormatter: createChartTimeFormatter(chartTimezone),
+            },
+            timeScale: {
+                ...(baseChartOptions.timeScale ?? {}),
+                tickMarkFormatter:
+                    createChartTickMarkFormatter(chartTimezone),
+            },
+        }),
+        [chartTimezone],
+    );
+
 
     if (source.error) {
         return (
@@ -422,6 +448,7 @@ export function ChartComponent({ config }: ChartComponentProps) {
         currentDate: source.currentDate,
         timeFrameMinutes,
         speed,
+        chartTimezone,
         indicators,
 
         isPlaying: replay.isPlaying,
@@ -429,6 +456,7 @@ export function ChartComponent({ config }: ChartComponentProps) {
         isDone: replay.isDone,
 
         setSpeed: setChartSpeed,
+        setChartTimezone,
         setIndicators: handleIndicatorChange,
         setTimeFrame: setTimeFrame,
         setChartDate: setChartDate,

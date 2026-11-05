@@ -1,4 +1,5 @@
 import { ChartSpeed } from "@/constants/chart";
+import { DEFAULT_CHART_TIMEZONE } from "@/constants/timezone";
 import { Timeframe } from "@/constants/toolbar";
 import type { IndicatorConfig } from "@/types/indicator";
 import type { PositionParamters } from "@/types/positionParamters";
@@ -21,6 +22,7 @@ export function createDefaultView() {
     return {
         timeframeMinutes: DEFAULT_TIMEFRAME_MINUTES,
         speed: DEFAULT_CHART_SPEED,
+        chartTimezone: DEFAULT_CHART_TIMEZONE,
         indicators: [] as IndicatorConfig[],
         positionParameters: { ...DEFAULT_POSITION_PARAMETERS },
     };

@@ -3,6 +3,7 @@ import {
     INDICATOR_COLORS,
     indicatorCatalogEntry,
 } from "@/constants/indicators";
+import { isChartTimezone } from "@/constants/timezone";
 import { createDefaultView } from "@/constants/workspace";
 import { getStore, type Store } from "@/store/store";
 import type { IndicatorConfig, IndicatorType } from "@/types/indicator";
@@ -205,6 +206,9 @@ function normaliseView(value: unknown, fallback: PersistedView): PersistedView {
             finiteNumber(value.timeframeMinutes, fallback.timeframeMinutes),
         ),
         speed: Math.max(1, finiteNumber(value.speed, fallback.speed)),
+        chartTimezone: isChartTimezone(value.chartTimezone)
+            ? value.chartTimezone
+            : fallback.chartTimezone,
         indicators: normaliseIndicators(
             value.indicators !== undefined
                 ? value.indicators

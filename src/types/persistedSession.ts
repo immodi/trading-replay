@@ -1,3 +1,4 @@
+import type { ChartTimezone } from "@/constants/timezone";
 import type { IndicatorConfig } from "@/types/indicator";
 import type { PositionParamters } from "@/types/positionParamters";
 import type { PlayDirection } from "@/types/replay";
@@ -22,6 +23,7 @@ export type PersistedPlayback = {
 export type PersistedView = {
     timeframeMinutes: number;
     speed: number;
+    chartTimezone: ChartTimezone;
     indicators: IndicatorConfig[];
     positionParameters: PositionParamters;
 };
