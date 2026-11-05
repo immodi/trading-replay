@@ -33,6 +33,7 @@ import { useTrade } from "@/hooks/useTrade";
 import { useTradingSession } from "@/hooks/useTradingSession";
 import { getSessionStore } from "@/store/sessionStore";
 import { ChartTrading } from "./ChartTrading";
+import { FadeCheckPanel } from "./FadeCheckPanel";
 import type { PositionParamters } from "@/types/positionParamters";
 import type { IndicatorConfig } from "@/types/indicator";
 import type { ChartTimezone } from "@/constants/timezone";
@@ -493,8 +494,9 @@ export function ChartComponent({ config }: ChartComponentProps) {
 
             <ReplayToolbar {...replayToolbarProps} />
 
-            <div className="min-h-0 flex-1 p-2">
-                <div className="relative h-full w-full overflow-hidden rounded-lg border border-edge bg-canvas">
+            <div className="flex min-h-0 flex-1">
+                <div className="min-h-0 flex-1 p-2">
+                    <div className="relative h-full w-full overflow-hidden rounded-lg border border-edge bg-canvas">
                     <Chart
                         onInit={handleChartInit}
                         options={chartOptions}
@@ -571,7 +573,15 @@ export function ChartComponent({ config }: ChartComponentProps) {
                         visible={showGoToLatest}
                         onClick={goToLatest}
                     />
+                    </div>
                 </div>
+
+                <FadeCheckPanel
+                    bars={fullPriceData.History ?? []}
+                    timeframeMinutes={timeFrameMinutes}
+                    pointValue={source.pointValue}
+                    commissionRoundTrip={(source.commission ?? 0) * 2}
+                />
             </div>
 
             <TradingBar

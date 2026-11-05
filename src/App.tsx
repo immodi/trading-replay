@@ -63,6 +63,12 @@ function App() {
                 {navButton("sources", "Data Sources")}
                 {navButton("manual", "Manual Replay", !hasSource)}
                 {navButton("backtest", "Systematic Backtest", !hasSource)}
+                <a
+                    href="/fade-calculator"
+                    className="rounded-md px-3 py-1.5 text-xs font-medium text-sub transition hover:bg-raised hover:text-ink"
+                >
+                    Fade Calculator
+                </a>
                 <div className="ml-auto flex items-center gap-2 text-[11px] text-faint">
                     {hasSource ? (
                         <>
