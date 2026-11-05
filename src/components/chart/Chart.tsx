@@ -35,6 +35,7 @@ import { getSessionStore } from "@/store/sessionStore";
 import { ChartTrading } from "./ChartTrading";
 import type { PositionParamters } from "@/types/positionParamters";
 import type { IndicatorConfig } from "@/types/indicator";
+import { indicatorPlacement } from "@/constants/indicators";
 import { useIndicators } from "@/hooks/useIndicators";
 import { IndicatorSeries } from "./IndicatorSeries";
 import { useCurrentDataSource } from "@/hooks/useCurrentDataSource";
@@ -382,6 +383,13 @@ export function ChartComponent({ config }: ChartComponentProps) {
         settings: indicators,
     });
 
+    const overlayIndicators = indicatorLines.filter(
+        ({ config }) => indicatorPlacement(config.type) === "overlay",
+    );
+    const paneIndicators = indicatorLines.filter(
+        ({ config }) => indicatorPlacement(config.type) === "pane",
+    );
+
 
     if (source.error) {
         return (
@@ -476,7 +484,7 @@ export function ChartComponent({ config }: ChartComponentProps) {
                                 options={candlestickSeriesOptions}
                             />
 
-                            {indicatorLines.map(({ config, data }) => (
+                            {overlayIndicators.map(({ config, data }) => (
                                 <IndicatorSeries
                                     key={config.id}
                                     config={config}
@@ -491,6 +499,21 @@ export function ChartComponent({ config }: ChartComponentProps) {
                                 options={volumeSeriesOptions}
                             />
                         </Pane>
+
+                        {paneIndicators.map(({ config, data }) => (
+                            <Pane key={config.id} stretchFactor={1}>
+                                <IndicatorSeries
+                                    config={config}
+                                    data={data}
+                                    pane
+                                    referenceLines={
+                                        config.type === "rsi"
+                                            ? [30, 70]
+                                            : undefined
+                                    }
+                                />
+                            </Pane>
+                        ))}
                     </Chart>
 
 

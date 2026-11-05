@@ -218,7 +218,7 @@ export function IndicatorControls({
                     <div className="flex items-start justify-between gap-3 px-1 pb-2">
                         <div>
                             <div className="text-[10px] font-semibold uppercase tracking-wider text-faint">
-                                Overlays
+                                Indicators
                             </div>
                             <div className="mt-0.5 text-[11px] text-sub">
                                 Manage chart indicators
@@ -264,7 +264,7 @@ export function IndicatorControls({
                                     No indicators yet
                                 </p>
                                 <p className="mt-1 text-[10px] text-faint">
-                                    Add an overlay below to get started.
+                                    Add an indicator below to get started.
                                 </p>
                             </div>
                         ) : (

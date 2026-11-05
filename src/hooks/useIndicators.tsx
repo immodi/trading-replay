@@ -3,7 +3,9 @@ import type { LineData, UTCTimestamp } from "lightweight-charts";
 
 import type { IndicatorConfig, IndicatorType } from "@/types/indicator";
 import type { PriceData } from "@/types/priceData";
+import { ATRIndicator } from "@/indicators/atr";
 import { EMAIndicator } from "@/indicators/ema";
+import { RSIIndicator } from "@/indicators/rsi";
 import { SMAIndicator } from "@/indicators/sma";
 import { VWAPIndicator } from "@/indicators/vwap";
 
@@ -41,6 +43,10 @@ function buildData(config: IndicatorConfig, histories: Histories): LineData<UTCT
             return new SMAIndicator(config.period, history).getData();
         case "vwap":
             return new VWAPIndicator(history).getData();
+        case "rsi":
+            return new RSIIndicator(config.period, history).getData();
+        case "atr":
+            return new ATRIndicator(config.period, history).getData();
     }
 }
 

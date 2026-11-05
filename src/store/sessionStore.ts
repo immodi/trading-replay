@@ -100,7 +100,15 @@ function normaliseIndicator(
     if (!isRecord(value)) return null;
 
     const type = value.type;
-    if (type !== "vwap" && type !== "ema" && type !== "sma") return null;
+    if (
+        type !== "vwap" &&
+        type !== "ema" &&
+        type !== "sma" &&
+        type !== "rsi" &&
+        type !== "atr"
+    ) {
+        return null;
+    }
 
     const entry = indicatorCatalogEntry(type);
     const minimumPeriod = type === "vwap" ? 0 : 1;

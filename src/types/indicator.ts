@@ -1,4 +1,4 @@
-export type IndicatorType = "vwap" | "ema" | "sma";
+export type IndicatorType = "vwap" | "ema" | "sma" | "rsi" | "atr";
 
 /**
  * One configured chart overlay. Several instances of the same `type` may
@@ -9,6 +9,6 @@ export type IndicatorConfig = {
     type: IndicatorType;
     enabled: boolean;
     color: string;
-    /** Lookback for EMA/SMA. Unused by VWAP. */
+    /** Lookback for EMA/SMA/RSI/ATR. Unused by VWAP. */
     period: number;
 };
