@@ -3,11 +3,40 @@ import type { PriceData } from "@/types/priceData";
 export type FadeSide = "long" | "short";
 export type FadeTrend = "bullish" | "bearish";
 
+export type FadeProfileId = "base" | "relaxed";
+
+export type FadeProfile = {
+    id: FadeProfileId;
+    label: string;
+    maxStopAtr: number;
+    /** Last candle that may trigger a signal. */
+    lastSignalMinute: number;
+    timeLabel: string;
+};
+
+export const FADE_PROFILES = {
+    base: {
+        id: "base",
+        label: "Base",
+        maxStopAtr: 0.8,
+        lastSignalMinute: 14 * 60 + 20,
+        timeLabel: "13:00–14:20 ET",
+    },
+    relaxed: {
+        id: "relaxed",
+        label: "Relaxed",
+        maxStopAtr: 1.2,
+        lastSignalMinute: 14 * 60 + 50,
+        timeLabel: "13:00–14:50 ET",
+    },
+} as const satisfies Record<FadeProfileId, FadeProfile>;
+
 export type FadeCheckOptions = {
     pointValue: number;
     riskBudget: number;
     maxContracts: number;
     commissionRoundTrip: number;
+    profile?: FadeProfile;
 };
 
 export type FadeCheckCondition = {
@@ -71,7 +100,6 @@ const SESSION_TIME = new Intl.DateTimeFormat("en-US", {
 });
 
 export const FADE_ENTRY_START_MINUTE = 13 * 60;
-export const FADE_ENTRY_END_MINUTE = 14 * 60 + 20;
 
 function safeNumber(value: number | null | undefined): number | null {
     return typeof value === "number" && Number.isFinite(value) ? value : null;
@@ -91,9 +119,15 @@ export function etMinute(unixSeconds: number): number {
     return Number(values.hour) * 60 + Number(values.minute);
 }
 
-export function isFadeTimeWindow(unixSeconds: number): boolean {
+export function isFadeTimeWindow(
+    unixSeconds: number,
+    profile: FadeProfile = FADE_PROFILES.base,
+): boolean {
     const minute = etMinute(unixSeconds);
-    return minute >= FADE_ENTRY_START_MINUTE && minute <= FADE_ENTRY_END_MINUTE;
+    return (
+        minute >= FADE_ENTRY_START_MINUTE &&
+        minute <= profile.lastSignalMinute
+    );
 }
 
 function simpleAtr(bars: PriceData[], period = 14): number | null {
@@ -185,6 +219,8 @@ export function analyzeFadeBars(
 ): FadeCheckResult | null {
     if (bars.length < 20) return null;
 
+    const profile = options.profile ?? FADE_PROFILES.base;
+
     const current = bars[bars.length - 1];
     const rangeBars = bars.slice(-16, -1);
     if (rangeBars.length < 15) return null;
@@ -237,7 +273,7 @@ export function analyzeFadeBars(
             entryPrice: current.Price,
             stopExtreme,
             failedBreakout,
-            withinTimeWindow: isFadeTimeWindow(current.Time),
+            withinTimeWindow: isFadeTimeWindow(current.Time, profile),
         },
         options,
     );
@@ -299,6 +335,7 @@ function evaluateFadeSetup(
         withinTimeWindow,
     } = metrics;
 
+    const profile = options.profile ?? FADE_PROFILES.base;
     const rangeHigh = safeNumber(metrics.rangeHigh);
     const rangeLow = safeNumber(metrics.rangeLow);
     const atr = safeNumber(metrics.atr);
@@ -365,7 +402,8 @@ function evaluateFadeSetup(
         widthAtr !== null && widthAtr >= 0.75 && widthAtr <= 4;
     const touchesOk = highTouches >= 2 && lowTouches >= 2;
     const divergenceOk = divergence !== null && divergence > 0.5;
-    const stopOk = stopAtr !== null && stopAtr > 0 && stopAtr <= 0.8;
+    const stopOk =
+        stopAtr !== null && stopAtr > 0 && stopAtr <= profile.maxStopAtr;
     const targetOk =
         side === "short"
             ? targetPrice !== null && targetPrice < entryPrice
@@ -380,8 +418,8 @@ function evaluateFadeSetup(
             label: "Time window",
             pass: withinTimeWindow,
             detail: withinTimeWindow
-                ? "13:00–14:20 ET"
-                : "Outside 13:00–14:20 ET",
+                ? profile.timeLabel
+                : `Outside ${profile.timeLabel}`,
         },
         {
             key: "trend",
@@ -420,7 +458,7 @@ function evaluateFadeSetup(
             key: "stop",
             label: "Stop distance",
             pass: stopOk,
-            detail: `${formatNumber(stopAtr)}× ATR (max 0.8)`,
+            detail: `${formatNumber(stopAtr)}× ATR (max ${profile.maxStopAtr})`,
         },
         {
             key: "target",

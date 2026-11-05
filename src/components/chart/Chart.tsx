@@ -490,6 +490,25 @@ export function ChartComponent({ config }: ChartComponentProps) {
         );
     }
 
+    const hasOpenPosition = trade.positions.some(
+        (position) =>
+            position.state === "open" || position.state === "waiting",
+    );
+
+    const placeFadeTrade = (order: {
+        side: "long" | "short";
+        quantity: number;
+        stopLoss: number;
+        takeProfit: number;
+    }) => {
+        trade.enter({
+            direction: order.side,
+            quantity: order.quantity,
+            stopLoss: order.stopLoss,
+            takeProfit: order.takeProfit,
+        });
+    };
+
     const replayToolbarProps: ReplayToolbarProps = {
         minDate: source.dataRange.start,
         maxDate: source.dataRange.end,
@@ -639,6 +658,28 @@ export function ChartComponent({ config }: ChartComponentProps) {
                                     commissionRoundTrip={
                                         (source.commission ?? 0) * 2
                                     }
+                                    instrumentLabel={config.symbol}
+                                    profile="base"
+                                    canPlaceTrade={!hasOpenPosition}
+                                    onPlaceTrade={placeFadeTrade}
+                                />
+                            ),
+                        },
+                        {
+                            id: "fade-relaxed",
+                            label: "Fade Relaxed",
+                            content: (
+                                <FadeCheckPanel
+                                    bars={fullPriceData.History ?? []}
+                                    timeframeMinutes={timeFrameMinutes}
+                                    pointValue={source.pointValue}
+                                    commissionRoundTrip={
+                                        (source.commission ?? 0) * 2
+                                    }
+                                    instrumentLabel={config.symbol}
+                                    profile="relaxed"
+                                    canPlaceTrade={!hasOpenPosition}
+                                    onPlaceTrade={placeFadeTrade}
                                 />
                             ),
                         },

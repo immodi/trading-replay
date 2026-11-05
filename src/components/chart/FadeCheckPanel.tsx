@@ -1,7 +1,13 @@
 import { useMemo, useState } from "react";
 
 import type { PriceData } from "@/types/priceData";
-import { analyzeFadeBars, type FadeCheckResult } from "@/utils/fadeCheck";
+import {
+    analyzeFadeBars,
+    FADE_PROFILES,
+    type FadeCheckResult,
+    type FadeProfileId,
+    type FadeSide,
+} from "@/utils/fadeCheck";
 import {
     StrategyCheckPanel,
     type StrategyCheckCondition,
@@ -13,6 +19,15 @@ type FadeCheckPanelProps = {
     timeframeMinutes: number;
     pointValue: number;
     commissionRoundTrip: number;
+    instrumentLabel: string;
+    profile: FadeProfileId;
+    canPlaceTrade?: boolean;
+    onPlaceTrade?: (order: {
+        side: FadeSide;
+        quantity: number;
+        stopLoss: number;
+        takeProfit: number;
+    }) => void;
 };
 
 function fadeMetrics(result: FadeCheckResult): StrategyCheckMetric[] {
@@ -57,6 +72,13 @@ function fadeMetrics(result: FadeCheckResult): StrategyCheckMetric[] {
                     : `${result.stopAtr.toFixed(2)}×`,
         },
         {
+            label: "Stop pts",
+            value:
+                result.stopDistance === null
+                    ? "—"
+                    : result.stopDistance.toFixed(2),
+        },
+        {
             label: "Target",
             value:
                 result.targetPrice === null
@@ -84,9 +106,14 @@ export function FadeCheckPanel({
     timeframeMinutes,
     pointValue,
     commissionRoundTrip,
+    instrumentLabel,
+    profile,
+    canPlaceTrade = true,
+    onPlaceTrade,
 }: FadeCheckPanelProps) {
     const [riskBudget, setRiskBudget] = useState(800);
     const [maxContracts, setMaxContracts] = useState(20);
+    const profileConfig = FADE_PROFILES[profile];
 
     const result = useMemo(() => {
         if (timeframeMinutes !== 5) return null;
@@ -96,6 +123,7 @@ export function FadeCheckPanel({
             riskBudget,
             maxContracts,
             commissionRoundTrip,
+            profile: profileConfig,
         });
     }, [
         bars,
@@ -104,6 +132,7 @@ export function FadeCheckPanel({
         riskBudget,
         maxContracts,
         commissionRoundTrip,
+        profileConfig,
     ]);
 
     const sizing = (
@@ -154,11 +183,94 @@ export function FadeCheckPanel({
         </details>
     );
 
+    const title = profile === "relaxed" ? "Fade Relaxed" : "Fade Check";
+    const subtitle =
+        profile === "relaxed"
+            ? "Relaxed range-fade monitor"
+            : "Range-fade filter monitor";
+
+    const canPlace =
+        result !== null &&
+        result.overall &&
+        result.side !== null &&
+        result.stopPrice !== null &&
+        result.targetPrice !== null &&
+        result.contracts >= 1 &&
+        canPlaceTrade;
+
+    const actions =
+        result === null ? undefined : (
+            <div className="mt-3 space-y-2 border-t border-edge pt-3">
+                <div className="flex items-center justify-between gap-2 text-[10px] text-faint">
+                    <span>
+                        SL{" "}
+                        <strong className="font-mono text-ink">
+                            {result.stopPrice?.toFixed(2) ?? "—"}
+                        </strong>
+                    </span>
+                    <span>
+                        TP{" "}
+                        <strong className="font-mono text-ink">
+                            {result.targetPrice?.toFixed(2) ?? "—"}
+                        </strong>
+                    </span>
+                </div>
+                <button
+                    type="button"
+                    onClick={() => {
+                        if (
+                            !canPlace ||
+                            !onPlaceTrade ||
+                            result.side === null ||
+                            result.stopPrice === null ||
+                            result.targetPrice === null
+                        ) {
+                            return;
+                        }
+
+                        onPlaceTrade({
+                            side: result.side,
+                            quantity: result.contracts,
+                            stopLoss: result.stopPrice,
+                            takeProfit: result.targetPrice,
+                        });
+                    }}
+                    disabled={!canPlace || onPlaceTrade === undefined}
+                    className={`
+                        w-full
+                        rounded-md
+                        px-3
+                        py-2
+                        text-xs
+                        font-bold
+                        text-white
+                        transition
+                        disabled:cursor-not-allowed
+                        disabled:opacity-40
+                        ${
+                            result.side === "long"
+                                ? "bg-bull hover:bg-bull/90"
+                                : "bg-bear hover:bg-bear/90"
+                        }
+                    `}
+                >
+                    {result.side
+                        ? `Place ${result.side.toUpperCase()} ${result.contracts} ${instrumentLabel}`
+                        : "Place trade"}
+                </button>
+                {!canPlaceTrade ? (
+                    <div className="text-center text-[10px] text-faint">
+                        Close the open position first.
+                    </div>
+                ) : null}
+            </div>
+        );
+
     if (timeframeMinutes !== 5) {
         return (
             <StrategyCheckPanel
-                title="Fade Check"
-                subtitle="Range-fade filter monitor"
+                title={title}
+                subtitle={subtitle}
                 status="waiting"
                 summary="Set the chart timeframe to 5m."
                 metrics={[]}
@@ -177,8 +289,8 @@ export function FadeCheckPanel({
     if (result === null) {
         return (
             <StrategyCheckPanel
-                title="Fade Check"
-                subtitle="Range-fade filter monitor"
+                title={title}
+                subtitle={subtitle}
                 status="waiting"
                 summary="Need more candles."
                 metrics={[]}
@@ -194,8 +306,8 @@ export function FadeCheckPanel({
 
     return (
         <StrategyCheckPanel
-            title="Fade Check"
-            subtitle="Range-fade filter monitor"
+            title={title}
+            subtitle={subtitle}
             status={result.overall ? "pass" : "fail"}
             summary={
                 result.overall
@@ -204,6 +316,7 @@ export function FadeCheckPanel({
             }
             metrics={fadeMetrics(result)}
             conditions={fadeConditions(result)}
+            actions={actions}
         >
             {sizing}
         </StrategyCheckPanel>

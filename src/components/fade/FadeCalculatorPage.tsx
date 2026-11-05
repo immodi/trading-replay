@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 
 import {
     evaluateManualFade,
+    FADE_PROFILES,
     isFadeTimeWindow,
     type FadeCheckResult,
+    type FadeProfileId,
     type FadeSide,
     type FadeTrend,
 } from "@/utils/fadeCheck";
@@ -195,7 +197,15 @@ function ResultPanel({
                     }
                 />
                 <Metric
-                    label="Stop"
+                    label="Stop pts"
+                    value={
+                        result.stopDistance === null
+                            ? "—"
+                            : result.stopDistance.toFixed(2)
+                    }
+                />
+                <Metric
+                    label="Stop price"
                     value={
                         result.stopPrice === null
                             ? "—"
@@ -267,6 +277,7 @@ function ResultPanel({
 
 export function FadeCalculatorPage() {
     const [instrument, setInstrument] = useState<Instrument>("MES");
+    const [profile, setProfile] = useState<FadeProfileId>("relaxed");
     const [side, setSide] = useState<FadeSide>("short");
     const [trend, setTrend] = useState<FadeTrend>("bearish");
     const [rangeHigh, setRangeHigh] = useState("");
@@ -295,12 +306,16 @@ export function FadeCalculatorPage() {
             if (!stored) return;
             const parsed = JSON.parse(stored) as Partial<{
                 instrument: Instrument;
+                profile: FadeProfileId;
                 riskBudget: number;
                 maxContracts: number;
                 commission: number;
             }>;
             if (parsed.instrument === "MES" || parsed.instrument === "MNQ") {
                 setInstrument(parsed.instrument);
+            }
+            if (parsed.profile === "base" || parsed.profile === "relaxed") {
+                setProfile(parsed.profile);
             }
             if (Number.isFinite(parsed.riskBudget)) {
                 setRiskBudget(Number(parsed.riskBudget));
@@ -321,14 +336,19 @@ export function FadeCalculatorPage() {
             STORAGE_KEY,
             JSON.stringify({
                 instrument,
+                profile,
                 riskBudget,
                 maxContracts,
                 commission,
             }),
         );
-    }, [instrument, riskBudget, maxContracts, commission]);
+    }, [instrument, profile, riskBudget, maxContracts, commission]);
 
-    const withinTimeWindow = isFadeTimeWindow(Math.floor(now / 1000));
+    const profileConfig = FADE_PROFILES[profile];
+    const withinTimeWindow = isFadeTimeWindow(
+        Math.floor(now / 1000),
+        profileConfig,
+    );
     const values = useMemo(
         () => ({
             rangeHigh: Number(rangeHigh),
@@ -373,6 +393,7 @@ export function FadeCalculatorPage() {
                   riskBudget,
                   maxContracts,
                   commissionRoundTrip: commission,
+                  profile: profileConfig,
               },
               withinTimeWindow,
           )
@@ -411,7 +432,7 @@ export function FadeCalculatorPage() {
                 <div>
                     <div className="text-sm font-bold">Fade Calculator</div>
                     <div className="text-[10px] text-faint">
-                        Minimal inputs · range fade pass/fail
+                        {profileConfig.label} profile · minimal inputs · range fade pass/fail
                     </div>
                 </div>
                 <div className="ml-auto flex items-center gap-2 text-[10px]">
@@ -443,6 +464,26 @@ export function FadeCalculatorPage() {
                                 onClick={() => setInstrument(value)}
                             />
                         ))}
+                    </div>
+
+                    <div className="mb-4 flex flex-wrap items-center gap-2">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-faint">
+                            Profile
+                        </span>
+                        <SegmentButton
+                            active={profile === "base"}
+                            label="Base"
+                            onClick={() => setProfile("base")}
+                        />
+                        <SegmentButton
+                            active={profile === "relaxed"}
+                            label="Relaxed"
+                            onClick={() => setProfile("relaxed")}
+                        />
+                        <span className="text-[10px] text-faint">
+                            {profileConfig.timeLabel} · stop ≤{" "}
+                            {profileConfig.maxStopAtr} ATR
+                        </span>
                     </div>
 
                     <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -635,6 +676,9 @@ export function FadeCalculatorPage() {
                             Clear
                         </button>
                     </div>
+                    <p className="mt-2 text-[10px] text-faint">
+                        Place Trade is available inside Manual Replay, where the replay trade engine is connected.
+                    </p>
                 </section>
 
                 <section>

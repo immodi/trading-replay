@@ -22,6 +22,7 @@ type StrategyCheckPanelProps = {
     metrics: StrategyCheckMetric[];
     conditions: StrategyCheckCondition[];
     placeholder?: ReactNode;
+    actions?: ReactNode;
     children?: ReactNode;
     widthClass?: string;
 };
@@ -46,6 +47,7 @@ export function StrategyCheckPanel({
     metrics,
     conditions,
     placeholder,
+    actions,
     children,
     widthClass = "w-80",
 }: StrategyCheckPanelProps) {
@@ -150,6 +152,7 @@ export function StrategyCheckPanel({
                     </>
                 )}
 
+                {actions}
                 {children}
             </div>
         </aside>
