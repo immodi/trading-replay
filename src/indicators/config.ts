@@ -1,4 +1,5 @@
 import {
+    DEFAULT_INDICATOR_BAND_COUNT,
     DEFAULT_INDICATOR_LINE_STYLE,
     DEFAULT_INDICATOR_LINE_WIDTH,
     INDICATOR_COLORS,
@@ -41,5 +42,6 @@ export function createIndicator(
         period: entry.defaultPeriod,
         lineWidth: DEFAULT_INDICATOR_LINE_WIDTH,
         lineStyle: DEFAULT_INDICATOR_LINE_STYLE,
+        bandCount: DEFAULT_INDICATOR_BAND_COUNT,
     };
 }

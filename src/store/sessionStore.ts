@@ -1,5 +1,6 @@
 import { STORAGE_SCHEMA_VERSION, sessionStoreKey } from "@/constants/storage";
 import {
+    DEFAULT_INDICATOR_BAND_COUNT,
     DEFAULT_INDICATOR_LINE_STYLE,
     DEFAULT_INDICATOR_LINE_WIDTH,
     INDICATOR_COLORS,
@@ -147,6 +148,12 @@ function normaliseIndicator(
             value.lineStyle === "dotted"
                 ? value.lineStyle
                 : DEFAULT_INDICATOR_LINE_STYLE,
+        bandCount:
+            value.bandCount === 1 ||
+            value.bandCount === 2 ||
+            value.bandCount === 3
+                ? value.bandCount
+                : DEFAULT_INDICATOR_BAND_COUNT,
     };
 }
 

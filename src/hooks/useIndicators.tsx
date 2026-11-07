@@ -98,18 +98,20 @@ function buildPlots(
                     data: bands.vwap,
                     color: config.color,
                 },
-                ...bands.bands.flatMap((band) => [
-                    {
-                        key: `upper-${band.multiplier}`,
-                        data: band.upper,
-                        color: bandColor,
-                    },
-                    {
-                        key: `lower-${band.multiplier}`,
-                        data: band.lower,
-                        color: bandColor,
-                    },
-                ]),
+                ...bands.bands
+                    .slice(0, config.bandCount)
+                    .flatMap((band) => [
+                        {
+                            key: `upper-${band.multiplier}`,
+                            data: band.upper,
+                            color: bandColor,
+                        },
+                        {
+                            key: `lower-${band.multiplier}`,
+                            data: band.lower,
+                            color: bandColor,
+                        },
+                    ]),
             ];
         }
         case "rsi":

@@ -1,4 +1,5 @@
 import type {
+    IndicatorBandCount,
     IndicatorLineStyle,
     IndicatorLineWidth,
     IndicatorType,
@@ -48,6 +49,12 @@ export const INDICATOR_LINE_STYLE_LABELS: Record<
 
 export const DEFAULT_INDICATOR_LINE_WIDTH: IndicatorLineWidth = 2;
 export const DEFAULT_INDICATOR_LINE_STYLE: IndicatorLineStyle = "solid";
+
+export const INDICATOR_BAND_COUNTS = [
+    1, 2, 3,
+] as const satisfies readonly IndicatorBandCount[];
+
+export const DEFAULT_INDICATOR_BAND_COUNT: IndicatorBandCount = 3;
 
 /** Distinct overlay colours, used in order when new instances are added. */
 export const INDICATOR_COLORS = [

@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 
 import {
+    INDICATOR_BAND_COUNTS,
     INDICATOR_LINE_STYLES,
     INDICATOR_LINE_STYLE_LABELS,
     INDICATOR_LINE_WIDTHS,
     indicatorCatalogEntry,
 } from "@/constants/indicators";
 import type {
+    IndicatorBandCount,
     IndicatorConfig,
     IndicatorLineStyle,
     IndicatorLineWidth,
@@ -203,12 +205,48 @@ export function IndicatorItem({
                             "
                         />
                     </label>
+                ) : indicator.type === "vwap-bands" ? (
+                    <label
+                        title="Number of standard-deviation bands on each side"
+                        className="flex items-center gap-1"
+                    >
+                        <span>Bands</span>
+                        <select
+                            value={indicator.bandCount}
+                            onChange={(event) =>
+                                onChange({
+                                    bandCount: Number(
+                                        event.target.value,
+                                    ) as IndicatorBandCount,
+                                })
+                            }
+                            aria-label={`${entry.label} band count`}
+                            className="
+                                rounded-md
+                                border
+                                border-edge
+                                bg-canvas
+                                px-1
+                                py-0.5
+                                font-mono
+                                text-[11px]
+                                tabular-nums
+                                text-ink
+                                outline-none
+                                transition
+                                [color-scheme:dark]
+                                focus:border-accent/60
+                            "
+                        >
+                            {INDICATOR_BAND_COUNTS.map((count) => (
+                                <option key={count} value={count}>
+                                    {count}
+                                </option>
+                            ))}
+                        </select>
+                    </label>
                 ) : (
-                    <span>
-                        {indicator.type === "vwap-bands"
-                            ? "1σ–3σ"
-                            : "Session"}
-                    </span>
+                    <span>Session</span>
                 )}
 
                 <label title="Line thickness" className="flex items-center gap-1">

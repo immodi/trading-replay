@@ -92,7 +92,7 @@ test("multiple indicator instances keep unique ids and discard invalid rows", ()
     );
 });
 
-test("indicator line width and style are restored", () => {
+test("indicator appearance settings are restored", () => {
     const state = normaliseSessionState(
         {
             view: {
@@ -104,6 +104,7 @@ test("indicator line width and style are restored", () => {
                         color: "#123456",
                         lineWidth: 4,
                         lineStyle: "dashed",
+                        bandCount: 2,
                     },
                 ],
             },
@@ -116,9 +117,10 @@ test("indicator line width and style are restored", () => {
     assert.equal(state.view.indicators[0].period, 0);
     assert.equal(state.view.indicators[0].lineWidth, 4);
     assert.equal(state.view.indicators[0].lineStyle, "dashed");
+    assert.equal(state.view.indicators[0].bandCount, 2);
 });
 
-test("invalid indicator line settings fall back to defaults", () => {
+test("invalid indicator appearance settings fall back to defaults", () => {
     const state = normaliseSessionState(
         {
             view: {
@@ -128,6 +130,7 @@ test("invalid indicator line settings fall back to defaults", () => {
                         type: "ema",
                         lineWidth: 9,
                         lineStyle: "wavy",
+                        bandCount: 9,
                     },
                 ],
             },
@@ -138,6 +141,7 @@ test("invalid indicator line settings fall back to defaults", () => {
     assert.ok(state);
     assert.equal(state.view.indicators[0].lineWidth, 2);
     assert.equal(state.view.indicators[0].lineStyle, "solid");
+    assert.equal(state.view.indicators[0].bandCount, 3);
 });
 
 test("a fresh session starts with no indicators", () => {

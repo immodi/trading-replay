@@ -8,6 +8,7 @@ export type IndicatorType =
 
 export type IndicatorLineWidth = 1 | 2 | 3 | 4;
 export type IndicatorLineStyle = "solid" | "dashed" | "dotted";
+export type IndicatorBandCount = 1 | 2 | 3;
 
 /**
  * One configured chart overlay. Several instances of the same `type` may
@@ -22,4 +23,6 @@ export type IndicatorConfig = {
     period: number;
     lineWidth: IndicatorLineWidth;
     lineStyle: IndicatorLineStyle;
+    /** Number of standard-deviation bands on each side. VWAP bands only. */
+    bandCount: IndicatorBandCount;
 };
