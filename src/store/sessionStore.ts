@@ -1,5 +1,7 @@
 import { STORAGE_SCHEMA_VERSION, sessionStoreKey } from "@/constants/storage";
 import {
+    DEFAULT_INDICATOR_LINE_STYLE,
+    DEFAULT_INDICATOR_LINE_WIDTH,
     INDICATOR_COLORS,
     indicatorCatalogEntry,
 } from "@/constants/indicators";
@@ -132,13 +134,19 @@ function normaliseIndicator(
             minimumPeriod,
             Math.floor(finiteNumber(value.period, entry.defaultPeriod)),
         ),
-        multiplier: Math.max(
-            0.1,
-            finiteNumber(
-                value.multiplier,
-                entry.defaultMultiplier ?? 2,
-            ),
-        ),
+        lineWidth:
+            value.lineWidth === 1 ||
+            value.lineWidth === 2 ||
+            value.lineWidth === 3 ||
+            value.lineWidth === 4
+                ? value.lineWidth
+                : DEFAULT_INDICATOR_LINE_WIDTH,
+        lineStyle:
+            value.lineStyle === "solid" ||
+            value.lineStyle === "dashed" ||
+            value.lineStyle === "dotted"
+                ? value.lineStyle
+                : DEFAULT_INDICATOR_LINE_STYLE,
     };
 }
 

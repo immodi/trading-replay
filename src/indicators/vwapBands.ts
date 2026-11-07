@@ -1,18 +1,29 @@
 import type { LineData, UTCTimestamp } from "lightweight-charts";
 import type { PriceData } from "@/types/priceData";
 
-export type VWAPBandsData = {
-    vwap: LineData<UTCTimestamp>[];
+/** Standard VWAP band widths: one, two, and three standard deviations. */
+export const VWAP_BAND_MULTIPLIERS = [1, 2, 3] as const;
+
+export type VWAPBandLine = {
+    multiplier: number;
     upper: LineData<UTCTimestamp>[];
     lower: LineData<UTCTimestamp>[];
+};
+
+export type VWAPBandsData = {
+    vwap: LineData<UTCTimestamp>[];
+    bands: VWAPBandLine[];
 };
 
 export type VWAPBandPoint = {
     time: UTCTimestamp;
     vwap: number;
-    upper: number;
-    lower: number;
     standardDeviation: number;
+    bands: Array<{
+        multiplier: number;
+        upper: number;
+        lower: number;
+    }>;
 };
 
 type Contribution = {
@@ -43,7 +54,6 @@ function upsert(
  * candle, matching the plain VWAP indicator.
  */
 export class VWAPBandsIndicator {
-    private readonly multiplier: number;
     private cumulativePV = 0;
     private cumulativePV2 = 0;
     private cumulativeVolume = 0;
@@ -51,14 +61,14 @@ export class VWAPBandsIndicator {
 
     private readonly data: VWAPBandsData = {
         vwap: [],
-        upper: [],
-        lower: [],
+        bands: VWAP_BAND_MULTIPLIERS.map((multiplier) => ({
+            multiplier,
+            upper: [],
+            lower: [],
+        })),
     };
 
-    constructor(multiplier = 2, initialData: PriceData[] = []) {
-        this.multiplier =
-            Number.isFinite(multiplier) && multiplier > 0 ? multiplier : 2;
-
+    constructor(initialData: PriceData[] = []) {
         for (const candle of initialData) {
             this.update(candle);
         }
@@ -104,17 +114,29 @@ export class VWAPBandsIndicator {
                   )
                 : 0;
         const standardDeviation = Math.sqrt(variance);
+        const bands = this.data.bands.map((band) => {
+            const upper =
+                vwap + standardDeviation * band.multiplier;
+            const lower =
+                vwap - standardDeviation * band.multiplier;
+
+            upsert(band.upper, { time: candle.Time, value: upper });
+            upsert(band.lower, { time: candle.Time, value: lower });
+
+            return {
+                multiplier: band.multiplier,
+                upper,
+                lower,
+            };
+        });
         const point: VWAPBandPoint = {
             time: candle.Time,
             vwap,
-            upper: vwap + standardDeviation * this.multiplier,
-            lower: vwap - standardDeviation * this.multiplier,
             standardDeviation,
+            bands,
         };
 
-        upsert(this.data.vwap, { time: point.time, value: point.vwap });
-        upsert(this.data.upper, { time: point.time, value: point.upper });
-        upsert(this.data.lower, { time: point.time, value: point.lower });
+        upsert(this.data.vwap, { time: candle.Time, value: vwap });
 
         return point;
     }
@@ -129,8 +151,11 @@ export class VWAPBandsIndicator {
         this.cumulativeVolume = 0;
         this.lastContribution = undefined;
         this.data.vwap.length = 0;
-        this.data.upper.length = 0;
-        this.data.lower.length = 0;
+
+        for (const band of this.data.bands) {
+            band.upper.length = 0;
+            band.lower.length = 0;
+        }
 
         for (const candle of initialData) {
             this.update(candle);

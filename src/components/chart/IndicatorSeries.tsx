@@ -8,7 +8,16 @@ import {
 import { LineSeries, PriceLine } from "lightweight-charts-react-components";
 
 import { indicatorCatalogEntry } from "@/constants/indicators";
-import type { IndicatorConfig } from "@/types/indicator";
+import type {
+    IndicatorConfig,
+    IndicatorLineStyle,
+} from "@/types/indicator";
+
+const LINE_STYLE_MAP: Record<IndicatorLineStyle, LineStyle> = {
+    solid: LineStyle.Solid,
+    dashed: LineStyle.Dashed,
+    dotted: LineStyle.Dotted,
+};
 
 type IndicatorSeriesProps = {
     config: IndicatorConfig;
@@ -38,8 +47,8 @@ export function IndicatorSeries({
     const options = useMemo(
         () => ({
             color: color ?? config.color,
-            lineWidth: lineWidth ?? 2,
-            ...(lineStyle !== undefined ? { lineStyle } : {}),
+            lineWidth: lineWidth ?? config.lineWidth,
+            lineStyle: lineStyle ?? LINE_STYLE_MAP[config.lineStyle],
             priceLineVisible: false,
             lastValueVisible: pane,
             crosshairMarkerVisible: false,
@@ -61,6 +70,8 @@ export function IndicatorSeries({
         [
             color,
             config.color,
+            config.lineStyle,
+            config.lineWidth,
             config.period,
             config.type,
             entry.label,

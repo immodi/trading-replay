@@ -89,10 +89,7 @@ function buildPlots(
                 },
             ];
         case "vwap-bands": {
-            const bands = new VWAPBandsIndicator(
-                config.multiplier,
-                history,
-            ).getData();
+            const bands = new VWAPBandsIndicator(history).getData();
             const bandColor = withAlpha(config.color, 0.72);
 
             return [
@@ -100,22 +97,19 @@ function buildPlots(
                     key: "vwap",
                     data: bands.vwap,
                     color: config.color,
-                    lineWidth: 2,
                 },
-                {
-                    key: "upper",
-                    data: bands.upper,
-                    color: bandColor,
-                    lineWidth: 1,
-                    lineStyle: LineStyle.Dashed,
-                },
-                {
-                    key: "lower",
-                    data: bands.lower,
-                    color: bandColor,
-                    lineWidth: 1,
-                    lineStyle: LineStyle.Dashed,
-                },
+                ...bands.bands.flatMap((band) => [
+                    {
+                        key: `upper-${band.multiplier}`,
+                        data: band.upper,
+                        color: bandColor,
+                    },
+                    {
+                        key: `lower-${band.multiplier}`,
+                        data: band.lower,
+                        color: bandColor,
+                    },
+                ]),
             ];
         }
         case "rsi":

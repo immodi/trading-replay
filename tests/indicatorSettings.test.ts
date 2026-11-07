@@ -92,7 +92,7 @@ test("multiple indicator instances keep unique ids and discard invalid rows", ()
     );
 });
 
-test("VWAP bands keep their standard-deviation multiplier", () => {
+test("indicator line width and style are restored", () => {
     const state = normaliseSessionState(
         {
             view: {
@@ -102,7 +102,8 @@ test("VWAP bands keep their standard-deviation multiplier", () => {
                         type: "vwap-bands",
                         enabled: true,
                         color: "#123456",
-                        multiplier: 2.5,
+                        lineWidth: 4,
+                        lineStyle: "dashed",
                     },
                 ],
             },
@@ -113,7 +114,30 @@ test("VWAP bands keep their standard-deviation multiplier", () => {
     assert.ok(state);
     assert.equal(state.view.indicators[0].type, "vwap-bands");
     assert.equal(state.view.indicators[0].period, 0);
-    assert.equal(state.view.indicators[0].multiplier, 2.5);
+    assert.equal(state.view.indicators[0].lineWidth, 4);
+    assert.equal(state.view.indicators[0].lineStyle, "dashed");
+});
+
+test("invalid indicator line settings fall back to defaults", () => {
+    const state = normaliseSessionState(
+        {
+            view: {
+                indicators: [
+                    {
+                        id: "ema",
+                        type: "ema",
+                        lineWidth: 9,
+                        lineStyle: "wavy",
+                    },
+                ],
+            },
+        },
+        "MNQ",
+    );
+
+    assert.ok(state);
+    assert.equal(state.view.indicators[0].lineWidth, 2);
+    assert.equal(state.view.indicators[0].lineStyle, "solid");
 });
 
 test("a fresh session starts with no indicators", () => {

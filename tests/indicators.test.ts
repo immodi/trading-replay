@@ -37,17 +37,27 @@ test("ATR uses the simple average true range", () => {
     assert.equal(atr.getData().at(-1)?.value, 2);
 });
 
-test("VWAP bands use volume-weighted standard deviation", () => {
+test("VWAP bands render one, two, and three standard deviations", () => {
     const candles: PriceData[] = [
         { Time: 0 as UTCTimestamp, Price: 100, High: 101, Low: 99, Volume: 1 },
         { Time: 1 as UTCTimestamp, Price: 110, High: 111, Low: 109, Volume: 1 },
     ];
-    const bands = new VWAPBandsIndicator(2, candles);
+    const bands = new VWAPBandsIndicator(candles);
     const data = bands.getData();
 
     assert.equal(data.vwap.at(-1)?.value, 105);
-    assert.equal(data.upper.at(-1)?.value, 115);
-    assert.equal(data.lower.at(-1)?.value, 95);
+    assert.deepEqual(
+        data.bands.map((band) => band.multiplier),
+        [1, 2, 3],
+    );
+    assert.deepEqual(
+        data.bands.map((band) => band.upper.at(-1)?.value),
+        [110, 115, 120],
+    );
+    assert.deepEqual(
+        data.bands.map((band) => band.lower.at(-1)?.value),
+        [100, 95, 90],
+    );
 });
 
 test("VWAP bands weight the variance by volume", () => {
@@ -55,7 +65,7 @@ test("VWAP bands weight the variance by volume", () => {
         { Time: 0 as UTCTimestamp, Price: 100, High: 101, Low: 99, Volume: 3 },
         { Time: 1 as UTCTimestamp, Price: 110, High: 111, Low: 109, Volume: 1 },
     ];
-    const bands = new VWAPBandsIndicator(1, candles);
+    const bands = new VWAPBandsIndicator(candles);
     const point = bands.update({
         Time: 1 as UTCTimestamp,
         Price: 110,
@@ -67,4 +77,5 @@ test("VWAP bands weight the variance by volume", () => {
     // Repeating the latest bar must not double-count its contribution.
     assert.equal(point.vwap, 102.5);
     assert.ok(Math.abs(point.standardDeviation - Math.sqrt(18.75)) < 1e-10);
+    assert.equal(point.bands.length, 3);
 });

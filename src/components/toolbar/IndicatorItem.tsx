@@ -1,7 +1,16 @@
 import { useEffect, useState } from "react";
 
-import { indicatorCatalogEntry } from "@/constants/indicators";
-import type { IndicatorConfig } from "@/types/indicator";
+import {
+    INDICATOR_LINE_STYLES,
+    INDICATOR_LINE_STYLE_LABELS,
+    INDICATOR_LINE_WIDTHS,
+    indicatorCatalogEntry,
+} from "@/constants/indicators";
+import type {
+    IndicatorConfig,
+    IndicatorLineStyle,
+    IndicatorLineWidth,
+} from "@/types/indicator";
 
 type IndicatorItemProps = {
     indicator: IndicatorConfig;
@@ -17,21 +26,13 @@ export function IndicatorItem({
     const entry = indicatorCatalogEntry(indicator.type);
     const supportsPeriod =
         indicator.type !== "vwap" && indicator.type !== "vwap-bands";
-    const supportsMultiplier = indicator.type === "vwap-bands";
     const [periodDraft, setPeriodDraft] = useState(String(indicator.period));
-    const [multiplierDraft, setMultiplierDraft] = useState(
-        String(indicator.multiplier),
-    );
 
     // Keep the draft in sync when the value changes elsewhere, without
     // fighting the user while they are typing.
     useEffect(() => {
         setPeriodDraft(String(indicator.period));
     }, [indicator.period]);
-
-    useEffect(() => {
-        setMultiplierDraft(String(indicator.multiplier));
-    }, [indicator.multiplier]);
 
     const commitPeriod = () => {
         const parsed = Number(periodDraft);
@@ -47,27 +48,13 @@ export function IndicatorItem({
         if (next !== indicator.period) onChange({ period: next });
     };
 
-    const commitMultiplier = () => {
-        const parsed = Number(multiplierDraft);
-
-        if (!Number.isFinite(parsed) || parsed <= 0) {
-            setMultiplierDraft(String(indicator.multiplier));
-            return;
-        }
-
-        const next = Math.round(parsed * 100) / 100;
-        setMultiplierDraft(String(next));
-
-        if (next !== indicator.multiplier) onChange({ multiplier: next });
-    };
-
     return (
         <div
             className={`
                 group
                 flex
-                items-center
-                gap-2
+                flex-col
+                gap-1.5
                 rounded-lg
                 border
                 px-2
@@ -80,179 +67,221 @@ export function IndicatorItem({
                 }
             `}
         >
-            <label
-                title="Line colour"
-                className="relative h-5 w-5 shrink-0 cursor-pointer rounded-full border border-white/20"
-                style={{ backgroundColor: indicator.color }}
-            >
-                <input
-                    type="color"
-                    value={indicator.color}
-                    onChange={(event) => onChange({ color: event.target.value })}
-                    aria-label={`${entry.label} line colour`}
-                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                />
-            </label>
-
-            <span className="min-w-0 flex-1 truncate text-xs font-semibold tracking-wide text-ink">
-                {entry.label}
-            </span>
-
-            {supportsPeriod ? (
-                <label className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide text-faint">
-                    <span>Period</span>
-                    <input
-                        type="number"
-                        min={1}
-                        step={1}
-                        value={periodDraft}
-                        onChange={(event) => setPeriodDraft(event.target.value)}
-                        onBlur={commitPeriod}
-                        onKeyDown={(event) => {
-                            if (event.key !== "Enter") return;
-                            commitPeriod();
-                            event.currentTarget.blur();
-                        }}
-                        className="
-                            w-12
-                            rounded-md
-                            border
-                            border-edge
-                            bg-canvas
-                            px-1.5
-                            py-0.5
-                            text-right
-                            font-mono
-                            text-[11px]
-                            tabular-nums
-                            text-ink
-                            outline-none
-                            transition
-                            focus:border-accent/60
-                        "
-                    />
-                </label>
-            ) : supportsMultiplier ? (
+            <div className="flex items-center gap-2">
                 <label
-                    title="Band width in standard deviations"
-                    className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide text-faint"
+                    title="Line colour"
+                    className="relative h-5 w-5 shrink-0 cursor-pointer rounded-full border border-white/20"
+                    style={{ backgroundColor: indicator.color }}
                 >
-                    <span>σ</span>
                     <input
-                        type="number"
-                        min={0.1}
-                        step={0.1}
-                        value={multiplierDraft}
+                        type="color"
+                        value={indicator.color}
                         onChange={(event) =>
-                            setMultiplierDraft(event.target.value)
+                            onChange({ color: event.target.value })
                         }
-                        onBlur={commitMultiplier}
-                        onKeyDown={(event) => {
-                            if (event.key !== "Enter") return;
-                            commitMultiplier();
-                            event.currentTarget.blur();
-                        }}
+                        aria-label={`${entry.label} line colour`}
+                        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                    />
+                </label>
+
+                <span className="min-w-0 flex-1 truncate text-xs font-semibold tracking-wide text-ink">
+                    {entry.label}
+                </span>
+
+                <button
+                    type="button"
+                    onClick={() => onChange({ enabled: !indicator.enabled })}
+                    aria-label={`${indicator.enabled ? "Hide" : "Show"} ${entry.label}`}
+                    aria-pressed={indicator.enabled}
+                    title={indicator.enabled ? "Hide on chart" : "Show on chart"}
+                    className={`
+                        inline-flex
+                        h-6
+                        w-6
+                        shrink-0
+                        items-center
+                        justify-center
+                        rounded-md
+                        transition
+                        hover:bg-white/5
+                        ${indicator.enabled ? "text-accent" : "text-faint hover:text-ink"}
+                    `}
+                >
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        aria-hidden="true"
+                        className="h-3.5 w-3.5"
+                        stroke="currentColor"
+                        strokeWidth="1.75"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    >
+                        {indicator.enabled ? (
+                            <>
+                                <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z" />
+                                <circle cx="12" cy="12" r="2.5" />
+                            </>
+                        ) : (
+                            <>
+                                <path d="M3 3l18 18" />
+                                <path d="M10.6 6.2A9.8 9.8 0 0112 6c6 0 9.5 6 9.5 6a17 17 0 01-2.4 3" />
+                                <path d="M6.6 6.7A17 17 0 002.5 12s3.5 6 9.5 6a9.7 9.7 0 003.3-.6" />
+                            </>
+                        )}
+                    </svg>
+                </button>
+
+                <button
+                    type="button"
+                    onClick={onRemove}
+                    aria-label={`Remove ${entry.label}`}
+                    title="Remove indicator"
+                    className="
+                        inline-flex
+                        h-6
+                        w-6
+                        shrink-0
+                        items-center
+                        justify-center
+                        rounded-md
+                        text-faint
+                        transition
+                        hover:bg-bear/10
+                        hover:text-bear
+                    "
+                >
+                    <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        aria-hidden="true"
+                        className="h-3.5 w-3.5"
+                        stroke="currentColor"
+                        strokeWidth="1.75"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    >
+                        <path d="M6 6l12 12M18 6L6 18" />
+                    </svg>
+                </button>
+            </div>
+
+            <div className="flex items-center gap-2 pl-7 text-[10px] font-medium uppercase tracking-wide text-faint">
+                {supportsPeriod ? (
+                    <label className="flex items-center gap-1">
+                        <span>Period</span>
+                        <input
+                            type="number"
+                            min={1}
+                            step={1}
+                            value={periodDraft}
+                            onChange={(event) =>
+                                setPeriodDraft(event.target.value)
+                            }
+                            onBlur={commitPeriod}
+                            onKeyDown={(event) => {
+                                if (event.key !== "Enter") return;
+                                commitPeriod();
+                                event.currentTarget.blur();
+                            }}
+                            className="
+                                w-12
+                                rounded-md
+                                border
+                                border-edge
+                                bg-canvas
+                                px-1.5
+                                py-0.5
+                                text-right
+                                font-mono
+                                text-[11px]
+                                tabular-nums
+                                text-ink
+                                outline-none
+                                transition
+                                focus:border-accent/60
+                            "
+                        />
+                    </label>
+                ) : (
+                    <span>
+                        {indicator.type === "vwap-bands"
+                            ? "1σ–3σ"
+                            : "Session"}
+                    </span>
+                )}
+
+                <label title="Line thickness" className="flex items-center gap-1">
+                    <span>Width</span>
+                    <select
+                        value={indicator.lineWidth}
+                        onChange={(event) =>
+                            onChange({
+                                lineWidth: Number(
+                                    event.target.value,
+                                ) as IndicatorLineWidth,
+                            })
+                        }
+                        aria-label={`${entry.label} line thickness`}
                         className="
-                            w-12
                             rounded-md
                             border
                             border-edge
                             bg-canvas
-                            px-1.5
+                            px-1
                             py-0.5
-                            text-right
                             font-mono
                             text-[11px]
                             tabular-nums
                             text-ink
                             outline-none
                             transition
+                            [color-scheme:dark]
                             focus:border-accent/60
                         "
-                    />
+                    >
+                        {INDICATOR_LINE_WIDTHS.map((width) => (
+                            <option key={width} value={width}>
+                                {width}
+                            </option>
+                        ))}
+                    </select>
                 </label>
-            ) : (
-                <span className="text-[10px] font-medium uppercase tracking-wide text-faint">
-                    Session
-                </span>
-            )}
 
-            <button
-                type="button"
-                onClick={() => onChange({ enabled: !indicator.enabled })}
-                aria-label={`${indicator.enabled ? "Hide" : "Show"} ${entry.label}`}
-                aria-pressed={indicator.enabled}
-                title={indicator.enabled ? "Hide on chart" : "Show on chart"}
-                className={`
-                    inline-flex
-                    h-6
-                    w-6
-                    shrink-0
-                    items-center
-                    justify-center
-                    rounded-md
-                    transition
-                    hover:bg-white/5
-                    ${indicator.enabled ? "text-accent" : "text-faint hover:text-ink"}
-                `}
-            >
-                <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    aria-hidden="true"
-                    className="h-3.5 w-3.5"
-                    stroke="currentColor"
-                    strokeWidth="1.75"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                >
-                    {indicator.enabled ? (
-                        <>
-                            <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z" />
-                            <circle cx="12" cy="12" r="2.5" />
-                        </>
-                    ) : (
-                        <>
-                            <path d="M3 3l18 18" />
-                            <path d="M10.6 6.2A9.8 9.8 0 0112 6c6 0 9.5 6 9.5 6a17 17 0 01-2.4 3" />
-                            <path d="M6.6 6.7A17 17 0 002.5 12s3.5 6 9.5 6a9.7 9.7 0 003.3-.6" />
-                        </>
-                    )}
-                </svg>
-            </button>
-
-            <button
-                type="button"
-                onClick={onRemove}
-                aria-label={`Remove ${entry.label}`}
-                title="Remove indicator"
-                className="
-                    inline-flex
-                    h-6
-                    w-6
-                    shrink-0
-                    items-center
-                    justify-center
-                    rounded-md
-                    text-faint
-                    transition
-                    hover:bg-bear/10
-                    hover:text-bear
-                "
-            >
-                <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    aria-hidden="true"
-                    className="h-3.5 w-3.5"
-                    stroke="currentColor"
-                    strokeWidth="1.75"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                >
-                    <path d="M6 6l12 12M18 6L6 18" />
-                </svg>
-            </button>
+                <label title="Line style" className="flex items-center gap-1">
+                    <span>Style</span>
+                    <select
+                        value={indicator.lineStyle}
+                        onChange={(event) =>
+                            onChange({
+                                lineStyle: event.target
+                                    .value as IndicatorLineStyle,
+                            })
+                        }
+                        aria-label={`${entry.label} line style`}
+                        className="
+                            rounded-md
+                            border
+                            border-edge
+                            bg-canvas
+                            px-1
+                            py-0.5
+                            text-[11px]
+                            text-ink
+                            outline-none
+                            transition
+                            [color-scheme:dark]
+                            focus:border-accent/60
+                        "
+                    >
+                        {INDICATOR_LINE_STYLES.map((style) => (
+                            <option key={style} value={style}>
+                                {INDICATOR_LINE_STYLE_LABELS[style]}
+                            </option>
+                        ))}
+                    </select>
+                </label>
+            </div>
         </div>
     );
 }

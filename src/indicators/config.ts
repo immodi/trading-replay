@@ -1,4 +1,6 @@
 import {
+    DEFAULT_INDICATOR_LINE_STYLE,
+    DEFAULT_INDICATOR_LINE_WIDTH,
     INDICATOR_COLORS,
     indicatorCatalogEntry,
 } from "@/constants/indicators";
@@ -37,6 +39,7 @@ export function createIndicator(
         enabled: true,
         color: nextColor(existing),
         period: entry.defaultPeriod,
-        multiplier: entry.defaultMultiplier ?? 2,
+        lineWidth: DEFAULT_INDICATOR_LINE_WIDTH,
+        lineStyle: DEFAULT_INDICATOR_LINE_STYLE,
     };
 }
