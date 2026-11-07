@@ -92,6 +92,30 @@ test("multiple indicator instances keep unique ids and discard invalid rows", ()
     );
 });
 
+test("VWAP bands keep their standard-deviation multiplier", () => {
+    const state = normaliseSessionState(
+        {
+            view: {
+                indicators: [
+                    {
+                        id: "bands",
+                        type: "vwap-bands",
+                        enabled: true,
+                        color: "#123456",
+                        multiplier: 2.5,
+                    },
+                ],
+            },
+        },
+        "MNQ",
+    );
+
+    assert.ok(state);
+    assert.equal(state.view.indicators[0].type, "vwap-bands");
+    assert.equal(state.view.indicators[0].period, 0);
+    assert.equal(state.view.indicators[0].multiplier, 2.5);
+});
+
 test("a fresh session starts with no indicators", () => {
     const state = normaliseSessionState({}, "MNQ");
 

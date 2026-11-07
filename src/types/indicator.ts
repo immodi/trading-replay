@@ -1,4 +1,10 @@
-export type IndicatorType = "vwap" | "ema" | "sma" | "rsi" | "atr";
+export type IndicatorType =
+    | "vwap"
+    | "vwap-bands"
+    | "ema"
+    | "sma"
+    | "rsi"
+    | "atr";
 
 /**
  * One configured chart overlay. Several instances of the same `type` may
@@ -9,6 +15,8 @@ export type IndicatorConfig = {
     type: IndicatorType;
     enabled: boolean;
     color: string;
-    /** Lookback for EMA/SMA/RSI/ATR. Unused by VWAP. */
+    /** Lookback for EMA/SMA/RSI/ATR. Unused by VWAP indicators. */
     period: number;
+    /** Band width in standard deviations. Only used by VWAP bands. */
+    multiplier: number;
 };

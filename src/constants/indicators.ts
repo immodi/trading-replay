@@ -6,6 +6,7 @@ type IndicatorCatalogEntry = {
     type: IndicatorType;
     label: string;
     defaultPeriod: number;
+    defaultMultiplier?: number;
     placement: IndicatorPlacement;
 };
 
@@ -13,6 +14,13 @@ export const INDICATOR_CATALOG = [
     { type: "ema", label: "EMA", defaultPeriod: 14, placement: "overlay" },
     { type: "sma", label: "SMA", defaultPeriod: 20, placement: "overlay" },
     { type: "vwap", label: "VWAP", defaultPeriod: 0, placement: "overlay" },
+    {
+        type: "vwap-bands",
+        label: "VWAP Bands",
+        defaultPeriod: 0,
+        defaultMultiplier: 2,
+        placement: "overlay",
+    },
     { type: "rsi", label: "RSI", defaultPeriod: 14, placement: "pane" },
     { type: "atr", label: "ATR", defaultPeriod: 14, placement: "pane" },
 ] as const satisfies readonly IndicatorCatalogEntry[];

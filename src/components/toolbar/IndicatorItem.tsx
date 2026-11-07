@@ -15,14 +15,23 @@ export function IndicatorItem({
     onRemove,
 }: IndicatorItemProps) {
     const entry = indicatorCatalogEntry(indicator.type);
-    const supportsPeriod = indicator.type !== "vwap";
+    const supportsPeriod =
+        indicator.type !== "vwap" && indicator.type !== "vwap-bands";
+    const supportsMultiplier = indicator.type === "vwap-bands";
     const [periodDraft, setPeriodDraft] = useState(String(indicator.period));
+    const [multiplierDraft, setMultiplierDraft] = useState(
+        String(indicator.multiplier),
+    );
 
     // Keep the draft in sync when the value changes elsewhere, without
     // fighting the user while they are typing.
     useEffect(() => {
         setPeriodDraft(String(indicator.period));
     }, [indicator.period]);
+
+    useEffect(() => {
+        setMultiplierDraft(String(indicator.multiplier));
+    }, [indicator.multiplier]);
 
     const commitPeriod = () => {
         const parsed = Number(periodDraft);
@@ -36,6 +45,20 @@ export function IndicatorItem({
         setPeriodDraft(String(next));
 
         if (next !== indicator.period) onChange({ period: next });
+    };
+
+    const commitMultiplier = () => {
+        const parsed = Number(multiplierDraft);
+
+        if (!Number.isFinite(parsed) || parsed <= 0) {
+            setMultiplierDraft(String(indicator.multiplier));
+            return;
+        }
+
+        const next = Math.round(parsed * 100) / 100;
+        setMultiplierDraft(String(next));
+
+        if (next !== indicator.multiplier) onChange({ multiplier: next });
     };
 
     return (
@@ -88,6 +111,45 @@ export function IndicatorItem({
                         onKeyDown={(event) => {
                             if (event.key !== "Enter") return;
                             commitPeriod();
+                            event.currentTarget.blur();
+                        }}
+                        className="
+                            w-12
+                            rounded-md
+                            border
+                            border-edge
+                            bg-canvas
+                            px-1.5
+                            py-0.5
+                            text-right
+                            font-mono
+                            text-[11px]
+                            tabular-nums
+                            text-ink
+                            outline-none
+                            transition
+                            focus:border-accent/60
+                        "
+                    />
+                </label>
+            ) : supportsMultiplier ? (
+                <label
+                    title="Band width in standard deviations"
+                    className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-wide text-faint"
+                >
+                    <span>σ</span>
+                    <input
+                        type="number"
+                        min={0.1}
+                        step={0.1}
+                        value={multiplierDraft}
+                        onChange={(event) =>
+                            setMultiplierDraft(event.target.value)
+                        }
+                        onBlur={commitMultiplier}
+                        onKeyDown={(event) => {
+                            if (event.key !== "Enter") return;
+                            commitMultiplier();
                             event.currentTarget.blur();
                         }}
                         className="

@@ -583,13 +583,18 @@ export function ChartComponent({ config }: ChartComponentProps) {
                                 options={candlestickSeriesOptions}
                             />
 
-                            {overlayIndicators.map(({ config, data }) => (
-                                <IndicatorSeries
-                                    key={config.id}
-                                    config={config}
-                                    data={data}
-                                />
-                            ))}
+                            {overlayIndicators.flatMap(({ config, plots }) =>
+                                plots.map((plot) => (
+                                    <IndicatorSeries
+                                        key={`${config.id}:${plot.key}`}
+                                        config={config}
+                                        data={plot.data}
+                                        color={plot.color}
+                                        lineWidth={plot.lineWidth}
+                                        lineStyle={plot.lineStyle}
+                                    />
+                                )),
+                            )}
                         </Pane>
 
                         <Pane stretchFactor={1}>
@@ -599,18 +604,25 @@ export function ChartComponent({ config }: ChartComponentProps) {
                             />
                         </Pane>
 
-                        {paneIndicators.map(({ config, data }) => (
+                        {paneIndicators.map(({ config, plots }) => (
                             <Pane key={config.id} stretchFactor={1}>
-                                <IndicatorSeries
-                                    config={config}
-                                    data={data}
-                                    pane
-                                    referenceLines={
-                                        config.type === "rsi"
-                                            ? [30, 70]
-                                            : undefined
-                                    }
-                                />
+                                {plots.map((plot) => (
+                                    <IndicatorSeries
+                                        key={`${config.id}:${plot.key}`}
+                                        config={config}
+                                        data={plot.data}
+                                        color={plot.color}
+                                        lineWidth={plot.lineWidth}
+                                        lineStyle={plot.lineStyle}
+                                        pane
+                                        referenceLines={
+                                            config.type === "rsi" &&
+                                            plot.key === "main"
+                                                ? [30, 70]
+                                                : undefined
+                                        }
+                                    />
+                                ))}
                             </Pane>
                         ))}
                     </Chart>

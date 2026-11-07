@@ -103,6 +103,7 @@ function normaliseIndicator(
     const type = value.type;
     if (
         type !== "vwap" &&
+        type !== "vwap-bands" &&
         type !== "ema" &&
         type !== "sma" &&
         type !== "rsi" &&
@@ -112,7 +113,8 @@ function normaliseIndicator(
     }
 
     const entry = indicatorCatalogEntry(type);
-    const minimumPeriod = type === "vwap" ? 0 : 1;
+    const minimumPeriod =
+        type === "vwap" || type === "vwap-bands" ? 0 : 1;
 
     return {
         id:
@@ -129,6 +131,13 @@ function normaliseIndicator(
         period: Math.max(
             minimumPeriod,
             Math.floor(finiteNumber(value.period, entry.defaultPeriod)),
+        ),
+        multiplier: Math.max(
+            0.1,
+            finiteNumber(
+                value.multiplier,
+                entry.defaultMultiplier ?? 2,
+            ),
         ),
     };
 }

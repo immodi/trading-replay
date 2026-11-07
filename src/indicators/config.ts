@@ -29,11 +29,14 @@ export function createIndicator(
     type: IndicatorType,
     existing: IndicatorConfig[],
 ): IndicatorConfig {
+    const entry = indicatorCatalogEntry(type);
+
     return {
         id: createIndicatorId(),
         type,
         enabled: true,
         color: nextColor(existing),
-        period: indicatorCatalogEntry(type).defaultPeriod,
+        period: entry.defaultPeriod,
+        multiplier: entry.defaultMultiplier ?? 2,
     };
 }

@@ -1,5 +1,10 @@
 import { useMemo } from "react";
-import { LineStyle, type LineData, type UTCTimestamp } from "lightweight-charts";
+import {
+    LineStyle,
+    type LineData,
+    type LineWidth,
+    type UTCTimestamp,
+} from "lightweight-charts";
 import { LineSeries, PriceLine } from "lightweight-charts-react-components";
 
 import { indicatorCatalogEntry } from "@/constants/indicators";
@@ -10,6 +15,9 @@ type IndicatorSeriesProps = {
     data: LineData<UTCTimestamp>[];
     pane?: boolean;
     referenceLines?: number[];
+    color?: string;
+    lineWidth?: LineWidth;
+    lineStyle?: LineStyle;
 };
 
 /**
@@ -21,13 +29,17 @@ export function IndicatorSeries({
     data,
     pane = false,
     referenceLines,
+    color,
+    lineWidth,
+    lineStyle,
 }: IndicatorSeriesProps) {
     const entry = indicatorCatalogEntry(config.type);
 
     const options = useMemo(
         () => ({
-            color: config.color,
-            lineWidth: 2 as const,
+            color: color ?? config.color,
+            lineWidth: lineWidth ?? 2,
+            ...(lineStyle !== undefined ? { lineStyle } : {}),
             priceLineVisible: false,
             lastValueVisible: pane,
             crosshairMarkerVisible: false,
@@ -46,7 +58,16 @@ export function IndicatorSeries({
                   }
                 : {}),
         }),
-        [config.color, config.period, config.type, entry.label, pane],
+        [
+            color,
+            config.color,
+            config.period,
+            config.type,
+            entry.label,
+            lineStyle,
+            lineWidth,
+            pane,
+        ],
     );
 
     const referenceOptions = useMemo(
