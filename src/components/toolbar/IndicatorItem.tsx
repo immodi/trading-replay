@@ -20,6 +20,26 @@ type IndicatorItemProps = {
     onRemove: () => void;
 };
 
+const PARAMETER_LABEL_CLASS =
+    "text-[9px] font-semibold uppercase leading-none tracking-wider text-faint";
+
+const PARAMETER_FIELD_CLASS = `
+    h-6
+    w-full
+    min-w-0
+    rounded-md
+    border
+    border-edge
+    bg-canvas
+    px-1.5
+    text-[11px]
+    text-ink
+    outline-none
+    transition
+    [color-scheme:dark]
+    focus:border-accent/60
+`;
+
 export function IndicatorItem({
     indicator,
     onChange,
@@ -168,10 +188,13 @@ export function IndicatorItem({
                 </button>
             </div>
 
-            <div className="flex items-center gap-2 pl-7 text-[10px] font-medium uppercase tracking-wide text-faint">
+            <div className="grid grid-cols-3 gap-2">
                 {supportsPeriod ? (
-                    <label className="flex items-center gap-1">
-                        <span>Period</span>
+                    <label
+                        title="Lookback period"
+                        className="flex min-w-0 flex-col gap-1"
+                    >
+                        <span className={PARAMETER_LABEL_CLASS}>Period</span>
                         <input
                             type="number"
                             min={1}
@@ -186,31 +209,15 @@ export function IndicatorItem({
                                 commitPeriod();
                                 event.currentTarget.blur();
                             }}
-                            className="
-                                w-12
-                                rounded-md
-                                border
-                                border-edge
-                                bg-canvas
-                                px-1.5
-                                py-0.5
-                                text-right
-                                font-mono
-                                text-[11px]
-                                tabular-nums
-                                text-ink
-                                outline-none
-                                transition
-                                focus:border-accent/60
-                            "
+                            className={`${PARAMETER_FIELD_CLASS} text-right font-mono tabular-nums`}
                         />
                     </label>
                 ) : indicator.type === "vwap-bands" ? (
                     <label
                         title="Number of standard-deviation bands on each side"
-                        className="flex items-center gap-1"
+                        className="flex min-w-0 flex-col gap-1"
                     >
-                        <span>Bands</span>
+                        <span className={PARAMETER_LABEL_CLASS}>Bands</span>
                         <select
                             value={indicator.bandCount}
                             onChange={(event) =>
@@ -221,22 +228,7 @@ export function IndicatorItem({
                                 })
                             }
                             aria-label={`${entry.label} band count`}
-                            className="
-                                rounded-md
-                                border
-                                border-edge
-                                bg-canvas
-                                px-1
-                                py-0.5
-                                font-mono
-                                text-[11px]
-                                tabular-nums
-                                text-ink
-                                outline-none
-                                transition
-                                [color-scheme:dark]
-                                focus:border-accent/60
-                            "
+                            className={`${PARAMETER_FIELD_CLASS} font-mono tabular-nums`}
                         >
                             {INDICATOR_BAND_COUNTS.map((count) => (
                                 <option key={count} value={count}>
@@ -246,11 +238,19 @@ export function IndicatorItem({
                         </select>
                     </label>
                 ) : (
-                    <span>Session</span>
+                    <div className="flex min-w-0 flex-col gap-1">
+                        <span className={PARAMETER_LABEL_CLASS}>Scope</span>
+                        <span className="inline-flex h-6 items-center rounded-md border border-edge/70 bg-canvas/50 px-1.5 text-[11px] text-sub">
+                            Session
+                        </span>
+                    </div>
                 )}
 
-                <label title="Line thickness" className="flex items-center gap-1">
-                    <span>Width</span>
+                <label
+                    title="Line thickness"
+                    className="flex min-w-0 flex-col gap-1"
+                >
+                    <span className={PARAMETER_LABEL_CLASS}>Width</span>
                     <select
                         value={indicator.lineWidth}
                         onChange={(event) =>
@@ -261,22 +261,7 @@ export function IndicatorItem({
                             })
                         }
                         aria-label={`${entry.label} line thickness`}
-                        className="
-                            rounded-md
-                            border
-                            border-edge
-                            bg-canvas
-                            px-1
-                            py-0.5
-                            font-mono
-                            text-[11px]
-                            tabular-nums
-                            text-ink
-                            outline-none
-                            transition
-                            [color-scheme:dark]
-                            focus:border-accent/60
-                        "
+                        className={`${PARAMETER_FIELD_CLASS} font-mono tabular-nums`}
                     >
                         {INDICATOR_LINE_WIDTHS.map((width) => (
                             <option key={width} value={width}>
@@ -286,8 +271,11 @@ export function IndicatorItem({
                     </select>
                 </label>
 
-                <label title="Line style" className="flex items-center gap-1">
-                    <span>Style</span>
+                <label
+                    title="Line style"
+                    className="flex min-w-0 flex-col gap-1"
+                >
+                    <span className={PARAMETER_LABEL_CLASS}>Style</span>
                     <select
                         value={indicator.lineStyle}
                         onChange={(event) =>
@@ -297,20 +285,7 @@ export function IndicatorItem({
                             })
                         }
                         aria-label={`${entry.label} line style`}
-                        className="
-                            rounded-md
-                            border
-                            border-edge
-                            bg-canvas
-                            px-1
-                            py-0.5
-                            text-[11px]
-                            text-ink
-                            outline-none
-                            transition
-                            [color-scheme:dark]
-                            focus:border-accent/60
-                        "
+                        className={PARAMETER_FIELD_CLASS}
                     >
                         {INDICATOR_LINE_STYLES.map((style) => (
                             <option key={style} value={style}>
