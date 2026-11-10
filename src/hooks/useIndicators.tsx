@@ -8,6 +8,7 @@ import {
 
 import type { IndicatorConfig, IndicatorType } from "@/types/indicator";
 import type { PriceData } from "@/types/priceData";
+import { ADXIndicator } from "@/indicators/adx";
 import { ATRIndicator } from "@/indicators/atr";
 import { EMAIndicator } from "@/indicators/ema";
 import { RSIIndicator } from "@/indicators/rsi";
@@ -126,6 +127,13 @@ function buildPlots(
                 {
                     key: "main",
                     data: new ATRIndicator(config.period, history).getData(),
+                },
+            ];
+        case "adx":
+            return [
+                {
+                    key: "main",
+                    data: new ADXIndicator(config.period, history).getData(),
                 },
             ];
     }

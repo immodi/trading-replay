@@ -144,6 +144,29 @@ test("invalid indicator appearance settings fall back to defaults", () => {
     assert.equal(state.view.indicators[0].bandCount, 3);
 });
 
+test("ADX indicator settings are restored", () => {
+    const state = normaliseSessionState(
+        {
+            view: {
+                indicators: [
+                    {
+                        id: "adx",
+                        type: "adx",
+                        enabled: true,
+                        color: "#123456",
+                        period: 14,
+                    },
+                ],
+            },
+        },
+        "MNQ",
+    );
+
+    assert.ok(state);
+    assert.equal(state.view.indicators[0].type, "adx");
+    assert.equal(state.view.indicators[0].period, 14);
+});
+
 test("a fresh session starts with no indicators", () => {
     const state = normaliseSessionState({}, "MNQ");
 

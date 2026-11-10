@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { UTCTimestamp } from "lightweight-charts";
 
+import { ADXIndicator } from "../src/indicators/adx.ts";
 import { ATRIndicator } from "../src/indicators/atr.ts";
 import { RSIIndicator } from "../src/indicators/rsi.ts";
 import { VWAPBandsIndicator } from "../src/indicators/vwapBands.ts";
@@ -35,6 +36,20 @@ test("RSI is neutral on flat prices and pegged on a pure uptrend", () => {
 test("ATR uses the simple average true range", () => {
     const atr = new ATRIndicator(14, bars(Array.from({ length: 20 }, () => 100)));
     assert.equal(atr.getData().at(-1)?.value, 2);
+});
+
+test("ADX rises on a pure trend and is zero on flat prices", () => {
+    const rising = new ADXIndicator(
+        14,
+        bars(Array.from({ length: 80 }, (_, index) => 100 + index)),
+    );
+    assert.ok((rising.getData().at(-1)?.value ?? 0) > 90);
+
+    const flat = new ADXIndicator(
+        14,
+        bars(Array.from({ length: 80 }, () => 100)),
+    );
+    assert.equal(flat.getData().at(-1)?.value, 0);
 });
 
 test("VWAP bands render one, two, and three standard deviations", () => {

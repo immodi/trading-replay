@@ -26,6 +26,7 @@ export const INDICATOR_CATALOG = [
     },
     { type: "rsi", label: "RSI", defaultPeriod: 14, placement: "pane" },
     { type: "atr", label: "ATR", defaultPeriod: 14, placement: "pane" },
+    { type: "adx", label: "ADX", defaultPeriod: 14, placement: "pane" },
 ] as const satisfies readonly IndicatorCatalogEntry[];
 
 export const INDICATOR_LINE_WIDTHS = [

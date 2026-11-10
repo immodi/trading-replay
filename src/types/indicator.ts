@@ -4,7 +4,8 @@ export type IndicatorType =
     | "ema"
     | "sma"
     | "rsi"
-    | "atr";
+    | "atr"
+    | "adx";
 
 export type IndicatorLineWidth = 1 | 2 | 3 | 4;
 export type IndicatorLineStyle = "solid" | "dashed" | "dotted";

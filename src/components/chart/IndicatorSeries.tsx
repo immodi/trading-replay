@@ -57,7 +57,7 @@ export function IndicatorSeries({
                       title: `${entry.label} ${config.period}`,
                   }
                 : {}),
-            ...(config.type === "rsi"
+            ...(config.type === "rsi" || config.type === "adx"
                 ? {
                       priceFormat: {
                           type: "price" as const,

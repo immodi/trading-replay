@@ -110,7 +110,8 @@ function normaliseIndicator(
         type !== "ema" &&
         type !== "sma" &&
         type !== "rsi" &&
-        type !== "atr"
+        type !== "atr" &&
+        type !== "adx"
     ) {
         return null;
     }
