@@ -143,6 +143,43 @@ test("converter merges chronological CSV windows", async () => {
     assert.ok(candles[1].time < candles[2].time);
 });
 
+test("converter distinguishes repeated contract symbols across decades", async () => {
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), "tradereplay-"));
+    const input = path.join(directory, "fixture.csv");
+    const output = path.join(directory, "out.json");
+
+    fs.writeFileSync(
+        input,
+        [
+            "ts_event,rtype,publisher_id,instrument_id,open,high,low,close,volume,symbol",
+            "2011-01-03T23:00:00.000000000Z,33,1,1,1400,1400,1400,1400,100,MGCZ1",
+            "2011-01-04T23:00:00.000000000Z,33,1,1,1401,1401,1401,1401,100,MGCZ1",
+            "2012-01-03T23:00:00.000000000Z,33,1,2,1500,1500,1500,1500,100,MGCZ2",
+            "2012-01-04T23:00:00.000000000Z,33,1,2,1501,1501,1501,1501,100,MGCZ2",
+            // Same symbols as above, but ten years later and with new ids.
+            "2021-01-04T23:00:00.000000000Z,33,1,3,1900,1900,1900,1900,200,MGCZ1",
+            "2021-01-05T23:00:00.000000000Z,33,1,3,1901,1901,1901,1901,200,MGCZ1",
+            "2022-01-04T23:00:00.000000000Z,33,1,4,1800,1800,1800,1800,300,MGCZ2",
+            "2022-01-05T23:00:00.000000000Z,33,1,4,1801,1801,1801,1801,300,MGCZ2",
+        ].join("\n"),
+    );
+
+    await convertCsvToJson({
+        input,
+        symbol: "MGC",
+        output,
+        log: () => {},
+    });
+
+    const candles = JSON.parse(fs.readFileSync(output, "utf8"));
+
+    assert.equal(candles.length, 8);
+    assert.deepEqual(
+        candles.map((candle) => candle.close),
+        [1400, 1401, 1500, 1501, 1900, 1901, 1800, 1801],
+    );
+});
+
 test("converter only includes the requested instrument root", async () => {
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), "tradereplay-"));
     const input = path.join(directory, "fixture.csv");

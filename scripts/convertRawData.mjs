@@ -307,6 +307,7 @@ export async function convertCsvToJson({
 
     const dailyVolumes = new Map();
     const firstSeen = new Map();
+    const symbolByContract = new Map();
     const dates = new Set();
 
     for (const fileName of inputFiles) {
@@ -315,6 +316,10 @@ export async function convertCsvToJson({
 
             if (!outrightSymbol.test(rowSymbol)) return;
 
+            // Contract symbols only carry a single year digit, so the same
+            // string can describe a different contract ten years later. The
+            // Databento instrument id keeps those contracts distinct.
+            const contract = `${rowSymbol}#${columns[3]}`;
             const date = columns[0].slice(0, 10);
             const volume = Number(columns[8]);
 
@@ -322,15 +327,16 @@ export async function convertCsvToJson({
                 throw new Error(`Invalid volume at ${columns[0]}`);
             }
 
-            if (!firstSeen.has(rowSymbol)) {
-                firstSeen.set(rowSymbol, date);
+            if (!firstSeen.has(contract)) {
+                firstSeen.set(contract, date);
+                symbolByContract.set(contract, rowSymbol);
             }
 
-            let volumes = dailyVolumes.get(rowSymbol);
+            let volumes = dailyVolumes.get(contract);
 
             if (volumes === undefined) {
                 volumes = new Map();
-                dailyVolumes.set(rowSymbol, volumes);
+                dailyVolumes.set(contract, volumes);
             }
 
             volumes.set(date, (volumes.get(date) ?? 0) + volume);
@@ -344,10 +350,17 @@ export async function convertCsvToJson({
         );
     }
 
+    const expiryKey = (contract) =>
+        contractExpiryKey(
+            symbolByContract.get(contract),
+            firstSeen.get(contract),
+            root,
+        );
     const contracts = [...firstSeen.keys()].sort(
-        (a, b) =>
-            contractExpiryKey(a, firstSeen.get(a), root) -
-            contractExpiryKey(b, firstSeen.get(b), root),
+        (a, b) => expiryKey(a) - expiryKey(b),
+    );
+    const contractSymbols = contracts.map((contract) =>
+        symbolByContract.get(contract),
     );
 
     const activeByDate = planActiveContracts({
@@ -359,19 +372,23 @@ export async function convertCsvToJson({
     const rollDates = [];
     let previousActive = null;
 
-    for (const [date, symbol] of [...activeByDate.entries()].sort()) {
-        if (previousActive !== null && symbol !== previousActive) {
-            rollDates.push({ date, from: previousActive, to: symbol });
+    for (const [date, contract] of [...activeByDate.entries()].sort()) {
+        if (previousActive !== null && contract !== previousActive) {
+            rollDates.push({
+                date,
+                from: symbolByContract.get(previousActive),
+                to: symbolByContract.get(contract),
+            });
         }
 
-        previousActive = symbol;
+        previousActive = contract;
     }
 
     const rollDateSet = new Set(rollDates.map((roll) => roll.date));
 
     const candles = [];
     let previousCandle = null;
-    let previousSymbol = null;
+    let previousContract = null;
     const jumpWarnings = [];
 
     for (const fileName of inputFiles) {
@@ -380,9 +397,10 @@ export async function convertCsvToJson({
 
             if (!outrightSymbol.test(rowSymbol)) return;
 
+            const contract = `${rowSymbol}#${columns[3]}`;
             const date = columns[0].slice(0, 10);
 
-            if (activeByDate.get(date) !== rowSymbol) return;
+            if (activeByDate.get(date) !== contract) return;
 
             const candle = toCandle(
                 columns,
@@ -403,7 +421,7 @@ export async function convertCsvToJson({
                         ratio,
                         roll:
                             rollDateSet.has(date) &&
-                            previousSymbol !== rowSymbol,
+                            previousContract !== contract,
                     });
                 }
             }
@@ -413,7 +431,7 @@ export async function convertCsvToJson({
             }
 
             previousCandle = candle;
-            previousSymbol = rowSymbol;
+            previousContract = contract;
             candles.push(candle);
         });
     }
@@ -439,7 +457,7 @@ export async function convertCsvToJson({
 
     log(`Instrument: ${root}`);
     log(`Inputs: ${inputFiles.length} CSV file(s)`);
-    log(`Contracts: ${contracts.join(", ")}`);
+    log(`Contracts: ${contractSymbols.join(", ")}`);
     log(`Rolls: ${rollDates.length}`);
 
     for (const roll of rollDates) {
@@ -466,7 +484,7 @@ export async function convertCsvToJson({
     return {
         symbol: root,
         candles: candles.length,
-        contracts,
+        contracts: contractSymbols,
         rollDates,
         jumpWarnings,
     };
