@@ -31,3 +31,6 @@ data/*-1m.json
 
 # Private/local strategy files
 /strategies/
+
+# Generated project overview
+PROJECT_OVERVIEW.md
