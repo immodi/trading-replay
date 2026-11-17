@@ -34,3 +34,7 @@ data/*-1m.json
 
 # Generated project overview
 PROJECT_OVERVIEW.md
+
+# Research caches and per-run equity/trade dumps (regenerable, large)
+research/cache/
+research/results/*/

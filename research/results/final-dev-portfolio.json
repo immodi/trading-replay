@@ -1,0 +1,2334 @@
+{
+  "prop": {
+    "startingBalance": 50000,
+    "profitTarget": 3000,
+    "maxTrailingDrawdown": 2000,
+    "trailMode": "intraday",
+    "lockFloorAtStart": true,
+    "dailyLossLimit": null,
+    "consistencyMaxBestDayPct": null,
+    "timeLimitDays": 60,
+    "passOnIntraday": true
+  },
+  "fundedCfg": {
+    "startingBalanceMode": "eval_end",
+    "maxTrailingDrawdown": 2000,
+    "trailMode": "intraday",
+    "lockFloorAtStart": true,
+    "minWinningDays": 5,
+    "minWinDayProfit": 200,
+    "split": 0.9,
+    "payoutCap": 2000,
+    "consistencyMaxBestDayPct": null,
+    "timeLimitDays": 60
+  },
+  "symbols": [
+    "mes",
+    "mnq",
+    "m2k",
+    "mym",
+    "mgc",
+    "mcl"
+  ],
+  "summary": {
+    "starts": 639,
+    "passes": 250,
+    "passRate": 0.39123630672926446,
+    "medianDaysToPass": 30,
+    "p90DaysToPass": 47,
+    "failByReason": {
+      "time": 57,
+      "drawdown": 332
+    },
+    "pPass20": 0.10161290322580645,
+    "pPass30": 0.2081967213114754,
+    "pPass45": 0.3495798319327731,
+    "pPass60": 0.3913793103448276,
+    "medianMaxDdUsed": 2928.1933656646943,
+    "p90MaxDdUsed": 3916.0498197569977,
+    "avgEndEquity": 50906.57292134507,
+    "byYear": {
+      "2021": {
+        "starts": 124,
+        "passes": 49,
+        "passRate": 0.3951612903225806
+      },
+      "2022": {
+        "starts": 258,
+        "passes": 108,
+        "passRate": 0.4186046511627907
+      },
+      "2023": {
+        "starts": 257,
+        "passes": 93,
+        "passRate": 0.36186770428015563
+      }
+    }
+  },
+  "funded": {
+    "starts": 250,
+    "payouts": 125,
+    "payoutRate": 0.5,
+    "medianDays": 16,
+    "p90Days": 21,
+    "meanPayout": 513.0250104809581,
+    "meanPayoutGivenPaid": 1026.0500209619163,
+    "failByReason": {
+      "drawdown": 114,
+      "time": 11
+    },
+    "medianDdUsed": 2059.4696414450227
+  },
+  "fundedOutcomes": [
+    {
+      "startDate": "2021-08-12",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 22,
+      "payout": 448.3259863136351,
+      "totalProfit": 498.13998479292786,
+      "maxDrawdownUsed": 1758.634809916388
+    },
+    {
+      "startDate": "2021-08-13",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 23,
+      "payout": 198.37705989198585,
+      "totalProfit": 220.41895543553983,
+      "maxDrawdownUsed": 1758.634809916388
+    },
+    {
+      "startDate": "2021-08-05",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 16,
+      "payout": 280.3005026080682,
+      "totalProfit": 311.44500289785356,
+      "maxDrawdownUsed": 1477.555756050453
+    },
+    {
+      "startDate": "2021-08-13",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 23,
+      "payout": 198.37705989198585,
+      "totalProfit": 220.41895543553983,
+      "maxDrawdownUsed": 1758.634809916388
+    },
+    {
+      "startDate": "2021-08-05",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 16,
+      "payout": 280.3005026080682,
+      "totalProfit": 311.44500289785356,
+      "maxDrawdownUsed": 1477.555756050453
+    },
+    {
+      "startDate": "2021-10-01",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1625.403637425814,
+      "maxDrawdownUsed": 2059.4696414450227
+    },
+    {
+      "startDate": "2021-09-23",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": 209.3583004766624,
+      "maxDrawdownUsed": 2701.1727963081576
+    },
+    {
+      "startDate": "2021-10-01",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1625.403637425814,
+      "maxDrawdownUsed": 2059.4696414450227
+    },
+    {
+      "startDate": "2021-10-01",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1625.403637425814,
+      "maxDrawdownUsed": 2059.4696414450227
+    },
+    {
+      "startDate": "2021-10-01",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1625.403637425814,
+      "maxDrawdownUsed": 2059.4696414450227
+    },
+    {
+      "startDate": "2021-10-01",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1625.403637425814,
+      "maxDrawdownUsed": 2059.4696414450227
+    },
+    {
+      "startDate": "2021-10-01",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1625.403637425814,
+      "maxDrawdownUsed": 2059.4696414450227
+    },
+    {
+      "startDate": "2021-10-01",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1625.403637425814,
+      "maxDrawdownUsed": 2059.4696414450227
+    },
+    {
+      "startDate": "2021-10-01",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1625.403637425814,
+      "maxDrawdownUsed": 2059.4696414450227
+    },
+    {
+      "startDate": "2021-10-01",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1625.403637425814,
+      "maxDrawdownUsed": 2059.4696414450227
+    },
+    {
+      "startDate": "2021-10-01",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1625.403637425814,
+      "maxDrawdownUsed": 2059.4696414450227
+    },
+    {
+      "startDate": "2022-01-13",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1027.132653612127,
+      "maxDrawdownUsed": 2056.1499855289658
+    },
+    {
+      "startDate": "2022-01-12",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -871.324902811728,
+      "maxDrawdownUsed": 2056.1499855289658
+    },
+    {
+      "startDate": "2022-01-13",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1027.132653612127,
+      "maxDrawdownUsed": 2056.1499855289658
+    },
+    {
+      "startDate": "2022-01-13",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1027.132653612127,
+      "maxDrawdownUsed": 2056.1499855289658
+    },
+    {
+      "startDate": "2022-01-13",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1027.132653612127,
+      "maxDrawdownUsed": 2056.1499855289658
+    },
+    {
+      "startDate": "2022-01-13",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1027.132653612127,
+      "maxDrawdownUsed": 2056.1499855289658
+    },
+    {
+      "startDate": "2022-01-12",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -871.324902811728,
+      "maxDrawdownUsed": 2056.1499855289658
+    },
+    {
+      "startDate": "2022-01-13",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1027.132653612127,
+      "maxDrawdownUsed": 2056.1499855289658
+    },
+    {
+      "startDate": "2022-01-12",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -871.324902811728,
+      "maxDrawdownUsed": 2056.1499855289658
+    },
+    {
+      "startDate": "2022-01-05",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 15,
+      "payout": 583.6786499210866,
+      "totalProfit": 648.5318332456518,
+      "maxDrawdownUsed": 2373.674068649263
+    },
+    {
+      "startDate": "2021-12-30",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 15,
+      "payout": 1402.304179788998,
+      "totalProfit": 1558.1157553211087,
+      "maxDrawdownUsed": 2253.086142949098
+    },
+    {
+      "startDate": "2021-12-28",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 17,
+      "payout": 1471.745611909964,
+      "totalProfit": 1635.2729021221821,
+      "maxDrawdownUsed": 2253.086142949098
+    },
+    {
+      "startDate": "2021-12-28",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 17,
+      "payout": 1471.745611909964,
+      "totalProfit": 1635.2729021221821,
+      "maxDrawdownUsed": 2253.086142949098
+    },
+    {
+      "startDate": "2021-12-28",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 17,
+      "payout": 1471.745611909964,
+      "totalProfit": 1635.2729021221821,
+      "maxDrawdownUsed": 2253.086142949098
+    },
+    {
+      "startDate": "2021-12-28",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 17,
+      "payout": 1471.745611909964,
+      "totalProfit": 1635.2729021221821,
+      "maxDrawdownUsed": 2253.086142949098
+    },
+    {
+      "startDate": "2021-12-28",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 17,
+      "payout": 1471.745611909964,
+      "totalProfit": 1635.2729021221821,
+      "maxDrawdownUsed": 2253.086142949098
+    },
+    {
+      "startDate": "2022-01-05",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 15,
+      "payout": 583.6786499210866,
+      "totalProfit": 648.5318332456518,
+      "maxDrawdownUsed": 2373.674068649263
+    },
+    {
+      "startDate": "2021-12-28",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 17,
+      "payout": 1471.745611909964,
+      "totalProfit": 1635.2729021221821,
+      "maxDrawdownUsed": 2253.086142949098
+    },
+    {
+      "startDate": "2021-12-28",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 17,
+      "payout": 1471.745611909964,
+      "totalProfit": 1635.2729021221821,
+      "maxDrawdownUsed": 2253.086142949098
+    },
+    {
+      "startDate": "2022-01-05",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 15,
+      "payout": 583.6786499210866,
+      "totalProfit": 648.5318332456518,
+      "maxDrawdownUsed": 2373.674068649263
+    },
+    {
+      "startDate": "2022-01-13",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1027.132653612127,
+      "maxDrawdownUsed": 2056.1499855289658
+    },
+    {
+      "startDate": "2022-01-13",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1027.132653612127,
+      "maxDrawdownUsed": 2056.1499855289658
+    },
+    {
+      "startDate": "2022-01-12",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -871.324902811728,
+      "maxDrawdownUsed": 2056.1499855289658
+    },
+    {
+      "startDate": "2022-01-14",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1793.7619253926096,
+      "maxDrawdownUsed": 2056.1499855289658
+    },
+    {
+      "startDate": "2022-01-13",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1027.132653612127,
+      "maxDrawdownUsed": 2056.1499855289658
+    },
+    {
+      "startDate": "2022-01-14",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1793.7619253926096,
+      "maxDrawdownUsed": 2056.1499855289658
+    },
+    {
+      "startDate": "2022-01-13",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1027.132653612127,
+      "maxDrawdownUsed": 2056.1499855289658
+    },
+    {
+      "startDate": "2022-01-13",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1027.132653612127,
+      "maxDrawdownUsed": 2056.1499855289658
+    },
+    {
+      "startDate": "2022-01-14",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1793.7619253926096,
+      "maxDrawdownUsed": 2056.1499855289658
+    },
+    {
+      "startDate": "2022-01-14",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1793.7619253926096,
+      "maxDrawdownUsed": 2056.1499855289658
+    },
+    {
+      "startDate": "2022-01-13",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1027.132653612127,
+      "maxDrawdownUsed": 2056.1499855289658
+    },
+    {
+      "startDate": "2022-01-14",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1793.7619253926096,
+      "maxDrawdownUsed": 2056.1499855289658
+    },
+    {
+      "startDate": "2022-03-01",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 18,
+      "payout": 699.1492088254366,
+      "totalProfit": 776.8324542504852,
+      "maxDrawdownUsed": 1507.9052930895778
+    },
+    {
+      "startDate": "2022-04-25",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 12,
+      "payout": 1800,
+      "totalProfit": 2030.1995050683254,
+      "maxDrawdownUsed": 2911.798934156257
+    },
+    {
+      "startDate": "2022-04-25",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 12,
+      "payout": 1800,
+      "totalProfit": 2030.1995050683254,
+      "maxDrawdownUsed": 2911.798934156257
+    },
+    {
+      "startDate": "2022-04-25",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 12,
+      "payout": 1800,
+      "totalProfit": 2030.1995050683254,
+      "maxDrawdownUsed": 2911.798934156257
+    },
+    {
+      "startDate": "2022-04-25",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 12,
+      "payout": 1800,
+      "totalProfit": 2030.1995050683254,
+      "maxDrawdownUsed": 2911.798934156257
+    },
+    {
+      "startDate": "2022-04-25",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 12,
+      "payout": 1800,
+      "totalProfit": 2030.1995050683254,
+      "maxDrawdownUsed": 2911.798934156257
+    },
+    {
+      "startDate": "2022-04-25",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 12,
+      "payout": 1800,
+      "totalProfit": 2030.1995050683254,
+      "maxDrawdownUsed": 2911.798934156257
+    },
+    {
+      "startDate": "2022-04-08",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 10,
+      "payout": 1741.5925613714114,
+      "totalProfit": 1935.1028459682348,
+      "maxDrawdownUsed": 2761.4731228753008
+    },
+    {
+      "startDate": "2022-03-01",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 18,
+      "payout": 699.1492088254366,
+      "totalProfit": 776.8324542504852,
+      "maxDrawdownUsed": 1507.9052930895778
+    },
+    {
+      "startDate": "2022-04-25",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 12,
+      "payout": 1800,
+      "totalProfit": 2030.1995050683254,
+      "maxDrawdownUsed": 2911.798934156257
+    },
+    {
+      "startDate": "2022-04-25",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 12,
+      "payout": 1800,
+      "totalProfit": 2030.1995050683254,
+      "maxDrawdownUsed": 2911.798934156257
+    },
+    {
+      "startDate": "2022-04-25",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 12,
+      "payout": 1800,
+      "totalProfit": 2030.1995050683254,
+      "maxDrawdownUsed": 2911.798934156257
+    },
+    {
+      "startDate": "2022-05-02",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 13,
+      "payout": 1654.556578408587,
+      "totalProfit": 1838.3961982317633,
+      "maxDrawdownUsed": 2518.1890273199388
+    },
+    {
+      "startDate": "2022-05-02",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 13,
+      "payout": 1654.556578408587,
+      "totalProfit": 1838.3961982317633,
+      "maxDrawdownUsed": 2518.1890273199388
+    },
+    {
+      "startDate": "2022-05-02",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 13,
+      "payout": 1654.556578408587,
+      "totalProfit": 1838.3961982317633,
+      "maxDrawdownUsed": 2518.1890273199388
+    },
+    {
+      "startDate": "2022-04-25",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 12,
+      "payout": 1800,
+      "totalProfit": 2030.1995050683254,
+      "maxDrawdownUsed": 2911.798934156257
+    },
+    {
+      "startDate": "2022-04-28",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 13,
+      "payout": 1800,
+      "totalProfit": 2096.6022684463896,
+      "maxDrawdownUsed": 2619.901586209555
+    },
+    {
+      "startDate": "2022-04-25",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 12,
+      "payout": 1800,
+      "totalProfit": 2030.1995050683254,
+      "maxDrawdownUsed": 2911.798934156257
+    },
+    {
+      "startDate": "2022-04-25",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 12,
+      "payout": 1800,
+      "totalProfit": 2030.1995050683254,
+      "maxDrawdownUsed": 2911.798934156257
+    },
+    {
+      "startDate": "2022-04-25",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 12,
+      "payout": 1800,
+      "totalProfit": 2030.1995050683254,
+      "maxDrawdownUsed": 2911.798934156257
+    },
+    {
+      "startDate": "2022-05-02",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 13,
+      "payout": 1654.556578408587,
+      "totalProfit": 1838.3961982317633,
+      "maxDrawdownUsed": 2518.1890273199388
+    },
+    {
+      "startDate": "2022-05-06",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 18,
+      "payout": 1066.871450773179,
+      "totalProfit": 1185.41272308131,
+      "maxDrawdownUsed": 2492.6498697114657
+    },
+    {
+      "startDate": "2022-05-06",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 18,
+      "payout": 1066.871450773179,
+      "totalProfit": 1185.41272308131,
+      "maxDrawdownUsed": 2492.6498697114657
+    },
+    {
+      "startDate": "2022-05-02",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 13,
+      "payout": 1654.556578408587,
+      "totalProfit": 1838.3961982317633,
+      "maxDrawdownUsed": 2518.1890273199388
+    },
+    {
+      "startDate": "2022-05-03",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 12,
+      "payout": 1721.5549144615638,
+      "totalProfit": 1912.838793846182,
+      "maxDrawdownUsed": 2518.1890273199388
+    },
+    {
+      "startDate": "2022-05-02",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 13,
+      "payout": 1654.556578408587,
+      "totalProfit": 1838.3961982317633,
+      "maxDrawdownUsed": 2518.1890273199388
+    },
+    {
+      "startDate": "2022-05-02",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 13,
+      "payout": 1654.556578408587,
+      "totalProfit": 1838.3961982317633,
+      "maxDrawdownUsed": 2518.1890273199388
+    },
+    {
+      "startDate": "2022-05-02",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 13,
+      "payout": 1654.556578408587,
+      "totalProfit": 1838.3961982317633,
+      "maxDrawdownUsed": 2518.1890273199388
+    },
+    {
+      "startDate": "2022-05-06",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 18,
+      "payout": 1066.871450773179,
+      "totalProfit": 1185.41272308131,
+      "maxDrawdownUsed": 2492.6498697114657
+    },
+    {
+      "startDate": "2022-05-03",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 12,
+      "payout": 1721.5549144615638,
+      "totalProfit": 1912.838793846182,
+      "maxDrawdownUsed": 2518.1890273199388
+    },
+    {
+      "startDate": "2022-05-03",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 12,
+      "payout": 1721.5549144615638,
+      "totalProfit": 1912.838793846182,
+      "maxDrawdownUsed": 2518.1890273199388
+    },
+    {
+      "startDate": "2022-05-02",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 13,
+      "payout": 1654.556578408587,
+      "totalProfit": 1838.3961982317633,
+      "maxDrawdownUsed": 2518.1890273199388
+    },
+    {
+      "startDate": "2022-05-06",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 18,
+      "payout": 1066.871450773179,
+      "totalProfit": 1185.41272308131,
+      "maxDrawdownUsed": 2492.6498697114657
+    },
+    {
+      "startDate": "2022-05-06",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 18,
+      "payout": 1066.871450773179,
+      "totalProfit": 1185.41272308131,
+      "maxDrawdownUsed": 2492.6498697114657
+    },
+    {
+      "startDate": "2022-05-03",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 12,
+      "payout": 1721.5549144615638,
+      "totalProfit": 1912.838793846182,
+      "maxDrawdownUsed": 2518.1890273199388
+    },
+    {
+      "startDate": "2022-05-02",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 13,
+      "payout": 1654.556578408587,
+      "totalProfit": 1838.3961982317633,
+      "maxDrawdownUsed": 2518.1890273199388
+    },
+    {
+      "startDate": "2022-05-06",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 18,
+      "payout": 1066.871450773179,
+      "totalProfit": 1185.41272308131,
+      "maxDrawdownUsed": 2492.6498697114657
+    },
+    {
+      "startDate": "2022-05-10",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": 521.6365940856267,
+      "maxDrawdownUsed": 2141.9042921895307
+    },
+    {
+      "startDate": "2022-05-06",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 18,
+      "payout": 1066.871450773179,
+      "totalProfit": 1185.41272308131,
+      "maxDrawdownUsed": 2492.6498697114657
+    },
+    {
+      "startDate": "2022-05-06",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 18,
+      "payout": 1066.871450773179,
+      "totalProfit": 1185.41272308131,
+      "maxDrawdownUsed": 2492.6498697114657
+    },
+    {
+      "startDate": "2022-05-03",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 12,
+      "payout": 1721.5549144615638,
+      "totalProfit": 1912.838793846182,
+      "maxDrawdownUsed": 2518.1890273199388
+    },
+    {
+      "startDate": "2022-05-10",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": 521.6365940856267,
+      "maxDrawdownUsed": 2141.9042921895307
+    },
+    {
+      "startDate": "2022-05-06",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 18,
+      "payout": 1066.871450773179,
+      "totalProfit": 1185.41272308131,
+      "maxDrawdownUsed": 2492.6498697114657
+    },
+    {
+      "startDate": "2022-05-02",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 13,
+      "payout": 1654.556578408587,
+      "totalProfit": 1838.3961982317633,
+      "maxDrawdownUsed": 2518.1890273199388
+    },
+    {
+      "startDate": "2022-05-02",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 13,
+      "payout": 1654.556578408587,
+      "totalProfit": 1838.3961982317633,
+      "maxDrawdownUsed": 2518.1890273199388
+    },
+    {
+      "startDate": "2022-05-02",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 13,
+      "payout": 1654.556578408587,
+      "totalProfit": 1838.3961982317633,
+      "maxDrawdownUsed": 2518.1890273199388
+    },
+    {
+      "startDate": "2022-05-02",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 13,
+      "payout": 1654.556578408587,
+      "totalProfit": 1838.3961982317633,
+      "maxDrawdownUsed": 2518.1890273199388
+    },
+    {
+      "startDate": "2022-05-02",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 13,
+      "payout": 1654.556578408587,
+      "totalProfit": 1838.3961982317633,
+      "maxDrawdownUsed": 2518.1890273199388
+    },
+    {
+      "startDate": "2022-04-29",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 12,
+      "payout": 1800,
+      "totalProfit": 2122.32436123339,
+      "maxDrawdownUsed": 2619.901586209555
+    },
+    {
+      "startDate": "2022-05-06",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 18,
+      "payout": 1066.871450773179,
+      "totalProfit": 1185.41272308131,
+      "maxDrawdownUsed": 2492.6498697114657
+    },
+    {
+      "startDate": "2022-05-06",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 18,
+      "payout": 1066.871450773179,
+      "totalProfit": 1185.41272308131,
+      "maxDrawdownUsed": 2492.6498697114657
+    },
+    {
+      "startDate": "2022-05-06",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 18,
+      "payout": 1066.871450773179,
+      "totalProfit": 1185.41272308131,
+      "maxDrawdownUsed": 2492.6498697114657
+    },
+    {
+      "startDate": "2022-05-02",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 13,
+      "payout": 1654.556578408587,
+      "totalProfit": 1838.3961982317633,
+      "maxDrawdownUsed": 2518.1890273199388
+    },
+    {
+      "startDate": "2022-05-03",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 12,
+      "payout": 1721.5549144615638,
+      "totalProfit": 1912.838793846182,
+      "maxDrawdownUsed": 2518.1890273199388
+    },
+    {
+      "startDate": "2022-05-03",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 12,
+      "payout": 1721.5549144615638,
+      "totalProfit": 1912.838793846182,
+      "maxDrawdownUsed": 2518.1890273199388
+    },
+    {
+      "startDate": "2022-05-06",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 18,
+      "payout": 1066.871450773179,
+      "totalProfit": 1185.41272308131,
+      "maxDrawdownUsed": 2492.6498697114657
+    },
+    {
+      "startDate": "2022-05-11",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -20.731295969570056,
+      "maxDrawdownUsed": 2141.9042921895307
+    },
+    {
+      "startDate": "2022-05-10",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": 521.6365940856267,
+      "maxDrawdownUsed": 2141.9042921895307
+    },
+    {
+      "startDate": "2022-05-11",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -20.731295969570056,
+      "maxDrawdownUsed": 2141.9042921895307
+    },
+    {
+      "startDate": "2022-05-11",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -20.731295969570056,
+      "maxDrawdownUsed": 2141.9042921895307
+    },
+    {
+      "startDate": "2022-05-11",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -20.731295969570056,
+      "maxDrawdownUsed": 2141.9042921895307
+    },
+    {
+      "startDate": "2022-05-23",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 23,
+      "payout": 198.39159825539102,
+      "totalProfit": 220.43510917265667,
+      "maxDrawdownUsed": 2028.1528007046873
+    },
+    {
+      "startDate": "2022-05-19",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -617.4840167103612,
+      "maxDrawdownUsed": 2030.5949157267314
+    },
+    {
+      "startDate": "2022-05-23",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 23,
+      "payout": 198.39159825539102,
+      "totalProfit": 220.43510917265667,
+      "maxDrawdownUsed": 2028.1528007046873
+    },
+    {
+      "startDate": "2022-05-23",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 23,
+      "payout": 198.39159825539102,
+      "totalProfit": 220.43510917265667,
+      "maxDrawdownUsed": 2028.1528007046873
+    },
+    {
+      "startDate": "2022-05-23",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 23,
+      "payout": 198.39159825539102,
+      "totalProfit": 220.43510917265667,
+      "maxDrawdownUsed": 2028.1528007046873
+    },
+    {
+      "startDate": "2022-06-30",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1575.3228188775538,
+      "maxDrawdownUsed": 2033.323154570906
+    },
+    {
+      "startDate": "2022-06-30",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1575.3228188775538,
+      "maxDrawdownUsed": 2033.323154570906
+    },
+    {
+      "startDate": "2022-06-30",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1575.3228188775538,
+      "maxDrawdownUsed": 2033.323154570906
+    },
+    {
+      "startDate": "2022-06-29",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1277.7742036460404,
+      "maxDrawdownUsed": 2033.323154570906
+    },
+    {
+      "startDate": "2022-07-21",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 13,
+      "payout": 139.54758204661704,
+      "totalProfit": 155.05286894068558,
+      "maxDrawdownUsed": 1614.1911674874718
+    },
+    {
+      "startDate": "2022-07-01",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1685.8225442193507,
+      "maxDrawdownUsed": 2033.323154570906
+    },
+    {
+      "startDate": "2022-07-21",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 13,
+      "payout": 139.54758204661704,
+      "totalProfit": 155.05286894068558,
+      "maxDrawdownUsed": 1614.1911674874718
+    },
+    {
+      "startDate": "2022-07-21",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 13,
+      "payout": 139.54758204661704,
+      "totalProfit": 155.05286894068558,
+      "maxDrawdownUsed": 1614.1911674874718
+    },
+    {
+      "startDate": "2022-08-01",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1770.966247915887,
+      "maxDrawdownUsed": 2015.218628286988
+    },
+    {
+      "startDate": "2022-08-01",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1770.966247915887,
+      "maxDrawdownUsed": 2015.218628286988
+    },
+    {
+      "startDate": "2022-09-14",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1557.1062363128585,
+      "maxDrawdownUsed": 2008.7541837295794
+    },
+    {
+      "startDate": "2022-09-14",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1557.1062363128585,
+      "maxDrawdownUsed": 2008.7541837295794
+    },
+    {
+      "startDate": "2022-10-04",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1499.2262046264586,
+      "maxDrawdownUsed": 2023.8872329374935
+    },
+    {
+      "startDate": "2022-10-04",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1499.2262046264586,
+      "maxDrawdownUsed": 2023.8872329374935
+    },
+    {
+      "startDate": "2022-10-04",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1499.2262046264586,
+      "maxDrawdownUsed": 2023.8872329374935
+    },
+    {
+      "startDate": "2022-10-04",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1499.2262046264586,
+      "maxDrawdownUsed": 2023.8872329374935
+    },
+    {
+      "startDate": "2022-10-04",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1499.2262046264586,
+      "maxDrawdownUsed": 2023.8872329374935
+    },
+    {
+      "startDate": "2022-10-04",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1499.2262046264586,
+      "maxDrawdownUsed": 2023.8872329374935
+    },
+    {
+      "startDate": "2022-10-04",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1499.2262046264586,
+      "maxDrawdownUsed": 2023.8872329374935
+    },
+    {
+      "startDate": "2022-10-04",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1499.2262046264586,
+      "maxDrawdownUsed": 2023.8872329374935
+    },
+    {
+      "startDate": "2022-12-14",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1270.499028185448,
+      "maxDrawdownUsed": 2080.615794119207
+    },
+    {
+      "startDate": "2022-12-13",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1152.7475633416907,
+      "maxDrawdownUsed": 2080.615794119207
+    },
+    {
+      "startDate": "2022-12-13",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1152.7475633416907,
+      "maxDrawdownUsed": 2080.615794119207
+    },
+    {
+      "startDate": "2022-12-13",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1152.7475633416907,
+      "maxDrawdownUsed": 2080.615794119207
+    },
+    {
+      "startDate": "2022-12-08",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -548.9821345282035,
+      "maxDrawdownUsed": 2080.615794119207
+    },
+    {
+      "startDate": "2022-12-07",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -391.0462100544537,
+      "maxDrawdownUsed": 2080.615794119207
+    },
+    {
+      "startDate": "2022-12-07",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -391.0462100544537,
+      "maxDrawdownUsed": 2080.615794119207
+    },
+    {
+      "startDate": "2022-12-08",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -548.9821345282035,
+      "maxDrawdownUsed": 2080.615794119207
+    },
+    {
+      "startDate": "2022-12-08",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -548.9821345282035,
+      "maxDrawdownUsed": 2080.615794119207
+    },
+    {
+      "startDate": "2022-12-13",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1152.7475633416907,
+      "maxDrawdownUsed": 2080.615794119207
+    },
+    {
+      "startDate": "2022-12-13",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1152.7475633416907,
+      "maxDrawdownUsed": 2080.615794119207
+    },
+    {
+      "startDate": "2022-12-13",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1152.7475633416907,
+      "maxDrawdownUsed": 2080.615794119207
+    },
+    {
+      "startDate": "2022-12-13",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1152.7475633416907,
+      "maxDrawdownUsed": 2080.615794119207
+    },
+    {
+      "startDate": "2022-12-07",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -391.0462100544537,
+      "maxDrawdownUsed": 2080.615794119207
+    },
+    {
+      "startDate": "2022-12-13",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1152.7475633416907,
+      "maxDrawdownUsed": 2080.615794119207
+    },
+    {
+      "startDate": "2022-12-13",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1152.7475633416907,
+      "maxDrawdownUsed": 2080.615794119207
+    },
+    {
+      "startDate": "2022-12-15",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1474.661134763519,
+      "maxDrawdownUsed": 2039.6301095818344
+    },
+    {
+      "startDate": "2022-12-15",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1474.661134763519,
+      "maxDrawdownUsed": 2039.6301095818344
+    },
+    {
+      "startDate": "2022-12-15",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1474.661134763519,
+      "maxDrawdownUsed": 2039.6301095818344
+    },
+    {
+      "startDate": "2023-02-08",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": 156.19843562041933,
+      "maxDrawdownUsed": 2468.66495231499
+    },
+    {
+      "startDate": "2023-02-02",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": 573.5530182759758,
+      "maxDrawdownUsed": 3691.969531447925
+    },
+    {
+      "startDate": "2023-02-02",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": 573.5530182759758,
+      "maxDrawdownUsed": 3691.969531447925
+    },
+    {
+      "startDate": "2023-02-02",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": 573.5530182759758,
+      "maxDrawdownUsed": 3691.969531447925
+    },
+    {
+      "startDate": "2023-02-02",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": 573.5530182759758,
+      "maxDrawdownUsed": 3691.969531447925
+    },
+    {
+      "startDate": "2023-02-02",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": 573.5530182759758,
+      "maxDrawdownUsed": 3691.969531447925
+    },
+    {
+      "startDate": "2023-01-25",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 16,
+      "payout": 1800,
+      "totalProfit": 2231.234831098387,
+      "maxDrawdownUsed": 3106.6102633771807
+    },
+    {
+      "startDate": "2023-01-25",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 16,
+      "payout": 1800,
+      "totalProfit": 2231.234831098387,
+      "maxDrawdownUsed": 3106.6102633771807
+    },
+    {
+      "startDate": "2023-01-25",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 16,
+      "payout": 1800,
+      "totalProfit": 2231.234831098387,
+      "maxDrawdownUsed": 3106.6102633771807
+    },
+    {
+      "startDate": "2023-01-25",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 16,
+      "payout": 1800,
+      "totalProfit": 2231.234831098387,
+      "maxDrawdownUsed": 3106.6102633771807
+    },
+    {
+      "startDate": "2023-01-24",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 13,
+      "payout": 1800,
+      "totalProfit": 2144.2634886974847,
+      "maxDrawdownUsed": 2923.644414140341
+    },
+    {
+      "startDate": "2023-01-23",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 12,
+      "payout": 998.5868303391202,
+      "totalProfit": 1109.5409225990225,
+      "maxDrawdownUsed": 1991.0817497931203
+    },
+    {
+      "startDate": "2023-01-23",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 12,
+      "payout": 998.5868303391202,
+      "totalProfit": 1109.5409225990225,
+      "maxDrawdownUsed": 1991.0817497931203
+    },
+    {
+      "startDate": "2023-01-25",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 16,
+      "payout": 1800,
+      "totalProfit": 2231.234831098387,
+      "maxDrawdownUsed": 3106.6102633771807
+    },
+    {
+      "startDate": "2023-01-25",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 16,
+      "payout": 1800,
+      "totalProfit": 2231.234831098387,
+      "maxDrawdownUsed": 3106.6102633771807
+    },
+    {
+      "startDate": "2023-02-01",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": 201.594044322228,
+      "maxDrawdownUsed": 3691.969531447925
+    },
+    {
+      "startDate": "2023-02-10",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -988.5783131768112,
+      "maxDrawdownUsed": 2059.903308414083
+    },
+    {
+      "startDate": "2023-02-10",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -988.5783131768112,
+      "maxDrawdownUsed": 2059.903308414083
+    },
+    {
+      "startDate": "2023-02-17",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -884.6198163238078,
+      "maxDrawdownUsed": 2027.4197717425632
+    },
+    {
+      "startDate": "2023-02-17",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -884.6198163238078,
+      "maxDrawdownUsed": 2027.4197717425632
+    },
+    {
+      "startDate": "2023-02-17",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -884.6198163238078,
+      "maxDrawdownUsed": 2027.4197717425632
+    },
+    {
+      "startDate": "2023-02-17",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -884.6198163238078,
+      "maxDrawdownUsed": 2027.4197717425632
+    },
+    {
+      "startDate": "2023-02-17",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -884.6198163238078,
+      "maxDrawdownUsed": 2027.4197717425632
+    },
+    {
+      "startDate": "2023-02-17",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -884.6198163238078,
+      "maxDrawdownUsed": 2027.4197717425632
+    },
+    {
+      "startDate": "2023-04-17",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1739.818927462482,
+      "maxDrawdownUsed": 2013.7746890770795
+    },
+    {
+      "startDate": "2023-04-17",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1739.818927462482,
+      "maxDrawdownUsed": 2013.7746890770795
+    },
+    {
+      "startDate": "2023-03-10",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1561.37244504712,
+      "maxDrawdownUsed": 2071.3868125803783
+    },
+    {
+      "startDate": "2023-04-17",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1739.818927462482,
+      "maxDrawdownUsed": 2013.7746890770795
+    },
+    {
+      "startDate": "2023-06-09",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -732.9270483863875,
+      "maxDrawdownUsed": 2135.1559142691985
+    },
+    {
+      "startDate": "2023-05-22",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 16,
+      "payout": 968.1188219750948,
+      "totalProfit": 1075.6875799723275,
+      "maxDrawdownUsed": 2435.8346052704583
+    },
+    {
+      "startDate": "2023-05-22",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 16,
+      "payout": 968.1188219750948,
+      "totalProfit": 1075.6875799723275,
+      "maxDrawdownUsed": 2435.8346052704583
+    },
+    {
+      "startDate": "2023-06-09",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -732.9270483863875,
+      "maxDrawdownUsed": 2135.1559142691985
+    },
+    {
+      "startDate": "2023-06-09",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -732.9270483863875,
+      "maxDrawdownUsed": 2135.1559142691985
+    },
+    {
+      "startDate": "2023-06-15",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1191.4044279468508,
+      "maxDrawdownUsed": 2135.1559142691985
+    },
+    {
+      "startDate": "2023-06-15",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1191.4044279468508,
+      "maxDrawdownUsed": 2135.1559142691985
+    },
+    {
+      "startDate": "2023-06-09",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -732.9270483863875,
+      "maxDrawdownUsed": 2135.1559142691985
+    },
+    {
+      "startDate": "2023-06-16",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1592.1544279468508,
+      "maxDrawdownUsed": 2135.1559142691985
+    },
+    {
+      "startDate": "2023-06-16",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1592.1544279468508,
+      "maxDrawdownUsed": 2135.1559142691985
+    },
+    {
+      "startDate": "2023-06-15",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1191.4044279468508,
+      "maxDrawdownUsed": 2135.1559142691985
+    },
+    {
+      "startDate": "2023-06-15",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1191.4044279468508,
+      "maxDrawdownUsed": 2135.1559142691985
+    },
+    {
+      "startDate": "2023-06-15",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1191.4044279468508,
+      "maxDrawdownUsed": 2135.1559142691985
+    },
+    {
+      "startDate": "2023-06-15",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1191.4044279468508,
+      "maxDrawdownUsed": 2135.1559142691985
+    },
+    {
+      "startDate": "2023-06-15",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1191.4044279468508,
+      "maxDrawdownUsed": 2135.1559142691985
+    },
+    {
+      "startDate": "2023-06-09",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -732.9270483863875,
+      "maxDrawdownUsed": 2135.1559142691985
+    },
+    {
+      "startDate": "2023-06-15",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1191.4044279468508,
+      "maxDrawdownUsed": 2135.1559142691985
+    },
+    {
+      "startDate": "2023-06-15",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1191.4044279468508,
+      "maxDrawdownUsed": 2135.1559142691985
+    },
+    {
+      "startDate": "2023-06-16",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1592.1544279468508,
+      "maxDrawdownUsed": 2135.1559142691985
+    },
+    {
+      "startDate": "2023-06-21",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1200.954438634144,
+      "maxDrawdownUsed": 2018.1373163463795
+    },
+    {
+      "startDate": "2023-07-31",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 19,
+      "payout": 159.79894381191988,
+      "totalProfit": 177.55438201324432,
+      "maxDrawdownUsed": 1628.530345560961
+    },
+    {
+      "startDate": "2023-07-31",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 19,
+      "payout": 159.79894381191988,
+      "totalProfit": 177.55438201324432,
+      "maxDrawdownUsed": 1628.530345560961
+    },
+    {
+      "startDate": "2023-07-31",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 19,
+      "payout": 159.79894381191988,
+      "totalProfit": 177.55438201324432,
+      "maxDrawdownUsed": 1628.530345560961
+    },
+    {
+      "startDate": "2023-07-31",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 19,
+      "payout": 159.79894381191988,
+      "totalProfit": 177.55438201324432,
+      "maxDrawdownUsed": 1628.530345560961
+    },
+    {
+      "startDate": "2023-06-21",
+      "paid": false,
+      "failReason": "drawdown",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -1200.954438634144,
+      "maxDrawdownUsed": 2018.1373163463795
+    },
+    {
+      "startDate": "2023-11-14",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 21,
+      "payout": 308.5937701353425,
+      "totalProfit": 342.8819668170472,
+      "maxDrawdownUsed": 1864.0714206393095
+    },
+    {
+      "startDate": "2023-11-14",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 21,
+      "payout": 308.5937701353425,
+      "totalProfit": 342.8819668170472,
+      "maxDrawdownUsed": 1864.0714206393095
+    },
+    {
+      "startDate": "2023-11-14",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 21,
+      "payout": 308.5937701353425,
+      "totalProfit": 342.8819668170472,
+      "maxDrawdownUsed": 1864.0714206393095
+    },
+    {
+      "startDate": "2023-11-14",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 21,
+      "payout": 308.5937701353425,
+      "totalProfit": 342.8819668170472,
+      "maxDrawdownUsed": 1864.0714206393095
+    },
+    {
+      "startDate": "2023-11-10",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 19,
+      "payout": 834.3596253351418,
+      "totalProfit": 927.0662503723797,
+      "maxDrawdownUsed": 1475.0716342623637
+    },
+    {
+      "startDate": "2023-11-10",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 19,
+      "payout": 834.3596253351418,
+      "totalProfit": 927.0662503723797,
+      "maxDrawdownUsed": 1475.0716342623637
+    },
+    {
+      "startDate": "2023-11-14",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 21,
+      "payout": 308.5937701353425,
+      "totalProfit": 342.8819668170472,
+      "maxDrawdownUsed": 1864.0714206393095
+    },
+    {
+      "startDate": "2023-11-10",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 19,
+      "payout": 834.3596253351418,
+      "totalProfit": 927.0662503723797,
+      "maxDrawdownUsed": 1475.0716342623637
+    },
+    {
+      "startDate": "2023-11-09",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 17,
+      "payout": 1190.8304127933407,
+      "totalProfit": 1323.1449031037118,
+      "maxDrawdownUsed": 2033.9672645570536
+    },
+    {
+      "startDate": "2023-11-14",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 21,
+      "payout": 308.5937701353425,
+      "totalProfit": 342.8819668170472,
+      "maxDrawdownUsed": 1864.0714206393095
+    },
+    {
+      "startDate": "2023-11-14",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 21,
+      "payout": 308.5937701353425,
+      "totalProfit": 342.8819668170472,
+      "maxDrawdownUsed": 1864.0714206393095
+    },
+    {
+      "startDate": "2023-11-13",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 18,
+      "payout": 773.8751058852548,
+      "totalProfit": 859.8612287613942,
+      "maxDrawdownUsed": 1475.0716342623637
+    },
+    {
+      "startDate": "2023-11-10",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 19,
+      "payout": 834.3596253351418,
+      "totalProfit": 927.0662503723797,
+      "maxDrawdownUsed": 1475.0716342623637
+    },
+    {
+      "startDate": "2023-11-14",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 21,
+      "payout": 308.5937701353425,
+      "totalProfit": 342.8819668170472,
+      "maxDrawdownUsed": 1864.0714206393095
+    },
+    {
+      "startDate": "2023-11-10",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 19,
+      "payout": 834.3596253351418,
+      "totalProfit": 927.0662503723797,
+      "maxDrawdownUsed": 1475.0716342623637
+    },
+    {
+      "startDate": "2023-11-14",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 21,
+      "payout": 308.5937701353425,
+      "totalProfit": 342.8819668170472,
+      "maxDrawdownUsed": 1864.0714206393095
+    },
+    {
+      "startDate": "2023-12-08",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 15,
+      "payout": 23.59466686791202,
+      "totalProfit": 26.216296519902244,
+      "maxDrawdownUsed": 1573.6825456728984
+    },
+    {
+      "startDate": "2023-11-14",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 21,
+      "payout": 308.5937701353425,
+      "totalProfit": 342.8819668170472,
+      "maxDrawdownUsed": 1864.0714206393095
+    },
+    {
+      "startDate": "2023-11-14",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 21,
+      "payout": 308.5937701353425,
+      "totalProfit": 342.8819668170472,
+      "maxDrawdownUsed": 1864.0714206393095
+    },
+    {
+      "startDate": "2023-11-14",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 21,
+      "payout": 308.5937701353425,
+      "totalProfit": 342.8819668170472,
+      "maxDrawdownUsed": 1864.0714206393095
+    },
+    {
+      "startDate": "2023-11-09",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 17,
+      "payout": 1190.8304127933407,
+      "totalProfit": 1323.1449031037118,
+      "maxDrawdownUsed": 2033.9672645570536
+    },
+    {
+      "startDate": "2023-12-08",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 15,
+      "payout": 23.59466686791202,
+      "totalProfit": 26.216296519902244,
+      "maxDrawdownUsed": 1573.6825456728984
+    },
+    {
+      "startDate": "2023-12-14",
+      "paid": false,
+      "failReason": "time",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -326.3447263336857,
+      "maxDrawdownUsed": 1502.200231519877
+    },
+    {
+      "startDate": "2023-12-08",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 15,
+      "payout": 23.59466686791202,
+      "totalProfit": 26.216296519902244,
+      "maxDrawdownUsed": 1573.6825456728984
+    },
+    {
+      "startDate": "2023-11-14",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 21,
+      "payout": 308.5937701353425,
+      "totalProfit": 342.8819668170472,
+      "maxDrawdownUsed": 1864.0714206393095
+    },
+    {
+      "startDate": "2023-11-14",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 21,
+      "payout": 308.5937701353425,
+      "totalProfit": 342.8819668170472,
+      "maxDrawdownUsed": 1864.0714206393095
+    },
+    {
+      "startDate": "2023-12-15",
+      "paid": false,
+      "failReason": "time",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -66.10878084442083,
+      "maxDrawdownUsed": 1433.292726350759
+    },
+    {
+      "startDate": "2023-12-08",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 15,
+      "payout": 23.59466686791202,
+      "totalProfit": 26.216296519902244,
+      "maxDrawdownUsed": 1573.6825456728984
+    },
+    {
+      "startDate": "2023-12-08",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 15,
+      "payout": 23.59466686791202,
+      "totalProfit": 26.216296519902244,
+      "maxDrawdownUsed": 1573.6825456728984
+    },
+    {
+      "startDate": "2023-12-15",
+      "paid": false,
+      "failReason": "time",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -66.10878084442083,
+      "maxDrawdownUsed": 1433.292726350759
+    },
+    {
+      "startDate": "2023-12-08",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 15,
+      "payout": 23.59466686791202,
+      "totalProfit": 26.216296519902244,
+      "maxDrawdownUsed": 1573.6825456728984
+    },
+    {
+      "startDate": "2023-12-14",
+      "paid": false,
+      "failReason": "time",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -326.3447263336857,
+      "maxDrawdownUsed": 1502.200231519877
+    },
+    {
+      "startDate": "2023-12-14",
+      "paid": false,
+      "failReason": "time",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -326.3447263336857,
+      "maxDrawdownUsed": 1502.200231519877
+    },
+    {
+      "startDate": "2023-12-08",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 15,
+      "payout": 23.59466686791202,
+      "totalProfit": 26.216296519902244,
+      "maxDrawdownUsed": 1573.6825456728984
+    },
+    {
+      "startDate": "2023-11-14",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 21,
+      "payout": 308.5937701353425,
+      "totalProfit": 342.8819668170472,
+      "maxDrawdownUsed": 1864.0714206393095
+    },
+    {
+      "startDate": "2023-11-14",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 21,
+      "payout": 308.5937701353425,
+      "totalProfit": 342.8819668170472,
+      "maxDrawdownUsed": 1864.0714206393095
+    },
+    {
+      "startDate": "2023-12-08",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 15,
+      "payout": 23.59466686791202,
+      "totalProfit": 26.216296519902244,
+      "maxDrawdownUsed": 1573.6825456728984
+    },
+    {
+      "startDate": "2023-12-08",
+      "paid": true,
+      "failReason": null,
+      "daysToPayout": 15,
+      "payout": 23.59466686791202,
+      "totalProfit": 26.216296519902244,
+      "maxDrawdownUsed": 1573.6825456728984
+    },
+    {
+      "startDate": "2023-12-14",
+      "paid": false,
+      "failReason": "time",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -326.3447263336857,
+      "maxDrawdownUsed": 1502.200231519877
+    },
+    {
+      "startDate": "2023-12-15",
+      "paid": false,
+      "failReason": "time",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -66.10878084442083,
+      "maxDrawdownUsed": 1433.292726350759
+    },
+    {
+      "startDate": "2023-12-15",
+      "paid": false,
+      "failReason": "time",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -66.10878084442083,
+      "maxDrawdownUsed": 1433.292726350759
+    },
+    {
+      "startDate": "2023-12-15",
+      "paid": false,
+      "failReason": "time",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -66.10878084442083,
+      "maxDrawdownUsed": 1433.292726350759
+    },
+    {
+      "startDate": "2023-12-14",
+      "paid": false,
+      "failReason": "time",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -326.3447263336857,
+      "maxDrawdownUsed": 1502.200231519877
+    },
+    {
+      "startDate": "2023-12-15",
+      "paid": false,
+      "failReason": "time",
+      "daysToPayout": null,
+      "payout": 0,
+      "totalProfit": -66.10878084442083,
+      "maxDrawdownUsed": 1433.292726350759
+    }
+  ]
+}

@@ -310,6 +310,29 @@ export interface RunBacktestInput {
     config: BacktestRunConfig;
     strategy: StrategyInstance;
     onProgress?: (processed: number, total: number) => void;
+    /**
+     * Optional research/diagnostic hook. Called after each in-range bar has
+     * been marked to market, with the open positions that survived that bar.
+     * It cannot alter the simulation. Used by the prop-rule simulator, which
+     * needs an intraday equity path rather than the daily equity curve.
+     */
+    onBarEquity?: (point: BarEquityPoint) => void;
+}
+
+export interface BarEquityPoint {
+    time: number;
+    barHigh: number;
+    barLow: number;
+    /** Equity at this bar's close (capital + realized + unrealized - open entry commission). */
+    equity: number;
+    realizedNetPnl: number;
+    unrealizedPnl: number;
+    openEntryCommission: number;
+    /** Worst/best mark of the still-open positions at the bar extremes. */
+    openWorstGross: number;
+    openBestGross: number;
+    /** Positions still open at this bar's close, with brackets in effect. */
+    positions: OpenPositionView[];
 }
 
 export function runBacktest({
@@ -317,6 +340,7 @@ export function runBacktest({
     config,
     strategy,
     onProgress,
+    onBarEquity,
 }: RunBacktestInput): BacktestResult {
     const firstInRangeIndex = bars.findIndex(
         (bar) => bar.time >= config.startTs,
@@ -478,6 +502,41 @@ export function runBacktest({
             drawdown,
             drawdownPct,
         });
+
+        if (onBarEquity) {
+            let openEntryCommission = 0;
+            let openWorstGross = 0;
+            let openBestGross = 0;
+
+            for (const position of openPositions) {
+                openEntryCommission += position.entryCommission;
+
+                const long = position.side === "long";
+                const worstPrice = long ? bar.low : bar.high;
+                const bestPrice = long ? bar.high : bar.low;
+                openWorstGross +=
+                    (long ? worstPrice - position.entryPrice : position.entryPrice - worstPrice) *
+                    pointValue *
+                    position.quantity;
+                openBestGross +=
+                    (long ? bestPrice - position.entryPrice : position.entryPrice - bestPrice) *
+                    pointValue *
+                    position.quantity;
+            }
+
+            onBarEquity({
+                time: bar.time,
+                barHigh: bar.high,
+                barLow: bar.low,
+                equity,
+                realizedNetPnl,
+                unrealizedPnl: unrealized,
+                openEntryCommission,
+                openWorstGross,
+                openBestGross,
+                positions: openPositions.map(positionView),
+            });
+        }
     }
 
     function closePosition(
