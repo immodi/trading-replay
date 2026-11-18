@@ -52,7 +52,17 @@ export function analyzeDataQuality(
     endTsExclusive: number,
     timeframeMinutes: number,
     warmup?: { requestedBars: number; availableBars: number },
+    baseTimeframeMinutes: number = 1,
 ): DataQualityReport {
+    const baseSeconds = Math.max(1, baseTimeframeMinutes) * 60;
+    const expectedBaseBars = Math.max(
+        1,
+        Math.round(
+            (Math.max(1, timeframeMinutes) * 60) / baseSeconds,
+        ),
+    );
+    const trackPartialBuckets =
+        baseTimeframeMinutes < 1440 && timeframeMinutes > 1;
     const nonFinite: IssueCounter = { count: 0, samples: [] };
     const invalidOhlc: IssueCounter = { count: 0, samples: [] };
     const nonIncreasing: IssueCounter = { count: 0, samples: [] };
@@ -94,7 +104,11 @@ export function analyzeDataQuality(
             bump(negativeVolume, candle.time);
         }
 
-        if (!Number.isInteger(candle.time) || candle.time % 60 !== 0) {
+        if (
+            !Number.isInteger(candle.time) ||
+            (baseTimeframeMinutes < 1440 &&
+                candle.time % baseSeconds !== 0)
+        ) {
             bump(misalignedTimestamp, candle.time);
         }
 
@@ -106,7 +120,7 @@ export function analyzeDataQuality(
             bump(invalidOhlc, candle.time);
         }
 
-        if (timeframeMinutes > 1) {
+        if (trackPartialBuckets) {
             const bucket = bucketStart(candle.time, timeframeMinutes);
             bucketCounts.set(bucket, (bucketCounts.get(bucket) ?? 0) + 1);
         }
@@ -114,7 +128,11 @@ export function analyzeDataQuality(
         if (previous) {
             if (candle.time <= previous.time) {
                 bump(nonIncreasing, candle.time);
-            } else if (candle.time - previous.time > 60) {
+            } else if (
+                // Daily/weekly feeds legitimately skip weekends and holidays.
+                baseTimeframeMinutes < 1440 &&
+                candle.time - previous.time > baseSeconds
+            ) {
                 bump(gaps, candle.time);
             }
 
@@ -136,9 +154,9 @@ export function analyzeDataQuality(
         previous = candle;
     }
 
-    if (timeframeMinutes > 1) {
+    if (trackPartialBuckets) {
         for (const [bucket, count] of bucketCounts) {
-            if (count < timeframeMinutes) {
+            if (count < expectedBaseBars) {
                 bump(partialBuckets, bucket);
             }
         }
@@ -167,7 +185,7 @@ export function analyzeDataQuality(
         ),
         toIssue(
             "misaligned_base_timestamp",
-            "Candle timestamp is not aligned to the 1-minute base resolution.",
+            `Candle timestamp is not aligned to the ${baseTimeframeMinutes}-minute base resolution.`,
             misalignedTimestamp,
         ),
     ].filter((issue): issue is DataQualityIssue => issue !== null);

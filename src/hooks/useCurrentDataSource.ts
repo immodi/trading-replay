@@ -50,7 +50,8 @@ export function useCurrentDataSource(
         };
     }, [source, initialDate]);
 
-    // Raw 1‑minute candles for the selected date
+    // Raw base-timeframe candles for the selected date (daily sources load a
+    // forward window so playback can continue across trading days).
     useEffect(() => {
         if (!dataRange || !currentDate) return;
         const date = currentDate;
@@ -58,7 +59,7 @@ export function useCurrentDataSource(
 
         async function load() {
             try {
-                const raw = await source.loadDay(date);
+                const raw = await source.loadReplayWindow(date);
                 if (cancelled) return;
 
                 setError(null);
@@ -111,6 +112,7 @@ export function useCurrentDataSource(
         isHistoryLoading,
         pointValue: source.pointValue,
         commission: source.commission ?? 0,
+        commissionPercent: source.commissionPercent ?? 0,
         error,
     };
 }

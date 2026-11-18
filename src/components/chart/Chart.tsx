@@ -34,11 +34,13 @@ import { useTrade } from "@/hooks/useTrade";
 import { useTradingSession } from "@/hooks/useTradingSession";
 import { getSessionStore } from "@/store/sessionStore";
 import { ChartTrading } from "./ChartTrading";
-import { FadeCheckPanel } from "./FadeCheckPanel";
-import { StrategyPanelHost } from "./StrategyPanelHost";
 import type { PositionParamters } from "@/types/positionParamters";
 import type { IndicatorConfig } from "@/types/indicator";
 import type { ChartTimezone } from "@/constants/timezone";
+import {
+    normaliseTimeframe,
+    resolveBaseTimeframe,
+} from "@/constants/assetClass";
 import { indicatorPlacement } from "@/constants/indicators";
 import {
     createChartTickMarkFormatter,
@@ -138,6 +140,8 @@ const volumeSeriesOptions = {
 } as const;
 
 export function ChartComponent({ config }: ChartComponentProps) {
+    const baseTimeframeMinutes = resolveBaseTimeframe(config);
+
     // One singleton store per stored source: trades, positions, playback and
     // view preferences all live here and are mirrored to localStorage.
     const sessionStore = useMemo(
@@ -147,15 +151,16 @@ export function ChartComponent({ config }: ChartComponentProps) {
     const persisted = useStore(sessionStore);
 
     const [timeFrameMinutes, setTimeFrameMinutes] = useState<number>(
-        () => persisted.view.timeframeMinutes,
+        () =>
+            normaliseTimeframe(
+                persisted.view.timeframeMinutes,
+                baseTimeframeMinutes,
+            ),
     );
     const [speed, setSpeed] = useState<number>(() => persisted.view.speed);
     const [chartTimezone, setChartTimezone] = useState<ChartTimezone>(
         () => persisted.view.chartTimezone,
     );
-    const [activeStrategyPanel, setActiveStrategyPanel] = useState<
-        string | null
-    >(() => persisted.view.activeStrategyPanel);
     const [orderMenu, setOrderMenu] = useState<{
         x: number;
         y: number;
@@ -208,10 +213,37 @@ export function ChartComponent({ config }: ChartComponentProps) {
     );
     const fullPriceData = usePrice(replay.candles);
     const sessionPriceData = usePrice(replay.sessionCandles);
+
+    // While a daily replay moves forward, the selected start date is no longer
+    // the candle being displayed. Use the visible bar's UTC day for session
+    // bookkeeping so trade snapshots and rewind logic stay aligned.
+    const replayDay = useMemo(() => {
+        const currentTime = replay.sessionCandles.at(-1)?.time;
+
+        if (currentTime !== undefined && currentTime > 0) {
+            return new Date(currentTime * 1000)
+                .toISOString()
+                .slice(0, 10);
+        }
+
+        return source.currentDate
+            ? source.currentDate.toISOString().slice(0, 10)
+            : "";
+    }, [replay.sessionCandles, source.currentDate]);
+
+    const commissionSettings = useMemo(
+        () => ({
+            flatPerSide: source.commission,
+            percentPerSide: source.commissionPercent,
+            assetClass: config.assetClass,
+        }),
+        [source.commission, source.commissionPercent, config.assetClass],
+    );
+
     const trade = useTrade(
         fullPriceData,
         source.pointValue,
-        source.commission,
+        commissionSettings,
         persisted.positions,
         replay.hasRestored,
         replay.index,
@@ -219,11 +251,16 @@ export function ChartComponent({ config }: ChartComponentProps) {
     const session = useTradingSession({
         positions: trade.positions,
         instrument: config.symbol,
+        assetClass: config.assetClass,
+        baseTimeframeMinutes,
+        currency: config.currency,
         pointValue: source.pointValue,
         commissionPerSide: source.commission,
+        commissionPercent: source.commissionPercent,
         store: sessionStore,
         replayIndex: replay.index,
-        replayDay: source.currentDate
+        replayDay,
+        replayWindowDay: source.currentDate
             ? source.currentDate.toISOString().slice(0, 10)
             : "",
     });
@@ -262,7 +299,6 @@ export function ChartComponent({ config }: ChartComponentProps) {
             current.timeframeMinutes === timeFrameMinutes &&
             current.speed === speed &&
             current.chartTimezone === chartTimezone &&
-            current.activeStrategyPanel === activeStrategyPanel &&
             current.indicators === indicators
         ) {
             return;
@@ -274,7 +310,6 @@ export function ChartComponent({ config }: ChartComponentProps) {
                 timeframeMinutes: timeFrameMinutes,
                 speed,
                 chartTimezone,
-                activeStrategyPanel,
                 indicators,
             },
             updatedAt: Date.now(),
@@ -284,7 +319,6 @@ export function ChartComponent({ config }: ChartComponentProps) {
         timeFrameMinutes,
         speed,
         chartTimezone,
-        activeStrategyPanel,
         indicators,
         sessionStore,
     ]);
@@ -490,30 +524,12 @@ export function ChartComponent({ config }: ChartComponentProps) {
         );
     }
 
-    const hasOpenPosition = trade.positions.some(
-        (position) =>
-            position.state === "open" || position.state === "waiting",
-    );
-
-    const placeFadeTrade = (order: {
-        side: "long" | "short";
-        quantity: number;
-        stopLoss: number;
-        takeProfit: number;
-    }) => {
-        trade.enter({
-            direction: order.side,
-            quantity: order.quantity,
-            stopLoss: order.stopLoss,
-            takeProfit: order.takeProfit,
-        });
-    };
-
     const replayToolbarProps: ReplayToolbarProps = {
         minDate: source.dataRange.start,
         maxDate: source.dataRange.end,
         currentDate: source.currentDate,
         timeFrameMinutes,
+        baseTimeframeMinutes,
         speed,
         chartTimezone,
         indicators,
@@ -534,6 +550,7 @@ export function ChartComponent({ config }: ChartComponentProps) {
         restart: replay.restart,
 
         sessionInstrument: config.symbol,
+        sessionCurrency: config.currency,
         sessionTrades: session.trades,
         sessionSummary: session.summary,
         sessionHasUnexportedChanges: session.hasUnexportedChanges,
@@ -549,8 +566,11 @@ export function ChartComponent({ config }: ChartComponentProps) {
         >
             <MarketHeader
                 symbol={config.symbol}
+                assetClass={config.assetClass}
+                currency={config.currency}
                 pointValue={source.pointValue}
                 commission={source.commission}
+                commissionPercent={source.commissionPercent}
                 price={fullPriceData.Price}
                 high={fullPriceData.High}
                 low={fullPriceData.Low}
@@ -656,55 +676,13 @@ export function ChartComponent({ config }: ChartComponentProps) {
                     />
                     </div>
                 </div>
-
-                <StrategyPanelHost
-                    panels={[
-                        {
-                            id: "fade",
-                            label: "Fade Check",
-                            content: (
-                                <FadeCheckPanel
-                                    bars={fullPriceData.History ?? []}
-                                    timeframeMinutes={timeFrameMinutes}
-                                    pointValue={source.pointValue}
-                                    commissionRoundTrip={
-                                        (source.commission ?? 0) * 2
-                                    }
-                                    instrumentLabel={config.symbol}
-                                    profile="base"
-                                    canPlaceTrade={!hasOpenPosition}
-                                    onPlaceTrade={placeFadeTrade}
-                                />
-                            ),
-                        },
-                        {
-                            id: "fade-relaxed",
-                            label: "Fade Relaxed",
-                            content: (
-                                <FadeCheckPanel
-                                    bars={fullPriceData.History ?? []}
-                                    timeframeMinutes={timeFrameMinutes}
-                                    pointValue={source.pointValue}
-                                    commissionRoundTrip={
-                                        (source.commission ?? 0) * 2
-                                    }
-                                    instrumentLabel={config.symbol}
-                                    profile="relaxed"
-                                    canPlaceTrade={!hasOpenPosition}
-                                    onPlaceTrade={placeFadeTrade}
-                                />
-                            ),
-                        },
-                    ]}
-                    activeId={activeStrategyPanel}
-                    onShow={setActiveStrategyPanel}
-                    onHide={() => setActiveStrategyPanel(null)}
-                />
             </div>
 
             <TradingBar
                 positionParametersRef={positionParametersRef}
                 onParametersChange={persistPositionParameters}
+                assetClass={config.assetClass}
+                currency={config.currency}
                 price={fullPriceData.Price}
                 pl={trade.pl}
                 reset={() => {

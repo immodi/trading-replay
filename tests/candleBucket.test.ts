@@ -100,3 +100,44 @@ test("daily aggregation uses UTC midnight, not 1440 input rows", () => {
         [0, day],
     );
 });
+
+test("stock calendar buckets start at week, month, quarter, and year boundaries", () => {
+    const time = Date.UTC(2024, 4, 15, 12) / 1000; // Wed 15 May 2024
+
+    assert.equal(
+        bucketStart(time, 10_080),
+        Date.UTC(2024, 4, 13) / 1000,
+    );
+    assert.equal(
+        bucketStart(time, 43_200),
+        Date.UTC(2024, 4, 1) / 1000,
+    );
+    assert.equal(
+        bucketStart(time, 129_600),
+        Date.UTC(2024, 3, 1) / 1000,
+    );
+    assert.equal(
+        bucketStart(time, 525_600),
+        Date.UTC(2024, 0, 1) / 1000,
+    );
+});
+
+test("daily stock candles aggregate into a monthly bar", () => {
+    const aggregated = aggregateCandlesByTimeframe(
+        [
+            candle(Date.UTC(2024, 0, 2) / 1000, 10, 12, 9, 11, 1),
+            candle(Date.UTC(2024, 0, 31) / 1000, 11, 15, 10, 14, 2),
+            candle(Date.UTC(2024, 1, 1) / 1000, 14, 16, 13, 15, 3),
+        ],
+        43_200,
+    );
+
+    assert.equal(aggregated.length, 2);
+    assert.equal(aggregated[0].time, Date.UTC(2024, 0, 1) / 1000);
+    assert.equal(aggregated[0].open, 10);
+    assert.equal(aggregated[0].high, 15);
+    assert.equal(aggregated[0].low, 9);
+    assert.equal(aggregated[0].close, 14);
+    assert.equal(aggregated[0].volume, 3);
+    assert.equal(aggregated[1].time, Date.UTC(2024, 1, 1) / 1000);
+});

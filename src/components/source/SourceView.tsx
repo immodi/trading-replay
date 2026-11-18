@@ -1,4 +1,9 @@
 import { list, loadJson, remove } from "@/data/opfs";
+import { withSourceDefaults } from "@/data/sources/config";
+import {
+    assetClassDefinition,
+    timeframeLabel,
+} from "@/constants/assetClass";
 import type { CandleSourceConfig } from "@/types/candleSource";
 import { useCallback, useEffect, useState } from "react";
 
@@ -23,10 +28,19 @@ export default function SourceView({ config, setConfig, refreshKey, onSelect: on
         const names = await list();
 
         const stored = await Promise.all(
-            names.map(async (fileName) => ({
-                fileName,
-                config: await loadJson<CandleSourceConfig>(fileName, true),
-            })),
+            names.map(async (fileName) => {
+                const meta = await loadJson<Partial<CandleSourceConfig>>(
+                    fileName,
+                    true,
+                );
+
+                return {
+                    fileName,
+                    // Sidecars written before stocks/daily support lack the
+                    // new fields; default them to a futures 1m source.
+                    config: meta ? withSourceDefaults(meta) : null,
+                };
+            }),
         );
 
         setSources(stored);
@@ -92,7 +106,13 @@ export default function SourceView({ config, setConfig, refreshKey, onSelect: on
                                         {source.fileName}
                                     </span>
                                     <span className="block truncate text-xs text-gray-500">
-                                        Commission: ${(source.config?.commission ?? 0).toFixed(2)}/side
+                                        {source.config
+                                            ? `${assetClassDefinition(source.config.assetClass).label} · ${timeframeLabel(source.config.baseTimeframeMinutes)} · ${source.config.currency} · ${
+                                                  source.config.assetClass === "stock"
+                                                      ? `${source.config.currency} ${(source.config.commission ?? 0).toFixed(2)}/order/side`
+                                                      : `${source.config.currency} ${source.config.pointValue.toFixed(2)}/pt`
+                                              } · +${(source.config.commissionPercent ?? 0).toFixed(2)}%/side`
+                                            : "Missing source metadata"}
                                     </span>
                                 </div>
 

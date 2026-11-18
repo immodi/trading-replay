@@ -165,10 +165,20 @@ interface HistoryApi {
 interface InstrumentContext {
     id: string;
     symbol: string;
-    pointValue: number;         // dollars per point per contract
-    commissionPerSide: number;  // dollars per contract per side
+    assetClass?: "futures" | "stock";
+    currency?: string;
+    quantityUnit?: string;
+    baseTimeframeMinutes?: number;
+    pointValue: number;         // currency per point per contract/share
+    commissionPerSide: number;  // flat per side: per order (stock) or per contract (futures)
+    commissionPercentPerSide?: number; // percentage of notional per side
 }
 ```
+
+For stock sources, `pointValue` is `1` and `quantityUnit` is `"share"`, so P/L
+is `price change × shares` in `currency`. Bracket point fields are then simply
+the stop/target distance in that currency per share. Long stock backtests may
+also use weekly, monthly, quarterly, and yearly bars.
 
 ### `positions`
 
@@ -384,11 +394,11 @@ Exits are recorded with `exitReason: "exit_all"`; individual exits use
 | Take-profit hit | Exactly at the target. No adverse slippage and no price improvement. |
 | Both stop and target in one bar | Stop-loss is checked first. |
 | Entry bar | Brackets can trigger on the same bar as the entry fill. |
-| Commission | `commissionPerSide × 2 × quantity` per completed trade. |
+| Commission | Fixed per side plus percentage of notional per side. Stock fixed fee is per order; futures fixed fee is per contract. |
 | Slippage | `slippagePointsPerSide` per entry and per exit/stop fill. Targets are exempt. |
 | Forced close | Any position still open at the end closes at the last bar close with adverse slippage (`end_of_test`). |
 | Drawdown | Mark-to-market at each bar close. |
-| Position sizing | Strategy-supplied `quantity` per entry; max 100 contracts per entry. |
+| Position sizing | Strategy-supplied `quantity` per entry; max 100 contracts or 1,000,000 shares per entry. |
 | Opening-gap priority | Queued modifies/exits/entries run before existing bracket checks at the same bar open. |
 
 P/L for a closed trade:
@@ -396,7 +406,12 @@ P/L for a closed trade:
 ```text
 grossPnl = (exitPrice - entryPrice) × pointValue × quantity   (long)
 grossPnl = (entryPrice - exitPrice) × pointValue × quantity   (short)
-netPnl   = grossPnl - commissionPerSide × 2 × quantity
+
+flatEntry = stock ? commissionPerSide : commissionPerSide × quantity
+flatExit  = stock ? commissionPerSide : commissionPerSide × quantity
+percent   = (entryPrice + exitPrice) × quantity × commissionPercentPerSide / 100
+
+netPnl = grossPnl - (flatEntry + flatExit + percent)
 ```
 
 ### Warm-up

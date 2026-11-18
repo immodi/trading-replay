@@ -1,11 +1,18 @@
-import { Timeframes } from "@/constants/toolbar";
+import { availableTimeframes } from "@/constants/assetClass";
 
 type ReplayTimeframeSelectProps = {
     timeFrame: number;
+    baseTimeframeMinutes: number;
     setTimeFrame: (timeFrame: number) => void
 }
 
-export function ReplayTimeframeSelect({ timeFrame, setTimeFrame }: ReplayTimeframeSelectProps) {
+export function ReplayTimeframeSelect({
+    timeFrame,
+    baseTimeframeMinutes,
+    setTimeFrame,
+}: ReplayTimeframeSelectProps) {
+    const timeframes = availableTimeframes(baseTimeframeMinutes);
+
     return (
         <div className="flex shrink-0 items-center gap-2">
             <label className="text-[10px] font-semibold uppercase tracking-wider text-faint">
@@ -36,7 +43,7 @@ export function ReplayTimeframeSelect({ timeFrame, setTimeFrame }: ReplayTimefra
                         focus:border-accent/60
                     "
                 >
-                    {Timeframes.map(timeframe => (
+                    {timeframes.map(timeframe => (
                         <option
                             key={timeframe.value}
                             value={timeframe.value}

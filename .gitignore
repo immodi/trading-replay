@@ -29,6 +29,10 @@ data/*.csv
 data/**/*.csv
 data/*-1m.json
 
+# Generated EGX100 downloads (large; kept local)
+data/egx100/
+data/egx30/
+
 # Private/local strategy files
 /strategies/
 
@@ -38,3 +42,8 @@ PROJECT_OVERVIEW.md
 # Research caches and per-run equity/trade dumps (regenerable, large)
 research/cache/
 research/results/*/
+
+# EGX30 research outputs
+research/egx-swing/.venv/
+research/egx-swing/results/
+research/egx-swing/__pycache__/

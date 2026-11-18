@@ -24,7 +24,6 @@ export type PersistedView = {
     timeframeMinutes: number;
     speed: number;
     chartTimezone: ChartTimezone;
-    activeStrategyPanel: string | null;
     indicators: IndicatorConfig[];
     positionParameters: PositionParamters;
 };

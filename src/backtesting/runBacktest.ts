@@ -1,6 +1,13 @@
-import { MAX_ACTIONS_PER_BAR, MAX_CONTRACTS_PER_ENTRY } from "./constants";
+import {
+    MAX_ACTIONS_PER_BAR,
+    maxUnitsPerEntry,
+} from "./constants";
 import { computeSummary } from "./metrics";
 import { formatUtcDate, formatUtcDateTime } from "./range";
+import {
+    calculateFillCommission,
+    type CommissionSettings,
+} from "@/utils/calculatePositionPL";
 import type {
     AccountContext,
     BacktestBar,
@@ -73,7 +80,10 @@ function optionalString(value: unknown, maxLength: number): string | undefined {
     return typeof value === "string" ? value.slice(0, maxLength) : undefined;
 }
 
-function validateEnter(raw: Record<string, unknown>): ActionResult {
+function validateEnter(
+    raw: Record<string, unknown>,
+    maxEntryQuantity: number,
+): ActionResult {
     if (raw.side !== "long" && raw.side !== "short") {
         return reject("invalid_side");
     }
@@ -83,7 +93,7 @@ function validateEnter(raw: Record<string, unknown>): ActionResult {
         typeof quantity !== "number" ||
         !Number.isInteger(quantity) ||
         quantity < 1 ||
-        quantity > MAX_CONTRACTS_PER_ENTRY
+        quantity > maxEntryQuantity
     ) {
         return reject("invalid_quantity");
     }
@@ -198,10 +208,13 @@ function validateModify(raw: Record<string, unknown>): ActionResult {
     return { action };
 }
 
-function validateAction(raw: unknown): ActionResult {
+function validateAction(
+    raw: unknown,
+    maxEntryQuantity: number,
+): ActionResult {
     if (!isRecord(raw)) return reject("malformed_action");
 
-    if (raw.type === "enter") return validateEnter(raw);
+    if (raw.type === "enter") return validateEnter(raw, maxEntryQuantity);
 
     if (raw.type === "modify") return validateModify(raw);
 
@@ -358,7 +371,15 @@ export function runBacktest({
 
     const pointValue = config.instrument.pointValue;
     const commissionPerSide = config.instrument.commissionPerSide;
+    const commissionPercentPerSide =
+        config.instrument.commissionPercentPerSide ?? 0;
     const slippage = config.slippagePointsPerSide;
+    const maxEntryQuantity = maxUnitsPerEntry(config.instrument.assetClass);
+    const commissionSettings: CommissionSettings = {
+        flatPerSide: commissionPerSide,
+        percentPerSide: commissionPercentPerSide,
+        assetClass: config.instrument.assetClass,
+    };
 
     if (!Number.isFinite(pointValue) || pointValue <= 0) {
         throw new BacktestError(
@@ -369,6 +390,15 @@ export function runBacktest({
     if (!Number.isFinite(commissionPerSide) || commissionPerSide < 0) {
         throw new BacktestError(
             "Instrument commissionPerSide must be finite and non-negative.",
+        );
+    }
+
+    if (
+        !Number.isFinite(commissionPercentPerSide) ||
+        commissionPercentPerSide < 0
+    ) {
+        throw new BacktestError(
+            "Instrument commissionPercentPerSide must be finite and non-negative.",
         );
     }
 
@@ -556,7 +586,12 @@ export function runBacktest({
                 : (position.entryPrice - exitPrice) *
                   pointValue *
                   position.quantity;
-        const commissionCost = commissionPerSide * 2 * position.quantity;
+        const exitCommission = calculateFillCommission(
+            exitPrice,
+            position.quantity,
+            commissionSettings,
+        );
+        const commissionCost = position.entryCommission + exitCommission;
         const exitSlippage =
             Math.abs(exitPrice - referencePrice) * pointValue * position.quantity;
 
@@ -777,7 +812,11 @@ export function runBacktest({
             entryTime: bar.time,
             entryPrice: fill,
             ...levels,
-            entryCommission: commissionPerSide * quantity,
+            entryCommission: calculateFillCommission(
+                fill,
+                quantity,
+                commissionSettings,
+            ),
             entrySlippage: Math.abs(fill - reference) * pointValue * quantity,
             entrySimIndex: simIndex,
             ...(action.tag === undefined ? {} : { tag: action.tag }),
@@ -897,7 +936,7 @@ export function runBacktest({
         const actions = returned.slice(0, MAX_ACTIONS_PER_BAR);
 
         for (const raw of actions) {
-            const validated = validateAction(raw);
+            const validated = validateAction(raw, maxEntryQuantity);
 
             if ("reason" in validated) {
                 increment(rejectedActions, validated.reason);
@@ -1062,7 +1101,8 @@ export function runBacktest({
                 "limit at target, no adverse slippage; no price improvement",
             forcedClose: "last bar close with adverse slippage",
             drawdown: "bar-close mark-to-market",
-            positionSizing: "strategy-supplied quantity per entry (contracts)",
+            positionSizing:
+                "strategy-supplied quantity per entry (contracts or shares)",
             openingGapPriority:
                 "queued market entries/exits are processed before existing bracket checks at the same bar open",
         },

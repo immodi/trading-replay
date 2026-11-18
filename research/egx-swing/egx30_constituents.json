@@ -1,0 +1,216 @@
+{
+  "index": "EGX30",
+  "source": "Investing.com components",
+  "stocks": [
+    {
+      "symbol": "CCAP",
+      "name": "Qalaa",
+      "slug": "citadel-capita",
+      "fileName": "CCAP-1d.json",
+      "sourceRows": 4087
+    },
+    {
+      "symbol": "COMI",
+      "name": "Com Intl Bk",
+      "slug": "com-intl-bk",
+      "fileName": "COMI-1d.json",
+      "sourceRows": 7882
+    },
+    {
+      "symbol": "VLMR",
+      "name": "Valmore Holding",
+      "slug": "egypt-kuwait-h",
+      "fileName": "VLMR-1d.json",
+      "sourceRows": 6674
+    },
+    {
+      "symbol": "ETEL",
+      "name": "Telecom Egypt",
+      "slug": "telecom-egypt",
+      "fileName": "ETEL-1d.json",
+      "sourceRows": 5068
+    },
+    {
+      "symbol": "HRHO",
+      "name": "EFG Holding",
+      "slug": "efg-hermes-hol",
+      "fileName": "HRHO-1d.json",
+      "sourceRows": 6288
+    },
+    {
+      "symbol": "PHDC",
+      "name": "Palm Hills",
+      "slug": "palm-hill-dev",
+      "fileName": "PHDC-1d.json",
+      "sourceRows": 4483
+    },
+    {
+      "symbol": "SKPC",
+      "name": "Sidi Kerir",
+      "slug": "sidi-kerir-pet",
+      "fileName": "SKPC-1d.json",
+      "sourceRows": 5188
+    },
+    {
+      "symbol": "TMGH",
+      "name": "TMG",
+      "slug": "t-m-g-holding",
+      "fileName": "TMGH-1d.json",
+      "sourceRows": 4588
+    },
+    {
+      "symbol": "GBCO",
+      "name": "GB AUTO",
+      "slug": "gb-auto-s.a.e",
+      "fileName": "GBCO-1d.json",
+      "sourceRows": 4555
+    },
+    {
+      "symbol": "HELI",
+      "name": "Misr El Gadida for Housing Dev",
+      "slug": "heliopolis-housing",
+      "fileName": "HELI-1d.json",
+      "sourceRows": 6561
+    },
+    {
+      "symbol": "RAYA",
+      "name": "Raya Holding",
+      "slug": "raya-tech---co",
+      "fileName": "RAYA-1d.json",
+      "sourceRows": 5149
+    },
+    {
+      "symbol": "ABUK",
+      "name": "Abu Qir Fertilizers",
+      "slug": "abou-kir-fertilizers",
+      "fileName": "ABUK-1d.json",
+      "sourceRows": 7571
+    },
+    {
+      "symbol": "MCQE",
+      "name": "Misr Cement",
+      "slug": "misr-cement-qe",
+      "fileName": "MCQE-1d.json",
+      "sourceRows": 6232
+    },
+    {
+      "symbol": "AMOC",
+      "name": "Alexandria Mineral Oils",
+      "slug": "alx-mineral-oi",
+      "fileName": "AMOC-1d.json",
+      "sourceRows": 5115
+    },
+    {
+      "symbol": "EAST",
+      "name": "EC",
+      "slug": "eastern-co",
+      "fileName": "EAST-1d.json",
+      "sourceRows": 6966
+    },
+    {
+      "symbol": "ALCN",
+      "name": "Alex Cont",
+      "slug": "alexandria-containers-and-goods",
+      "fileName": "ALCN-1d.json",
+      "sourceRows": 5141
+    },
+    {
+      "symbol": "BTFH",
+      "name": "Beltone",
+      "slug": "beltone-financial-holding",
+      "fileName": "BTFH-1d.json",
+      "sourceRows": 3539
+    },
+    {
+      "symbol": "EGAL",
+      "name": "Egypt Aluminum",
+      "slug": "egypt-aluminum",
+      "fileName": "EGAL-1d.json",
+      "sourceRows": 6087
+    },
+    {
+      "symbol": "JUFO",
+      "name": "Juhayna Food",
+      "slug": "juhayna-food-industries",
+      "fileName": "JUFO-1d.json",
+      "sourceRows": 3905
+    },
+    {
+      "symbol": "ORHD",
+      "name": "ODE",
+      "slug": "orascom-hotels-and-development",
+      "fileName": "ORHD-1d.json",
+      "sourceRows": 5069
+    },
+    {
+      "symbol": "ADIB",
+      "name": "Abu Dhabi Islamic Bank",
+      "slug": "abu-dhabi-islamic-bank-egypt",
+      "fileName": "ADIB-1d.json",
+      "sourceRows": 7266
+    },
+    {
+      "symbol": "ORAS",
+      "name": "Orascom Construction Ltd",
+      "slug": "orascom-construction-ltd",
+      "fileName": "ORAS-1d.json",
+      "sourceRows": 2834
+    },
+    {
+      "symbol": "EMFD",
+      "name": "Emaar Misr",
+      "slug": "emaar-misr-for-development-sae",
+      "fileName": "EMFD-1d.json",
+      "sourceRows": 2765
+    },
+    {
+      "symbol": "CLHO",
+      "name": "Cleopatra Hospital",
+      "slug": "cleopatra-hospital",
+      "fileName": "CLHO-1d.json",
+      "sourceRows": 2560
+    },
+    {
+      "symbol": "EFID",
+      "name": "Edita Food",
+      "slug": "edita-food-industries",
+      "fileName": "EFID-1d.json",
+      "sourceRows": 2617
+    },
+    {
+      "symbol": "MFPC",
+      "name": "Misr Fertilizers",
+      "slug": "misr-fertilizers-production-co-sae",
+      "fileName": "MFPC-1d.json",
+      "sourceRows": 2551
+    },
+    {
+      "symbol": "ISPH",
+      "name": "Ibnsina Pharma",
+      "slug": "ibnsina-pharma",
+      "fileName": "ISPH-1d.json",
+      "sourceRows": 2171
+    },
+    {
+      "symbol": "FWRY",
+      "name": "Fawry",
+      "slug": "fawry-banking-and-payment",
+      "fileName": "FWRY-1d.json",
+      "sourceRows": 1770
+    },
+    {
+      "symbol": "RMDA",
+      "name": "Rameda",
+      "slug": "tenth-of-ramadan-for-pharmaceutical",
+      "fileName": "RMDA-1d.json",
+      "sourceRows": 1694
+    },
+    {
+      "symbol": "EFIH",
+      "name": "E-finance",
+      "slug": "e-finance-digital-financial-invest",
+      "fileName": "EFIH-1d.json",
+      "sourceRows": 1242
+    }
+  ]
+}

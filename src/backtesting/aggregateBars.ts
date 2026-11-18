@@ -34,15 +34,23 @@ function buildResult(
     aggregates: Aggregate[],
     timeframeMinutes: number,
     dropFirst: boolean,
+    baseTimeframeMinutes: number,
 ): AggregateResult {
     const retained = dropFirst ? aggregates.slice(1) : aggregates;
-    const bars = retained.map(finish);
-    const partialBucketTimes = retained
-        .filter((aggregate) => aggregate.count < timeframeMinutes)
-        .map((aggregate) => aggregate.time);
+    const expectedBaseBars = Math.max(
+        1,
+        Math.round(timeframeMinutes / Math.max(1, baseTimeframeMinutes)),
+    );
+    const trackPartialBuckets =
+        baseTimeframeMinutes < 1440 && timeframeMinutes > 1;
+    const partialBucketTimes = trackPartialBuckets
+        ? retained
+              .filter((aggregate) => aggregate.count < expectedBaseBars)
+              .map((aggregate) => aggregate.time)
+        : [];
 
     return {
-        bars,
+        bars: retained.map(finish),
         partialBucketCount: partialBucketTimes.length,
         partialBucketTimes,
     };
@@ -53,6 +61,7 @@ export function aggregateBars(
     bars: BacktestBar[],
     timeframeMinutes: number,
     dropFirst = false,
+    baseTimeframeMinutes = 1,
 ): AggregateResult {
     const aggregates: Aggregate[] = [];
     let current: Aggregate | null = null;
@@ -90,7 +99,12 @@ export function aggregateBars(
 
     if (current) aggregates.push(current);
 
-    return buildResult(aggregates, timeframeMinutes, dropFirst);
+    return buildResult(
+        aggregates,
+        timeframeMinutes,
+        dropFirst,
+        baseTimeframeMinutes,
+    );
 }
 
 /** Aggregate the worker's packed six-value base-bar buffer. */
@@ -98,6 +112,7 @@ export function aggregatePackedBars(
     packed: Float64Array,
     timeframeMinutes: number,
     dropFirst = false,
+    baseTimeframeMinutes = 1,
 ): AggregateResult {
     const aggregates: Aggregate[] = [];
     let current: Aggregate | null = null;
@@ -141,5 +156,10 @@ export function aggregatePackedBars(
 
     if (current) aggregates.push(current);
 
-    return buildResult(aggregates, timeframeMinutes, dropFirst);
+    return buildResult(
+        aggregates,
+        timeframeMinutes,
+        dropFirst,
+        baseTimeframeMinutes,
+    );
 }

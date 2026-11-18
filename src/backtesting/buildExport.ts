@@ -1,5 +1,5 @@
 import { downloadJson } from "@/utils/downloadJson";
-import { MAX_CONTRACTS_PER_ENTRY } from "./constants";
+import { maxUnitsPerEntry } from "./constants";
 import type {
     BacktestExport,
     BacktestResult,
@@ -52,7 +52,9 @@ export function buildBacktestExport({
             startingCapital: config.startingCapital,
             slippagePointsPerSide: config.slippagePointsPerSide,
             maxOpenPositions: config.maxOpenPositions,
-            maxContractsPerEntry: MAX_CONTRACTS_PER_ENTRY,
+            maxContractsPerEntry: maxUnitsPerEntry(
+                config.instrument.assetClass,
+            ),
             warmupBars: config.warmupBars,
             forcedCloseAtEnd: true,
             executionAssumptions: result.assumptions,

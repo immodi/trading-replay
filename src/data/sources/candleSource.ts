@@ -1,14 +1,17 @@
 import type { Candle, RawCandle } from "@/types/candle";
 import type { CandleSourceConfig, CandleSource } from "@/types/candleSource";
 import type { DataRange } from "@/types/dateRange";
+import {
+    normaliseTimeframe,
+    resolveBaseTimeframe,
+} from "@/constants/assetClass";
 import { aggregateCandlesByTimeframe } from "@/utils/candleBucket";
+import { normaliseOhlc } from "@/utils/normaliseOhlc";
 import { loadJson } from "../opfs";
+import { withSourceDefaults } from "./config";
 
-/**
- * Resolution of the stored dataset. Raw JSON holds 1‑minute bars; larger
- * timeframes are aggregated on demand.
- */
-const BASE_TIMEFRAME = 1;
+/** Safety cap for daily replay windows (roughly 12 years of trading days). */
+const DAILY_REPLAY_WINDOW = 3_000;
 
 const cache = new Map<string, Candle[]>();
 
@@ -22,6 +25,14 @@ const defaultMap = (raw: RawCandle): Candle => ({
     highHistory: [],
     lowHistory: [],
 });
+
+/** Snap a raw timestamp to its base-resolution bucket start. */
+function alignToBaseTimeframe(time: number, baseTimeframeMinutes: number): number {
+    if (!Number.isFinite(time)) return time;
+
+    const bucketSeconds = Math.max(1, baseTimeframeMinutes) * 60;
+    return Math.floor(time / bucketSeconds) * bucketSeconds;
+}
 
 /**
  * Reject malformed ordering before any binary-search range selection or
@@ -61,14 +72,15 @@ export function assertChronologicalCandles(candles: Candle[]): void {
 }
 
 /**
- * Fetch (and cache per fileName) a raw candle JSON file, mapping each row to
- * the app's `Candle` shape.
+ * Fetch (and cache per fileName/resolution) a raw candle JSON file, mapping
+ * each row to the app's `Candle` shape.
  */
 export async function getData(
     srcFileName: string,
     map: (raw: RawCandle) => Candle = defaultMap,
+    cacheKey: string = srcFileName,
 ): Promise<Candle[]> {
-    const hit = cache.get(srcFileName);
+    const hit = cache.get(cacheKey);
     if (hit) return hit;
 
     const json = await loadJson<RawCandle[]>(srcFileName);
@@ -81,7 +93,7 @@ export async function getData(
 
     assertChronologicalCandles(data);
 
-    cache.set(srcFileName, data);
+    cache.set(cacheKey, data);
     return data;
 }
 
@@ -94,15 +106,48 @@ function utcMidnight(date: Date): Date {
     ));
 }
 
-export function createCandleSource(config: CandleSourceConfig): CandleSource {
-    /** Entire ordered base dataset, backed by the shared loader cache. */
-    async function loadAll(): Promise<Candle[]> {
-        return getData(config.fileName);
+export function createCandleSource(
+    configInput: CandleSourceConfig,
+): CandleSource {
+    const config = withSourceDefaults(configInput);
+    const baseTimeframeMinutes = resolveBaseTimeframe(config);
+    const cacheKey = `${config.fileName}|${baseTimeframeMinutes}`;
+
+    /**
+     * Load the shared dataset. Timestamps are snapped to the source's base
+     * bucket (e.g. daily bars move to UTC midnight), which keeps date filters,
+     * replay buckets and history consistent even if the import used the
+     * exchange's local clock time.
+     */
+    function loadRaw(): Promise<Candle[]> {
+        return getData(
+            config.fileName,
+            (raw) => {
+                const mapped = defaultMap(raw);
+                const aligned = {
+                    ...mapped,
+                    time: alignToBaseTimeframe(
+                        raw.time,
+                        baseTimeframeMinutes,
+                    ) as Candle["time"],
+                };
+
+                return config.assetClass === "stock"
+                    ? normaliseOhlc(aligned)
+                    : aligned;
+            },
+            cacheKey,
+        );
     }
 
-    /** Raw 1‑minute candles for a given UTC date. */
+    /** Entire ordered base dataset, backed by the shared loader cache. */
+    async function loadAll(): Promise<Candle[]> {
+        return loadRaw();
+    }
+
+    /** Raw base-timeframe candles for a given UTC date. */
     async function loadDay(date: Date): Promise<Candle[]> {
-        const candles = await getData(config.fileName);
+        const candles = await loadRaw();
 
         const start = utcMidnight(date);
         const end = new Date(start);
@@ -117,6 +162,34 @@ export function createCandleSource(config: CandleSourceConfig): CandleSource {
     }
 
     /**
+     * Intraday sources replay one UTC day at a time. Daily sources return the
+     * selected day plus the following bars so a replay can play across days.
+     */
+    async function loadReplayWindow(date: Date): Promise<Candle[]> {
+        const candles = await loadRaw();
+
+        if (baseTimeframeMinutes < 1440) {
+            const start = utcMidnight(date);
+            const end = new Date(start);
+            end.setUTCDate(end.getUTCDate() + 1);
+
+            const startTs = start.getTime() / 1000;
+            const endTs = end.getTime() / 1000;
+
+            return candles.filter(
+                (c) => c.time >= startTs && c.time < endTs
+            );
+        }
+
+        const startTs = utcMidnight(date).getTime() / 1000;
+        const firstIndex = candles.findIndex((c) => c.time >= startTs);
+
+        if (firstIndex < 0) return [];
+
+        return candles.slice(firstIndex, firstIndex + DAILY_REPLAY_WINDOW);
+    }
+
+    /**
      * Candles aggregated to `timeframe` minutes, from the start of the
      * dataset up to (but not including) the first candle of the given date.
      */
@@ -125,7 +198,11 @@ export function createCandleSource(config: CandleSourceConfig): CandleSource {
         timeframe: number,
         maxCandles: number = 200
     ): Promise<Candle[]> {
-        const raw = await getData(config.fileName);
+        const raw = await loadRaw();
+        const resolvedTimeframe = normaliseTimeframe(
+            timeframe,
+            baseTimeframeMinutes,
+        );
 
         const startTs = utcMidnight(date).getTime() / 1000;
 
@@ -134,7 +211,7 @@ export function createCandleSource(config: CandleSourceConfig): CandleSource {
 
         const candlesBeforeDay = raw.filter((c) => c.time < firstCandleOfDay.time);
 
-        if (timeframe === BASE_TIMEFRAME) {
+        if (resolvedTimeframe === baseTimeframeMinutes) {
             return candlesBeforeDay.slice(-maxCandles);
         }
 
@@ -143,7 +220,7 @@ export function createCandleSource(config: CandleSourceConfig): CandleSource {
         // boundaries even when the source data contains gaps.
         const aggregated = aggregateCandlesByTimeframe(
             candlesBeforeDay,
-            timeframe,
+            resolvedTimeframe,
         );
 
         // Keep only the most recent `maxCandles` candles
@@ -154,7 +231,7 @@ export function createCandleSource(config: CandleSourceConfig): CandleSource {
 
     /** UTC‑aligned date range covered by the whole dataset. */
     async function getRange(): Promise<DataRange> {
-        const candles = await getData(config.fileName);
+        const candles = await loadRaw();
 
         if (candles.length === 0) {
             throw new Error(`Candle dataset at ${config.fileName} is empty.`);
@@ -172,9 +249,14 @@ export function createCandleSource(config: CandleSourceConfig): CandleSource {
     return {
         id: config.id,
         symbol: config.symbol,
+        assetClass: config.assetClass,
+        currency: config.currency,
         pointValue: config.pointValue,
         commission: config.commission ?? 0,
+        commissionPercent: config.commissionPercent ?? 0,
+        baseTimeframeMinutes,
         loadDay,
+        loadReplayWindow,
         loadAll,
         getHistory,
         getRange,

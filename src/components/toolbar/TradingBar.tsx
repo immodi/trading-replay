@@ -1,3 +1,4 @@
+import type { AssetClass } from "@/constants/assetClass";
 import type { EnterOrder } from "@/types/position";
 import type { PositionParamters } from "@/types/positionParamters";
 import { ReplayPLDisplay } from "./ReplayPLDisplay";
@@ -6,6 +7,8 @@ import { ReplayTradingControls } from "./ReplayTradingControls";
 type TradingBarProps = {
     positionParametersRef: React.RefObject<PositionParamters>;
     onParametersChange?: () => void;
+    assetClass?: AssetClass;
+    currency?: string;
     price: number;
     pl: number;
     reset: () => void;
@@ -16,6 +19,8 @@ type TradingBarProps = {
 export function TradingBar({
     positionParametersRef,
     onParametersChange,
+    assetClass = "futures",
+    currency = "USD",
     price,
     pl,
     reset,
@@ -56,13 +61,15 @@ export function TradingBar({
                 whitespace-nowrap
             "
         >
-            <ReplayPLDisplay pl={pl} reset={reset} />
+            <ReplayPLDisplay pl={pl} currency={currency} reset={reset} />
 
             <div className="h-7 w-px shrink-0 bg-edge" />
 
             <ReplayTradingControls
                 positionParametersRef={positionParametersRef}
                 onParametersChange={onParametersChange}
+                assetClass={assetClass}
+                currency={currency}
                 onBuyMarket={() => openPosition("long")}
                 onSellMarket={() => openPosition("short")}
                 closeAll={closeAll}

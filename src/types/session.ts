@@ -1,3 +1,4 @@
+import type { AssetClass } from "@/constants/assetClass";
 import type { UTCTimestamp } from "lightweight-charts";
 import type { Direction } from "@/types/position";
 
@@ -13,11 +14,11 @@ export type SessionTrade = {
     entryTime: UTCTimestamp;
     exitTime: UTCTimestamp;
 
-    /** `commissionPerSide * 2 * quantity`. */
+    /** Commission for the completed round trip, in the source currency. */
     totalCommission: number;
-    /** Realised P/L before commission, in dollars. */
+    /** Realised P/L before commission, in the source currency. */
     grossProfitLoss: number;
-    /** Realised P/L after commission, in dollars. */
+    /** Realised P/L after commission, in the source currency. */
     netProfitLoss: number;
 
     /**
@@ -28,6 +29,12 @@ export type SessionTrade = {
     replayIndex?: number;
     /** UTC day of the replay tick (YYYY-MM-DD). */
     replayDay?: string;
+    /**
+     * UTC day that anchored the replay block when the trade was recorded.
+     * Distinguishes trades from different date selections that happen to
+     * share the same replay index.
+     */
+    replayWindowDay?: string;
 };
 
 export type SessionSummary = {
@@ -40,6 +47,8 @@ export type SessionSummary = {
 export type ExportedSessionTrade = {
     id: string;
     instrument: string;
+    /** Reporting currency for this trade's P/L values. */
+    currency: string;
     direction: Direction;
     quantity: number;
     entryPrice: number;
@@ -64,8 +73,12 @@ export type SessionExport = {
         schemaVersion: number;
         exportedAt: string;
         instrument: string;
+        assetClass?: AssetClass;
+        baseTimeframeMinutes?: number;
+        currency?: string;
         pointValue: number;
         commissionPerSide: number;
+        commissionPercentPerSide: number;
     };
     summary: SessionSummary;
     trades: ExportedSessionTrade[];

@@ -1,7 +1,15 @@
+import {
+    assetClassDefinition,
+    type AssetClass,
+} from "@/constants/assetClass";
+
 type MarketHeaderProps = {
     symbol: string;
+    assetClass?: AssetClass;
+    currency?: string;
     pointValue: number;
     commission: number;
+    commissionPercent?: number;
     price: number;
     high: number;
     low: number;
@@ -20,8 +28,11 @@ function formatPrice(value: number): string {
 
 export function MarketHeader({
     symbol,
+    assetClass,
+    currency = "USD",
     pointValue,
     commission,
+    commissionPercent = 0,
     price,
     high,
     low,
@@ -64,7 +75,9 @@ export function MarketHeader({
                         {symbol || "—"}
                     </span>
                     <span className="mt-1.5 text-[10px] font-medium uppercase leading-none tracking-[0.14em] text-faint">
-                        ${pointValue.toFixed(2)}/pt · ${commission.toFixed(2)}/side
+                        {assetClass === "stock"
+                            ? `Stocks · ${currency} · ${currency} ${commission.toFixed(2)}/order/side · +${commissionPercent.toFixed(2)}%/side`
+                            : `${assetClassDefinition(assetClass).label} · ${currency} ${pointValue.toFixed(2)}/pt · ${currency} ${commission.toFixed(2)}/side · +${commissionPercent.toFixed(2)}%/side`}
                     </span>
                 </div>
             </div>

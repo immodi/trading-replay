@@ -1,4 +1,5 @@
 import { SESSION_SCHEMA_VERSION } from "@/constants/session";
+import type { AssetClass } from "@/constants/assetClass";
 import type {
     ExportedSessionTrade,
     SessionExport,
@@ -10,15 +11,23 @@ type BuildSessionExportInput = {
     trades: SessionTrade[];
     summary: SessionSummary;
     instrument: string;
+    assetClass?: AssetClass;
+    baseTimeframeMinutes?: number;
+    currency?: string;
     pointValue: number;
     commissionPerSide: number;
+    commissionPercentPerSide: number;
     exportedAt?: Date;
 };
 
-function toExportedTrade(trade: SessionTrade): ExportedSessionTrade {
+function toExportedTrade(
+    trade: SessionTrade,
+    currency: string,
+): ExportedSessionTrade {
     return {
         id: trade.id,
         instrument: trade.instrument,
+        currency,
         direction: trade.direction,
         quantity: trade.quantity,
         entryPrice: trade.entryPrice,
@@ -38,8 +47,12 @@ export function buildSessionExport({
     trades,
     summary,
     instrument,
+    assetClass,
+    baseTimeframeMinutes,
+    currency,
     pointValue,
     commissionPerSide,
+    commissionPercentPerSide,
     exportedAt = new Date(),
 }: BuildSessionExportInput): SessionExport {
     return {
@@ -48,10 +61,18 @@ export function buildSessionExport({
             schemaVersion: SESSION_SCHEMA_VERSION,
             exportedAt: exportedAt.toISOString(),
             instrument,
+            ...(assetClass === undefined ? {} : { assetClass }),
+            ...(baseTimeframeMinutes === undefined
+                ? {}
+                : { baseTimeframeMinutes }),
+            ...(currency === undefined ? {} : { currency }),
             pointValue,
             commissionPerSide,
+            commissionPercentPerSide,
         },
         summary,
-        trades: trades.map(toExportedTrade),
+        trades: trades.map((trade) =>
+            toExportedTrade(trade, currency ?? "USD"),
+        ),
     };
 }

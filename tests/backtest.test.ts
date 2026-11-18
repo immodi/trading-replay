@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { MAX_CONTRACTS_PER_ENTRY } from "../src/backtesting/constants.ts";
+import {
+    MAX_CONTRACTS_PER_ENTRY,
+    MAX_SHARES_PER_ENTRY,
+} from "../src/backtesting/constants.ts";
 import { runBacktest } from "../src/backtesting/runBacktest.ts";
 import type {
     BacktestBar,
@@ -827,6 +830,84 @@ test("invalid and oversized contract quantities are rejected", () => {    const 
 
     assert.equal(result.trades.length, 0);
     assert.equal(result.summary.rejectedActions.invalid_quantity, 3);
+});
+
+test("stock entries use share quantities and currency P/L", () => {
+    const bars = barsFrom([
+        [100, 101, 99, 100],
+        [110, 111, 109, 110],
+        [120, 121, 119, 120],
+    ]);
+
+    const result = runBacktest({
+        bars,
+        config: config({
+            instrument: {
+                id: "comi",
+                symbol: "COMI",
+                assetClass: "stock",
+                pointValue: 1,
+                commissionPerSide: 2,
+                commissionPercentPerSide: 0.1,
+            },
+        }),
+        strategy: strategy((context) => {
+            if (context.index === 0) {
+                return { type: "enter", side: "long", quantity: 500 };
+            }
+            if (context.index === 1) {
+                return { type: "exit", positionId: context.positions[0].id };
+            }
+            return null;
+        }),
+    });
+
+    assert.equal(result.summary.rejectedActions.invalid_quantity ?? 0, 0);
+    assert.equal(result.trades.length, 1);
+    assert.equal(result.trades[0].quantity, 500);
+    approx(result.trades[0].grossPnl, 5_000);
+    approx(result.trades[0].commissionCost, 119);
+    approx(result.trades[0].netPnl, 4_881);
+});
+
+test("stock entry cap is share-based, not contract-based", () => {
+    const bars = barsFrom([
+        [100, 101, 99, 100],
+        [100, 101, 99, 100],
+    ]);
+
+    const result = runBacktest({
+        bars,
+        config: config({
+            instrument: {
+                id: "comi",
+                symbol: "COMI",
+                assetClass: "stock",
+                pointValue: 1,
+                commissionPerSide: 0,
+            },
+        }),
+        strategy: strategy((context) => {
+            if (context.index !== 0) return null;
+
+            return [
+                {
+                    type: "enter",
+                    side: "long",
+                    quantity: MAX_CONTRACTS_PER_ENTRY + 1,
+                },
+                {
+                    type: "enter",
+                    side: "long",
+                    quantity: MAX_SHARES_PER_ENTRY + 1,
+                },
+            ];
+        }),
+    });
+
+    assert.equal(result.summary.rejectedActions.invalid_quantity, 1);
+    assert.equal(result.trades.length, 1);
+    assert.equal(result.trades[0].quantity, MAX_CONTRACTS_PER_ENTRY + 1);
 });
 
 test("a Promise-returning onBar fails the run, including during warm-up", () => {

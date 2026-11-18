@@ -1,3 +1,4 @@
+import type { AssetClass } from "@/constants/assetClass";
 import type { Candle } from "@/types/candle";
 import type { DataRange } from "@/types/dateRange";
 
@@ -11,14 +12,24 @@ export interface CandleSourceConfig {
     id: string;
     /** Human‑readable instrument/symbol, e.g. "MNQ". */
     symbol: string;
-    /** Dollar value of a single point, used for P/L. */
+    /** Market family: futures contracts or cash stocks. */
+    assetClass: AssetClass;
+    /** Reporting currency for point value, commission and P/L. */
+    currency: string;
+    /** Currency value of a single point, used for P/L. */
     pointValue: number;
     /**
-     * Commission in dollars charged per contract **per side** (enter and
-     * exit), used for P/L. A completed trade therefore costs
-     * `commission * 2 * quantity`.
+     * Flat commission charged per side. Stocks charge it once per order;
+     * futures charge it per contract.
      */
     commission: number;
+    /** Percentage of order notional charged per side, added to `commission`. */
+    commissionPercent: number;
+    /**
+     * Resolution of the stored raw candles, in minutes. 1 = one-minute bars,
+     * 1440 = one daily bar per trading day.
+     */
+    baseTimeframeMinutes: number;
     /** URL the raw candle JSON is fetched from. */
     fileName: string;
 }
@@ -34,12 +45,26 @@ export interface CandleSourceConfig {
 export interface CandleSource {
     id: string;
     symbol: string;
+    assetClass: AssetClass;
+    currency: string;
     pointValue: number;
-    /** Commission in dollars per contract per side, used for P/L. */
+    /** Flat commission per side (per order for stocks, per contract for futures). */
     commission: number;
+    /** Percentage of order notional charged per side. */
+    commissionPercent: number;
+    /** Resolution of the raw dataset, in minutes (1 or 1440 today). */
+    baseTimeframeMinutes: number;
 
-    /** Raw 1‑minute candles for a given UTC date. */
+    /** Raw base-timeframe candles for a given UTC date. */
     loadDay(date: Date): Promise<Candle[]>;
+
+    /**
+     * Candles a replay session should start with for the selected date.
+     * Intraday sources return that UTC day; daily sources return the selected
+     * day and the following bars (up to a safe window) so playback can move
+     * forward across trading days.
+     */
+    loadReplayWindow(date: Date): Promise<Candle[]>;
 
     /** The entire ordered base-timeframe dataset, including history fields. */
     loadAll(): Promise<Candle[]>;

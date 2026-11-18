@@ -1,10 +1,12 @@
 type ReplayPLDisplayProps = {
     pl: number;
+    currency?: string;
     reset: () => void;
 };
 
 export function ReplayPLDisplay({
     pl,
+    currency = "USD",
     reset,
 }: ReplayPLDisplayProps) {
     const isPositive = pl > 0;
@@ -26,7 +28,7 @@ export function ReplayPLDisplay({
                     {pl.toFixed(2)}
                 </span>
                 <span className="text-[10px] font-medium uppercase tracking-wider text-faint">
-                    USD
+                    {currency}
                 </span>
             </div>
 

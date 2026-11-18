@@ -4,6 +4,7 @@ import type { SessionSummary, SessionTrade } from "@/types/session";
 
 type SessionControlsProps = {
     instrument: string;
+    currency?: string;
     trades: SessionTrade[];
     summary: SessionSummary;
     /** True while the session contains changes not yet exported. */
@@ -38,6 +39,7 @@ function SummaryStat({ label, value, valueClassName }: SummaryStatProps) {
 
 export function SessionControls({
     instrument,
+    currency = "USD",
     trades,
     summary,
     hasUnexportedChanges,
@@ -157,7 +159,9 @@ export function SessionControls({
                 >
                     <div className="flex items-center justify-between">
                         <span className="text-xs font-semibold text-ink">
-                            Trading session{instrument ? ` · ${instrument}` : ""}
+                            Trading session
+                            {instrument ? ` · ${instrument}` : ""}
+                            {currency ? ` · ${currency}` : ""}
                         </span>
                         <span className="text-[10px] font-medium uppercase tracking-wider text-faint">
                             Saved locally
@@ -173,12 +177,12 @@ export function SessionControls({
                         <SummaryStat label="Trades" value={String(summary.tradeCount)} />
                         <SummaryStat
                             label="Net P/L"
-                            value={`${net >= 0 ? "+" : ""}${net.toFixed(2)}`}
+                            value={`${net >= 0 ? "+" : ""}${net.toFixed(2)} ${currency}`}
                             valueClassName={netColor}
                         />
                         <SummaryStat
                             label="Commissions"
-                            value={summary.totalCommission.toFixed(2)}
+                            value={`${summary.totalCommission.toFixed(2)} ${currency}`}
                         />
                     </div>
 
@@ -248,7 +252,8 @@ export function SessionControls({
                                                 }`}
                                         >
                                             {trade.netProfitLoss >= 0 ? "+" : ""}
-                                            {trade.netProfitLoss.toFixed(2)}
+                                            {trade.netProfitLoss.toFixed(2)}{" "}
+                                            {currency}
                                         </span>
                                         <button
                                             type="button"

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import type { UTCTimestamp } from "lightweight-charts";
 
+import type { AssetClass } from "@/constants/assetClass";
 import { useStore } from "@/hooks/useStore";
 import type { Store } from "@/store/store";
 import type { PersistedSessionState } from "@/types/persistedSession";
@@ -11,6 +12,7 @@ import {
     calculateCommission,
     calculateGrossProfitLoss,
     calculatePositionPL,
+    type CommissionSettings,
 } from "@/utils/calculatePositionPL";
 import { downloadJson } from "@/utils/downloadJson";
 
@@ -19,16 +21,30 @@ type UseTradingSessionOptions = {
     positions: Position[];
     /** Instrument/symbol label from the active source config. */
     instrument: string;
-    /** Dollars per point from the active source config. */
+    /** Market family of the active source. */
+    assetClass?: AssetClass;
+    /** Raw dataset resolution in minutes. */
+    baseTimeframeMinutes?: number;
+    /** Reporting currency for exported metadata. */
+    currency?: string;
+    /** Currency value of one point from the active source config. */
     pointValue: number;
-    /** Commission in dollars per contract, per side. */
+    /** Flat commission per side, in the source currency. */
     commissionPerSide: number;
+    /** Percentage commission per side. */
+    commissionPercent: number;
     /** Persisted session for the active source. */
     store: Store<PersistedSessionState>;
     /** Raw-candle index of the replay tick currently being displayed. */
     replayIndex: number;
     /** UTC day (YYYY-MM-DD) of the tick currently being displayed. */
     replayDay: string;
+    /**
+     * UTC day that anchors the current replay block (the date picked by the
+     * user). Daily replays keep advancing across days without changing it, so
+     * it distinguishes rewinding from switching to another date.
+     */
+    replayWindowDay?: string;
 };
 
 /** Build the session record for a position that has a realised exit. */
@@ -36,9 +52,10 @@ function toSessionTrade(
     position: Position,
     instrument: string,
     pointValue: number,
-    commissionPerSide: number,
+    commission: CommissionSettings,
     replayIndex: number,
     replayDay: string,
+    replayWindowDay: string,
 ): SessionTrade {
     return {
         id: position.id,
@@ -49,11 +66,17 @@ function toSessionTrade(
         exitPrice: position.exitPrice ?? position.entryPrice,
         entryTime: position.entryTime,
         exitTime: (position.exitTime ?? position.entryTime) as UTCTimestamp,
-        totalCommission: calculateCommission(position.quantity, commissionPerSide),
+        totalCommission: calculateCommission(
+            position.entryPrice,
+            position.exitPrice ?? position.entryPrice,
+            position.quantity,
+            commission,
+        ),
         grossProfitLoss: calculateGrossProfitLoss(position, pointValue),
-        netProfitLoss: calculatePositionPL(position, pointValue, commissionPerSide),
+        netProfitLoss: calculatePositionPL(position, pointValue, commission),
         replayIndex,
         replayDay,
+        replayWindowDay,
     };
 }
 
@@ -70,14 +93,27 @@ function fileTimestamp(date: Date): string {
 export function useTradingSession({
     positions,
     instrument,
+    assetClass,
+    baseTimeframeMinutes,
+    currency,
     pointValue,
     commissionPerSide,
+    commissionPercent,
     store,
     replayIndex,
     replayDay,
+    replayWindowDay = replayDay,
 }: UseTradingSessionOptions) {
     const state = useStore(store);
     const trades = state.trades;
+    const commissionSettings = useMemo<CommissionSettings>(
+        () => ({
+            flatPerSide: commissionPerSide,
+            percentPerSide: commissionPercent,
+            assetClass,
+        }),
+        [commissionPerSide, commissionPercent, assetClass],
+    );
 
     // Seed both guards from the restored session so a reload cannot record a
     // trade twice or resurrect one the user removed.
@@ -125,9 +161,10 @@ export function useTradingSession({
                 position,
                 instrument,
                 pointValue,
-                commissionPerSide,
+                commissionSettings,
                 replayIndex,
                 replayDay,
+                replayWindowDay,
             );
         });
 
@@ -139,31 +176,39 @@ export function useTradingSession({
         positions,
         instrument,
         pointValue,
-        commissionPerSide,
+        commissionSettings,
         store,
         recordedIds,
         removedIds,
         markTradesChanged,
         replayIndex,
         replayDay,
+        replayWindowDay,
     ]);
 
     // Rewinding removes completed trades that belong to the part of the
     // replay the user has just left behind. The trade engine reopens the
     // matching positions from its snapshot; the session list must agree.
-    const previousReplayRef = useRef<{ index: number; day: string } | null>(
-        null,
-    );
+    const previousReplayRef = useRef<{
+        index: number;
+        windowDay: string;
+    } | null>(null);
 
     useEffect(() => {
         const previous = previousReplayRef.current;
-        previousReplayRef.current = { index: replayIndex, day: replayDay };
+        previousReplayRef.current = { index: replayIndex, windowDay: replayWindowDay };
 
-        if (
-            previous === null ||
-            previous.day !== replayDay ||
-            replayIndex >= previous.index
-        ) {
+        if (previous === null) {
+            return;
+        }
+
+        // Switching to another replay block (date picker) is not a rewind and
+        // must not discard earlier trades.
+        if (previous.windowDay !== replayWindowDay) {
+            return;
+        }
+
+        if (replayIndex >= previous.index) {
             return;
         }
 
@@ -171,7 +216,8 @@ export function useTradingSession({
             state.trades
                 .filter(
                     (trade) =>
-                        trade.replayDay === replayDay &&
+                        (trade.replayWindowDay ?? trade.replayDay) ===
+                            replayWindowDay &&
                         (trade.replayIndex ?? -1) > replayIndex,
                 )
                 .map((trade) => trade.id),
@@ -192,7 +238,7 @@ export function useTradingSession({
         store.save();
     }, [
         replayIndex,
-        replayDay,
+        replayWindowDay,
         state.trades,
         store,
         recordedIds,
@@ -245,8 +291,12 @@ export function useTradingSession({
             trades,
             summary,
             instrument,
+            assetClass,
+            baseTimeframeMinutes,
+            currency,
             pointValue,
             commissionPerSide,
+            commissionPercentPerSide: commissionPercent,
         });
 
         const safeInstrument = (instrument || "session")
@@ -260,7 +310,18 @@ export function useTradingSession({
 
         store.patch({ lastExportedAt: Date.now() });
         store.save();
-    }, [trades, summary, instrument, pointValue, commissionPerSide, store]);
+    }, [
+        trades,
+        summary,
+        instrument,
+        assetClass,
+        baseTimeframeMinutes,
+        currency,
+        pointValue,
+        commissionPerSide,
+        commissionPercent,
+        store,
+    ]);
 
     return {
         trades,

@@ -146,3 +146,36 @@ test("warm-up availability is reported", () => {
         insufficient: true,
     });
 });
+
+test("daily bars do not trigger session-gap or missing-minute warnings", () => {
+    const DAY = 86_400;
+    const report = analyzeDataQuality(
+        [
+            candle(BASE, 100, 101, 99, 100),
+            // Friday -> Monday: a normal weekend gap in a daily feed.
+            candle(BASE + 3 * DAY, 100, 102, 99, 101),
+            candle(BASE + 4 * DAY, 101, 103, 100, 102),
+        ],
+        BASE,
+        BASE + 30 * DAY,
+        1440,
+        undefined,
+        1440,
+    );
+
+    assert.deepEqual(report.hardErrors, []);
+    assert.deepEqual(report.warnings, []);
+});
+
+test("misaligned timestamps follow the configured base resolution", () => {
+    const report = analyzeDataQuality(
+        [candle(BASE + 15 * 60, 100, 101, 99, 100)],
+        BASE,
+        BASE + 86_400,
+        15,
+        undefined,
+        15,
+    );
+
+    assert.deepEqual(report.hardErrors, []);
+});

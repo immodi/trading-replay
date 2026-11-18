@@ -88,6 +88,7 @@ async function handle(request: BacktestWorkerRequest): Promise<void> {
             packed,
             config.timeframeMinutes,
             request.dropFirstAggregate,
+            config.instrument.baseTimeframeMinutes ?? 1,
         );
 
         if (aggregated.bars.length === 0) {

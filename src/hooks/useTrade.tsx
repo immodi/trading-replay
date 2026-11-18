@@ -1,7 +1,10 @@
 import type { EnterOrder, Position, PositionPricePatch } from "@/types/position";
 import type { PriceData } from "@/types/priceData";
 import { applyPriceTick } from "@/utils/applyPriceTick";
-import { calculatePositionPL } from "@/utils/calculatePositionPL";
+import {
+    calculatePositionPL,
+    type CommissionSettings,
+} from "@/utils/calculatePositionPL";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 /** Deep-enough copy so a rewound snapshot never aliases live state. */
@@ -19,7 +22,7 @@ type CommitOptions = {
 export function useTrade(
     priceData: PriceData,
     pointDollarValue: number,
-    commissionPerContract: number = 0,
+    commission: CommissionSettings,
     initialPositions: Position[] = [],
     /** False while the replay is still being restored; price checks are paused. */
     isReady: boolean = true,
@@ -43,11 +46,11 @@ export function useTrade(
                     calculatePositionPL(
                         position,
                         pointDollarValue,
-                        commissionPerContract,
+                        commission,
                     ),
                 0,
             ),
-        [positions, pointDollarValue, commissionPerContract],
+        [positions, pointDollarValue, commission],
     );
 
     const commitPositions = useCallback(

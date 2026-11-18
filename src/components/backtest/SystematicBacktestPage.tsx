@@ -19,9 +19,9 @@ import {
     selectBaseRange,
 } from "@/backtesting/range";
 import {
-    MAX_CONTRACTS_PER_ENTRY,
     MAX_STRATEGY_BYTES,
     MAX_WARMUP_BARS,
+    maxUnitsPerEntry,
 } from "@/backtesting/constants";
 import type {
     BacktestResult,
@@ -40,6 +40,12 @@ import {
     validateParameterValues,
 } from "@/backtesting/validateStrategy";
 import { createCandleSource } from "@/data/sources/candleSource";
+import {
+    assetClassDefinition,
+    availableTimeframes,
+    resolveBaseTimeframe,
+    timeframeLabel,
+} from "@/constants/assetClass";
 import type { Candle } from "@/types/candle";
 import type { CandleSourceConfig } from "@/types/candleSource";
 import { EquityCurve } from "./EquityCurve";
@@ -201,6 +207,14 @@ function ParameterInput({
 
 export function SystematicBacktestPage({ config }: { config: CandleSourceConfig }) {
     const source = useMemo(() => createCandleSource(config), [config]);
+    const baseTimeframeMinutes = resolveBaseTimeframe(config);
+    const quantity = assetClassDefinition(config.assetClass);
+    const maxEntryUnits = maxUnitsPerEntry(config.assetClass);
+    const money = (value: number | null | undefined) =>
+        formatMoney(value, config.currency);
+    const moneyPlain = (value: number | null | undefined) =>
+        formatMoneyPlain(value, config.currency);
+    const backtestTimeframes = availableTimeframes(baseTimeframeMinutes);
 
     const [candles, setCandles] = useState<Candle[] | null>(null);
     const [dataRange, setDataRange] = useState<{ start: Date; end: Date } | null>(
@@ -211,9 +225,14 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
 
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
-    const [timeframeMinutes, setTimeframeMinutes] = useState(1);
+    const [timeframeMinutes, setTimeframeMinutes] = useState(
+        baseTimeframeMinutes,
+    );
     const [commissionPerSide, setCommissionPerSide] = useState(
         config.commission ?? 0,
+    );
+    const [commissionPercentPerSide, setCommissionPercentPerSide] = useState(
+        config.commissionPercent ?? 0,
     );
     const [slippagePointsPerSide, setSlippagePointsPerSide] = useState(0);
     const [startingCapital, setStartingCapital] = useState(10_000);
@@ -280,6 +299,7 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
         setRunError(null);
         setWarmupBars(null);
         setCommissionPerSide(config.commission ?? 0);
+        setCommissionPercentPerSide(config.commissionPercent ?? 0);
 
         Promise.all([source.loadAll(), source.getRange()])
             .then(([loaded, range]) => {
@@ -387,6 +407,7 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                     requestedBars: effectiveWarmup,
                     availableBars: selection.availableWarmupBars,
                 },
+                baseTimeframeMinutes,
             );
 
             return {
@@ -416,6 +437,7 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
         timeframeMinutes,
         warmupBars,
         metadata,
+        baseTimeframeMinutes,
     ]);
 
     const qualitySignature = selectedRange.range
@@ -519,11 +541,21 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
     const effectiveCommission = Number.isFinite(commissionPerSide)
         ? Math.max(0, commissionPerSide)
         : 0;
+    const effectiveCommissionPercent = Number.isFinite(
+        commissionPercentPerSide,
+    )
+        ? Math.max(0, commissionPercentPerSide)
+        : 0;
     const instrument: InstrumentContext = {
         id: config.id,
         symbol: config.symbol,
         pointValue: config.pointValue,
         commissionPerSide: effectiveCommission,
+        commissionPercentPerSide: effectiveCommissionPercent,
+        assetClass: config.assetClass,
+        currency: config.currency,
+        quantityUnit: quantity.quantityLabel,
+        baseTimeframeMinutes,
     };
 
     const handleValidate = () => {
@@ -783,9 +815,13 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                             Systematic Backtest
                         </h1>
                         <p className="mt-1 text-xs text-sub">
-                            {config.symbol} · {config.fileName} · $
-                            {formatNumber(config.pointValue)}/point ·{" "}
-                            {config.commission ?? 0}/side commission
+                            {config.symbol} · {quantity.label} ·{" "}
+                            {config.fileName} ·{" "}
+                            {config.assetClass === "stock"
+                                ? `${config.currency} · price change × shares`
+                                : `${config.currency} ${formatNumber(config.pointValue)}/point`}{" "}
+                            · {config.commission ?? 0} fixed +{" "}
+                            {config.commissionPercent ?? 0}% / side commission
                         </p>
                     </div>
                     <a
@@ -804,9 +840,15 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                             <div className="mt-1 text-sm text-ink">{config.symbol}</div>
                         </div>
                         <div>
-                            <div className="text-faint">Point value</div>
+                            <div className="text-faint">
+                                {config.assetClass === "stock"
+                                    ? "P/L model"
+                                    : "Point value"}
+                            </div>
                             <div className="mt-1 text-sm text-ink">
-                                ${formatNumber(config.pointValue)} / point / contract
+                                {config.assetClass === "stock"
+                                    ? `Price change × shares, in ${config.currency}`
+                                    : `${config.currency} ${formatNumber(config.pointValue)} / point / ${quantity.quantityLabel}`}
                             </div>
                         </div>
                         <div>
@@ -885,16 +927,22 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                                         invalidateResult();
                                     }}
                                 >
-                                    {[1, 5, 15, 30, 60].map((minutes) => (
-                                        <option key={minutes} value={minutes}>
-                                            {minutes} minute
-                                            {minutes === 1 ? "" : "s"}
+                                    {backtestTimeframes.map((timeframe) => (
+                                        <option
+                                            key={timeframe.value}
+                                            value={timeframe.value}
+                                        >
+                                            {timeframe.label}
                                         </option>
                                     ))}
                                 </select>
                             </Field>
                             <Field
-                                label="Commission / contract / side"
+                                label={
+                                    config.assetClass === "stock"
+                                        ? "Fixed commission / order / side"
+                                        : "Commission / contract / side"
+                                }
                                 hint="Run-only override; does not change the saved source."
                             >
                                 <input
@@ -915,12 +963,40 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                                     }}
                                 />
                             </Field>
-                            <Field label="Slippage (points / side)">
+                            <Field
+                                label="Commission % / side"
+                                hint="Percentage of order notional, added to the fixed commission."
+                            >
                                 <input
                                     className={inputClass}
                                     type="number"
                                     min={0}
-                                    step={0.25}
+                                    step={0.01}
+                                    value={commissionPercentPerSide}
+                                    disabled={runState === "running"}
+                                    onChange={(event) => {
+                                        setCommissionPercentPerSide(
+                                            Math.max(
+                                                0,
+                                                Number(event.target.value),
+                                            ),
+                                        );
+                                        invalidateResult();
+                                    }}
+                                />
+                            </Field>
+                            <Field
+                                label={
+                                    config.assetClass === "stock"
+                                        ? `Slippage (${config.currency} / share / side)`
+                                        : "Slippage (points / side)"
+                                }
+                            >
+                                <input
+                                    className={inputClass}
+                                    type="number"
+                                    min={0}
+                                    step={config.assetClass === "stock" ? 0.01 : 0.25}
                                     value={slippagePointsPerSide}
                                     disabled={runState === "running"}
                                     onChange={(event) => {
@@ -934,7 +1010,7 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                                     }}
                                 />
                             </Field>
-                            <Field label="Starting capital ($)">
+                            <Field label={`Starting capital (${config.currency})`}>
                                 <input
                                     className={inputClass}
                                     type="number"
@@ -982,7 +1058,7 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                                 label="Warm-up bars"
                                 hint={
                                     metadata
-                                        ? `Strategy default: ${metadata.warmupBars}; counted in ${timeframeMinutes}-minute strategy bars.`
+                                        ? `Strategy default: ${metadata.warmupBars}; counted in ${timeframeLabel(timeframeMinutes)} strategy bars.`
                                         : "Validate a strategy to load its default."
                                 }
                             >
@@ -1014,10 +1090,13 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                             </Field>
                         </div>
                         <p className="mt-3 text-[11px] leading-relaxed text-faint">
-                            Contract quantity is chosen by the strategy on every
-                            entry. The engine does not add automatic position
-                            sizing, and it caps a single entry at{" "}
-                            {MAX_CONTRACTS_PER_ENTRY} contracts.
+                            {quantity.quantityLabel === "share"
+                                ? "Share"
+                                : "Contract"}{" "}
+                            quantity is chosen by the strategy on every entry.
+                            The engine does not add automatic position sizing,
+                            and it caps a single entry at {maxEntryUnits}{" "}
+                            {quantity.quantityLabelPlural}.
                         </p>
                         {instrumentError ? (
                             <p className="mt-2 text-xs text-bear">
@@ -1368,7 +1447,7 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
                                 <SummaryCard
                                     label="Net P&L"
-                                    value={formatMoney(result.summary.netPnl)}
+                                    value={money(result.summary.netPnl)}
                                 />
                                 <SummaryCard
                                     label="Closed trades"
@@ -1384,18 +1463,18 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                                 />
                                 <SummaryCard
                                     label="Max drawdown"
-                                    value={`${formatMoneyPlain(result.summary.maxDrawdown)} (${formatPct(result.summary.maxDrawdownPct)})`}
+                                    value={`${moneyPlain(result.summary.maxDrawdown)} (${formatPct(result.summary.maxDrawdownPct)})`}
                                 />
                                 <SummaryCard
                                     label="Expectancy / trade"
-                                    value={formatMoney(result.summary.expectancyPerTrade)}
+                                    value={money(result.summary.expectancyPerTrade)}
                                 />
                             </div>
                             <div className="mt-3 grid gap-2 text-[11px] text-sub sm:grid-cols-4">
                                 <div>
                                     Starting equity:{" "}
                                     <span className="text-ink">
-                                        {formatMoneyPlain(
+                                        {moneyPlain(
                                             result.summary.startingEquity,
                                         )}
                                     </span>
@@ -1403,7 +1482,7 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                                 <div>
                                     Ending equity:{" "}
                                     <span className="text-ink">
-                                        {formatMoneyPlain(
+                                        {moneyPlain(
                                             result.summary.endingEquity,
                                         )}
                                     </span>
@@ -1448,8 +1527,9 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                         <Panel title="Equity curve">
                             <EquityCurve points={result.equityCurve} />
                             <p className="mt-2 text-[11px] text-faint">
-                                Daily UTC close points. Drawdown uses bar-close
-                                marked-to-market equity, not tick-by-tick equity.
+                                One point per strategy-bar close (UTC). Drawdown
+                                uses bar-close marked-to-market equity, not
+                                tick-by-tick equity.
                             </p>
                         </Panel>
 
@@ -1526,15 +1606,15 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                                                         {trade.exitReason}
                                                     </td>
                                                     <td className="px-2 py-1.5">
-                                                        {formatMoney(trade.grossPnl)}
+                                                        {money(trade.grossPnl)}
                                                     </td>
                                                     <td className="px-2 py-1.5">
-                                                        {formatMoney(
+                                                        {money(
                                                             -trade.commissionCost,
                                                         )}
                                                     </td>
                                                     <td className="px-2 py-1.5">
-                                                        {formatMoneyPlain(
+                                                        {moneyPlain(
                                                             trade.slippageCostEstimate,
                                                         )}
                                                     </td>
@@ -1545,7 +1625,7 @@ export function SystematicBacktestPage({ config }: { config: CandleSourceConfig 
                                                                 : "text-bear"
                                                         }`}
                                                     >
-                                                        {formatMoney(trade.netPnl)}
+                                                        {money(trade.netPnl)}
                                                     </td>
                                                     <td className="px-2 py-1.5">
                                                         {trade.barsHeld}

@@ -234,11 +234,6 @@ function normaliseView(value: unknown, fallback: PersistedView): PersistedView {
         chartTimezone: isChartTimezone(value.chartTimezone)
             ? value.chartTimezone
             : fallback.chartTimezone,
-        activeStrategyPanel:
-            value.activeStrategyPanel === null ||
-            typeof value.activeStrategyPanel === "string"
-                ? value.activeStrategyPanel
-                : fallback.activeStrategyPanel,
         indicators: normaliseIndicators(
             value.indicators !== undefined
                 ? value.indicators

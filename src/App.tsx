@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { isAssetClass } from "./constants/assetClass";
 import { ChartComponent } from "./components/chart/Chart";
 import { SystematicBacktestPage } from "./components/backtest/SystematicBacktestPage";
 import SourceSelect from "./components/source/SourceSelect";
 import SourceView from "./components/source/SourceView";
+import { withSourceDefaults } from "./data/sources/config";
 import type { CandleSourceConfig } from "./types/candleSource";
 
 type AppTab = "sources" | "manual" | "backtest";
@@ -13,10 +15,17 @@ const isValidConfig = (
     config !== null &&
     config.symbol !== "" &&
     config.id !== "" &&
+    isAssetClass(config.assetClass) &&
+    typeof config.currency === "string" &&
+    config.currency !== "" &&
     Number.isFinite(config.pointValue) &&
     config.pointValue > 0 &&
     Number.isFinite(config.commission ?? 0) &&
     (config.commission ?? 0) >= 0 &&
+    Number.isFinite(config.commissionPercent ?? 0) &&
+    (config.commissionPercent ?? 0) >= 0 &&
+    Number.isFinite(config.baseTimeframeMinutes) &&
+    config.baseTimeframeMinutes >= 1 &&
     config.fileName !== "";
 
 function App() {
@@ -36,7 +45,7 @@ function App() {
     }, [hasSource]);
 
     const selectSource = (config: CandleSourceConfig) => {
-        setActiveConfig(config);
+        setActiveConfig(withSourceDefaults(config));
         setTab("manual");
     };
 
@@ -63,12 +72,6 @@ function App() {
                 {navButton("sources", "Data Sources")}
                 {navButton("manual", "Manual Replay", !hasSource)}
                 {navButton("backtest", "Systematic Backtest", !hasSource)}
-                <a
-                    href="/fade-calculator"
-                    className="rounded-md px-3 py-1.5 text-xs font-medium text-sub transition hover:bg-raised hover:text-ink"
-                >
-                    Fade Calculator
-                </a>
                 <div className="ml-auto flex items-center gap-2 text-[11px] text-faint">
                     {hasSource ? (
                         <>

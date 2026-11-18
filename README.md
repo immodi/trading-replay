@@ -1,9 +1,10 @@
 # TradeReplay
 
-A browser-based **bar replay and backtesting tool** for futures. Upload your own
-1-minute OHLCV history, step through it at up to 100×, replay it into higher
-timeframes, and practise entries and exits with market/stop orders, bracket
-take-profit & stop-loss, and live P/L — entirely client-side.
+A browser-based **bar replay and backtesting tool** for futures **and stocks**.
+Upload your own 1-minute or daily OHLCV history, step through it at up to
+100×, replay it into higher timeframes, and practise entries and exits with
+market/stop orders, bracket take-profit & stop-loss, and live P/L — entirely
+client-side.
 
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white)
@@ -13,12 +14,14 @@ take-profit & stop-loss, and live P/L — entirely client-side.
 
 ## Features
 
-- **Source management** — add one or more datasets by describing the instrument
-  (symbol, point value) and choosing a raw JSON file; select a stored source to
-  open it, or delete it again. Datasets are kept locally in the browser and can
-  be swapped instantly.
-- **Candle replay engine** — play forward/backward through history, 0.25×–100× speed, restart, and go-to-latest.
-- **Multi-timeframe** — aggregate the raw 1-minute series into 1m / 3m / 5m / 15m / 1h / 5h / 1D on the fly. Aggregation buckets candles by their UTC timestamp (anchored at UTC midnight) rather than by counting rows, so data gaps and session breaks do not shift or stretch a bar.
+- **Source management** — add one or more datasets by choosing a market
+  (**futures** or **stocks**), describing the instrument (symbol, point value,
+  commission) and picking a raw JSON file. Choose whether the file holds
+  **1-minute** or **daily** bars. Select a stored source to open it, or delete
+  it again. Datasets are kept locally in the browser and can be swapped
+  instantly.
+- **Candle replay engine** — play forward/backward through history, 0.25×–100× speed, restart, and go-to-latest. Daily sources replay one bar per trading day across the loaded forward window.
+- **Multi-timeframe** — aggregate the raw series into the timeframes the source can produce: 1m through 1D for a 1-minute feed, and 1D / 1W / 1M / 3M / 1Y for a daily stock feed. Aggregation buckets candles by their UTC timestamp rather than by counting rows, so data gaps and session breaks do not shift or stretch a bar.
 - **Trading** — long/short entries; market and stop orders from a chart right-click menu; optional **bracket** (stop-loss / take-profit) with a toggle; live P/L (net of per-side commission) and close-all.
 - **Trading session** — completed trades are collected for the active source
   with a summary (trade count, net P/L, total commissions) and a reviewable
@@ -76,16 +79,32 @@ then select it from **Stored sources** to open the replay chart.
 
 All data is managed from the **Sources** screen:
 
-- **Add a source** — enter a **Symbol** (used as the instrument label and to
-  derive its id), a **Point value** (dollars per index point per contract, used
-  for P/L), a **Commission** (dollars per contract **per side**; a completed
-  trade therefore costs `commission × 2 × quantity`), and pick a raw JSON file.
-- **Stored sources** — every uploaded dataset is listed by symbol and file name.
-  Click one to open it in the replay chart, or **Delete** to remove it.
+- **Add a source** — choose a **Market** (**Futures** or **Stocks**) and a
+  **Data interval** (**1-minute bars** or **Daily bars**), then enter a
+  **Symbol** (used as the instrument label and to derive its id), a **Currency**
+  code (for example `USD` or `EGP`, used for labels and exports), a **Point
+  value** (currency value of one price point per unit, used for P/L), a flat
+  **Commission** (per order per side for stocks, per contract per side for
+  futures), a **Commission %** (percentage of order notional per side, added to
+  the flat fee), and pick a raw JSON file.
+- **Stocks** use the source **Currency** directly. Point value is fixed at `1`,
+  so P/L is `price change × shares`, bracket stop/target distances are entered
+  in the stock currency (not points), and session/P&L values are shown and
+  exported in that currency. Stock fixed commission is charged once per order,
+  per side.
+- **Futures** use the instrument's point value, and bracket distances remain in
+  points. Fixed commission is per contract, per side.
+- **Percentage commission** is optional: set it to `0` for markets with only a
+  flat fee. For EGX stocks the typical setup is fixed `2` EGP per order/side plus
+  `0.1` percent per side.
+- **Stored sources** — every uploaded dataset is listed by symbol, market,
+  interval and file name. Click one to open it in the replay chart, or
+  **Delete** to remove it.
 
 Files are written to the browser's **Origin Private File System (OPFS)** along
 with a small `<file>.meta.json` sidecar holding the source config
-(`id`, `symbol`, `pointValue`, `commission`, `fileName`). This means:
+(`id`, `symbol`, `assetClass`, `currency`, `pointValue`, `commission`,
+`commissionPercent`, `baseTimeframeMinutes`, `fileName`). This means:
 
 - Nothing is uploaded to a server — the data stays on your machine.
 - Storage is **per browser profile and origin**, so datasets are not shared
@@ -95,9 +114,10 @@ with a small `<file>.meta.json` sidecar holding the source config
 
 ## Raw data format
 
-A source file is a single JSON document: an **array of 1-minute OHLCV bars**,
-sorted oldest → newest. This is exactly the shape the app reads and the shape
-`pnpm convert-data` writes.
+A source file is a single JSON document: an **array of OHLCV bars**, sorted
+oldest → newest. The bars are either one-minute bars or one daily bar per
+trading day, matching the **Data interval** selected in the source form. This
+is exactly the shape the app reads and the shape `pnpm convert-data` writes.
 
 ```json
 [
@@ -135,11 +155,75 @@ Rules the loader relies on:
 - Bars must be **chronological** (ascending `time`, no need to be gap-free).
   The first and last bars define the dataset's date range, and day/history
   queries assume ordering.
-- One row per minute; larger timeframes (3m, 5m, …) are aggregated at runtime.
-  Timestamps should be minute-aligned.
+- One row per base interval: one minute for **1-minute bars**, or one row per
+  trading day for **Daily bars**. Larger timeframes are aggregated at runtime
+  where the base resolution allows it (daily sources replay at 1D).
+- Timestamps should be minute-aligned for 1-minute data. For daily data, put
+  each bar on its trading day's UTC date; **00:00 UTC** is recommended. The
+  loader snaps timestamps to the base interval, so `11:30 UTC` becomes
+  `00:00 UTC` of the same trading day.
 - The array must contain **at least one bar**, otherwise the source is treated
   as empty.
 - Extra fields are ignored; only the six above are read.
+
+### Stocks and daily bars (EGX)
+
+Stock sources use the same JSON contract. For an EGX100 daily dataset:
+
+1. Convert each row to
+   `{ time, open, high, low, close, volume }`, where `time` is the Unix
+   timestamp in seconds for the trading day (00:00 UTC is simplest).
+2. Add the source with **Market: Stocks**, **Data interval: Daily bars**,
+   **Currency: EGP** and the EGX symbol (for example `COMI`). Stock point value
+   is fixed at `1` because P/L is calculated directly in the source currency.
+3. Set **Commission** to `2` (fixed EGP per order/side) and **Commission %**
+   to `0.1` (percent per side). Use `0` percent for any market with a flat-only
+   fee.
+
+Daily sources load the selected date plus a forward window of following trading
+days, so the replay controls step through the daily series. The systematic
+backtest always operates on the whole selected date range.
+
+## EGX100 daily downloader
+
+The repo includes a separate Chromium automation subproject in
+[`tools/egx100-downloader`](./tools/egx100-downloader) that signs in to
+Investing.com, reads the EGX100 components, downloads each stock's daily
+historical CSV, and converts it to upload-ready JSON under `data/egx100/`.
+
+```bash
+cd tools/egx100-downloader
+pnpm install
+pnpm auth          # sign in once; saves the session in .auth/
+pnpm components     # verify the EGX100 component list
+pnpm download       # full history for every stock
+pnpm download:append
+```
+
+Output files look like `data/egx100/CCAP-1d.json` and are imported with
+**Market: Stocks**, **Data interval: Daily bars**, **Currency: EGP**, and
+**Point value: 1**. See the subproject README for options, append behaviour,
+and current site selectors.
+
+## EGX30 swing strategy research
+
+[`research/egx-swing`](./research/egx-swing) is a TypeScript research workspace
+driven by the repo's portfolio backtesting engine. It uses a 30-stock EGX30 copy
+in `data/egx30/` and backtests long-only daily swing strategies with next-open
+fills, 0.3% per-side costs, ATR/fixed stops, 1% risk sizing (hard cap 2%), a
+20-session time stop, and ADX regime variants.
+
+Simulation capital starts at **10,000 EGP**, adds **10,000 EGP monthly**, caps
+each order at **1,000,000 EGP**, allows concurrent positions across EGX30, and
+compounds profits. Uninvested cash earns **1% monthly**, and **3.33% of each
+winning trade** is withdrawn to personal cash (both configurable). The research
+runs the full 2010→latest history and seven overlapping **10-year windows**.
+
+```bash
+pnpm research:egx
+```
+
+Reports are written under `research/egx-swing/results/`.
 
 ### Generating the file from a CSV
 
@@ -187,10 +271,10 @@ src/
     source/       # upload / select / delete datasets (OPFS-backed)
     toolbar/      # replay, speed, timeframe, trading and indicator controls
   backtesting/    # pure simulation engine, aggregation, validation, worker
-  constants/      # speeds, timeframes, colours
+  constants/      # speeds, timeframes, asset classes, colours
   data/
     opfs.ts       # Origin Private File System read/write helpers
-    sources/      # pluggable candle sources (generic factory + MNQ config)
+    sources/      # pluggable candle sources (generic factory, config defaults, MNQ)
   hooks/          # replay engine, trade engine, session tracking, data loading, indicators
   indicators/     # VWAP, VWAP bands, EMA, SMA, RSI, ATR implementations
   types/          # shared domain types
@@ -199,6 +283,8 @@ public/
   examples/strategies/  # downloadable example strategy modules
 scripts/
   convertRawData.mjs   # CSV -> JSON data pipeline
+tools/
+  egx100-downloader/   # Chromium automation -> data/egx100/*-1d.json
 ```
 
 ## How it works
@@ -206,7 +292,9 @@ scripts/
 - **Sources** — `App` shows the source manager until a config is selected, then
   renders the chart for that config. `opfs.ts` reads/writes dataset files and
   their `.meta.json` sidecars; `createCandleSource` turns a config into a
-  queryable dataset (`loadDay`, `getHistory`, `getRange`) over the raw JSON.
+  queryable dataset (`loadDay`, `loadReplayWindow`, `getHistory`, `getRange`)
+  over the raw JSON. Legacy sidecars are normalised to futures/1-minute, and
+  stock/daily configs pick their own timeframes and replay window.
 - **Replay** — `useReplay` holds the source 1-minute candles and a cache of
   snapshots. Each tick advances a pointer, aggregating minutes into the active
   timeframe by UTC timestamp bucket; the snapshot cache makes rewinding O(1).
@@ -227,11 +315,13 @@ scripts/
 
 Open a source, switch to **Systematic Backtest**, upload a `.js`/`.mjs` strategy
 module, validate it, choose the UTC date range, timeframe, costs, capital, and
-warm-up, then run it. The strategy is called once per completed bar and can
-return market entries, strategy exits (`exit`/`exitAll`), or `modify` actions
-that update an open position's stop-loss/take-profit; stop-loss and take-profit
-brackets are optional. Contract quantity is chosen by the strategy for every
-entry, so it can implement fixed-contract, fixed-dollar-risk, or any other
+warm-up, then run it. The timeframe list adapts to the source: a 1-minute feed
+supports 1m–1D, while a daily stock feed runs from 1D through 1W / 1M / 3M / 1Y.
+The strategy is called once per completed bar and can return market entries,
+strategy exits (`exit`/`exitAll`), or `modify` actions that update an open
+position's stop-loss/take-profit; stop-loss and take-profit brackets are
+optional. Position quantity is chosen by the strategy for every entry, so it
+can implement fixed-contract, fixed-share, fixed-dollar-risk, or any other
 sizing rule.
 
 ### Modifying an open position
@@ -267,6 +357,15 @@ The engine fills market actions at the next bar open, checks brackets against
 each bar's OHLC, and marks open positions to each bar close. It runs in a Web
 Worker with progress, cancellation, and a no-progress watchdog. Completed runs
 stay in memory and can be downloaded as versioned JSON; nothing is persisted.
+
+For stock sources, the backtest engine uses share quantities (up to 1,000,000
+per entry), produces P/L in the source currency, and supports daily, weekly,
+monthly, quarterly, and yearly strategy bars. Bracket fields named
+`stopLossPoints` / `takeProfitPoints` still exist in the strategy API; in stock
+mode one point equals one currency unit per share, so those values are simply
+the stop/target distance in EGP (or the configured currency). Slightly
+inconsistent Investing.com OHLC bounds are normalized at ingestion so they do
+not block a run.
 
 A commented example is available at
 [`public/examples/strategies/sma-cross.js`](./public/examples/strategies/sma-cross.js),

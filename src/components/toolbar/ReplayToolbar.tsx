@@ -19,6 +19,7 @@ export type ReplayToolbarProps = {
     direction: PlayDirection,
     indicators: IndicatorConfig[];
     timeFrameMinutes: number;
+    baseTimeframeMinutes: number;
     speed: number;
     chartTimezone: ChartTimezone;
 
@@ -34,6 +35,7 @@ export type ReplayToolbarProps = {
     setIndicators: (indicators: IndicatorConfig[]) => void,
 
     sessionInstrument: string,
+    sessionCurrency: string,
     sessionTrades: SessionTrade[],
     sessionSummary: SessionSummary,
     sessionHasUnexportedChanges: boolean,
@@ -84,6 +86,7 @@ export function ReplayToolbar(props: ReplayToolbarProps) {
 
             <ReplayTimeframeSelect
                 timeFrame={props.timeFrameMinutes}
+                baseTimeframeMinutes={props.baseTimeframeMinutes}
                 setTimeFrame={props.setTimeFrame}
             />
 
@@ -129,6 +132,7 @@ export function ReplayToolbar(props: ReplayToolbarProps) {
 
                 <SessionControls
                     instrument={props.sessionInstrument}
+                    currency={props.sessionCurrency}
                     trades={props.sessionTrades}
                     summary={props.sessionSummary}
                     hasUnexportedChanges={props.sessionHasUnexportedChanges}

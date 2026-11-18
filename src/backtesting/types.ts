@@ -1,3 +1,5 @@
+import type { AssetClass } from "@/constants/assetClass";
+
 /** Public, strategy-facing bar shape. Never includes replay implementation fields. */
 export interface BacktestBar {
     time: number;
@@ -23,6 +25,16 @@ export interface InstrumentContext {
     symbol: string;
     pointValue: number;
     commissionPerSide: number;
+    /** Percentage of order notional charged per side. */
+    commissionPercentPerSide?: number;
+    /** Market family; optional for strategies/exports written before stocks. */
+    assetClass?: AssetClass;
+    /** Reporting currency for point value/commission/P&L. */
+    currency?: string;
+    /** Unit label for strategy quantity, e.g. "contract" or "share". */
+    quantityUnit?: string;
+    /** Raw dataset resolution in minutes (1 or 1440). */
+    baseTimeframeMinutes?: number;
 }
 
 export interface AccountContext {

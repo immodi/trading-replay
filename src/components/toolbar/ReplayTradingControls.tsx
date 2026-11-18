@@ -1,3 +1,4 @@
+import type { AssetClass } from "@/constants/assetClass";
 import type { PositionParamters } from "@/types/positionParamters";
 import { useState } from "react";
 import type React from "react";
@@ -9,6 +10,8 @@ type ReplayTradingControlsProps = {
     positionParametersRef: React.RefObject<PositionParamters>;
     /** Called after any order parameter changes, so it can be persisted. */
     onParametersChange?: () => void;
+    assetClass?: AssetClass;
+    currency?: string;
 };
 
 export function ReplayTradingControls({
@@ -17,8 +20,14 @@ export function ReplayTradingControls({
     closeAll,
     positionParametersRef,
     onParametersChange,
+    assetClass = "futures",
+    currency = "USD",
 }: ReplayTradingControlsProps) {
     const [bracket, setBracket] = useState(positionParametersRef.current.bracket);
+    const isStock = assetClass === "stock";
+    const distanceUnit = isStock ? currency : "pts";
+    const distanceStep = isStock ? 0.01 : 1;
+    const distanceMin = isStock ? 0.01 : 1;
 
     function updateParameter<K extends keyof PositionParamters>(
         key: K,
@@ -56,13 +65,14 @@ export function ReplayTradingControls({
             <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1.5">
                     <label htmlFor="trading-stop-loss" className={labelClassName}>
-                        SL
+                        SL ({distanceUnit})
                     </label>
                     <input
                         id="trading-stop-loss"
                         type="number"
-                        min={1}
-                        step={1}
+                        min={distanceMin}
+                        step={distanceStep}
+                        inputMode="decimal"
                         disabled={!bracket}
                         defaultValue={positionParametersRef.current.stopLossPoints}
                         onChange={e => {
@@ -74,13 +84,14 @@ export function ReplayTradingControls({
 
                 <div className="flex items-center gap-1.5">
                     <label htmlFor="trading-take-profit" className={labelClassName}>
-                        TP
+                        TP ({distanceUnit})
                     </label>
                     <input
                         id="trading-take-profit"
                         type="number"
-                        min={1}
-                        step={1}
+                        min={distanceMin}
+                        step={distanceStep}
+                        inputMode="decimal"
                         disabled={!bracket}
                         defaultValue={positionParametersRef.current.takeProfitPoints}
                         onChange={e => {

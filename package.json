@@ -9,6 +9,8 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "convert-data": "node scripts/convertRawData.mjs",
+    "research:egx": "tsx research/egx-swing/run.ts",
+    "research:egx:tune": "tsx research/egx-swing/tune.ts",
     "test": "node --import tsx --test tests/*.test.ts scripts/*.test.mjs"
   },
   "dependencies": {

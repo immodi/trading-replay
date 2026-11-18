@@ -1,4 +1,11 @@
 import { save } from "@/data/opfs";
+import { withSourceDefaults } from "@/data/sources/config";
+import {
+    ASSET_CLASSES,
+    BASE_TIMEFRAME_OPTIONS,
+    assetClassDefinition,
+    type AssetClass,
+} from "@/constants/assetClass";
 import type { CandleSourceConfig } from "@/types/candleSource";
 import { useRef, useState } from "react";
 
@@ -9,13 +16,78 @@ type SourceSelectProps = {
     onSaved?: () => void,
 }
 
+const inputClass = `
+    w-full
+    rounded-lg
+    border
+    border-[#363A45]
+    bg-[#131722]
+    px-3
+    py-2
+    text-sm
+    text-gray-200
+    outline-none
+    transition
+    hover:border-gray-500
+    focus:ring-1
+    focus:ring-blue-500/40
+`;
+
+const labelClass =
+    "text-[10px] font-semibold uppercase tracking-wider text-gray-400";
+
 export default function SourceSelect({ config, setConfig, onSaved }: SourceSelectProps) {
     const [file, setFile] = useState<File | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const update = (patch: Partial<CandleSourceConfig>) =>
-        setConfig((c) => ({ id: "", symbol: "", pointValue: 0, commission: 0, fileName: "", ...c, ...patch }));
+        setConfig((c) => ({
+            id: "",
+            symbol: "",
+            assetClass: "futures",
+            currency: "USD",
+            pointValue: 0,
+            commission: 0,
+            commissionPercent: 0,
+            baseTimeframeMinutes: 1,
+            fileName: "",
+            ...c,
+            ...patch,
+        }));
+
+    const onAssetClassChange = (assetClass: AssetClass) => {
+        const definition = assetClassDefinition(assetClass);
+
+        setConfig((current) => {
+            const base = {
+                id: "",
+                symbol: "",
+                assetClass: "futures" as AssetClass,
+                currency: "USD",
+                pointValue: 0,
+                commission: 0,
+                commissionPercent: 0,
+                baseTimeframeMinutes: 1,
+                fileName: "",
+                ...current,
+            };
+
+            return {
+                ...base,
+                assetClass,
+                baseTimeframeMinutes:
+                    definition.defaultBaseTimeframeMinutes,
+                // Stocks are quoted per share, so one point is one currency
+                // unit. Futures point values are instrument-specific, so an
+                // existing value is left untouched.
+                pointValue:
+                    assetClass === "stock" || base.pointValue <= 0
+                        ? definition.defaultPointValue
+                        : base.pointValue,
+            };
+        });
+    };
 
     const onFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files;
@@ -33,17 +105,26 @@ export default function SourceSelect({ config, setConfig, onSaved }: SourceSelec
         config.symbol.trim() !== "" &&
         config.id.trim() !== "" &&
         config.fileName.trim() !== "" &&
-        Number.isFinite(config.pointValue) &&
-        config.pointValue > 0 &&
+        config.currency.trim() !== "" &&
+        (config.assetClass === "stock" ||
+            (Number.isFinite(config.pointValue) && config.pointValue > 0)) &&
         Number.isFinite(config.commission ?? 0) &&
-        (config.commission ?? 0) >= 0;
+        (config.commission ?? 0) >= 0 &&
+        Number.isFinite(config.commissionPercent ?? 0) &&
+        (config.commissionPercent ?? 0) >= 0 &&
+        Number.isFinite(config.baseTimeframeMinutes) &&
+        config.baseTimeframeMinutes >= 1;
 
     const onSave = async () => {
         if (!canSave || !file || !config) return;
 
         setIsSaving(true);
         try {
-            await save(config.fileName, file, config);
+            await save(
+                config.fileName,
+                file,
+                withSourceDefaults(config),
+            );
 
             // Reset the form so the next source starts from a clean slate.
             setFile(null);
@@ -61,6 +142,58 @@ export default function SourceSelect({ config, setConfig, onSaved }: SourceSelec
             <h1 className="text-lg font-semibold text-gray-100">Add a source</h1>
 
             <div className="grid gap-3 sm:grid-cols-3">
+                <label className="space-y-1">
+                    <span className={labelClass}>Market</span>
+                    <select
+                        value={config?.assetClass ?? "futures"}
+                        onChange={(e) =>
+                            onAssetClassChange(e.target.value as AssetClass)
+                        }
+                        className={`${inputClass} cursor-pointer`}
+                    >
+                        {ASSET_CLASSES.map((assetClass) => (
+                            <option key={assetClass.value} value={assetClass.value}>
+                                {assetClass.label}
+                            </option>
+                        ))}
+                    </select>
+                </label>
+
+                <label className="space-y-1">
+                    <span className={labelClass}>Data interval</span>
+                    <select
+                        value={config?.baseTimeframeMinutes ?? 1}
+                        onChange={(e) =>
+                            update({
+                                baseTimeframeMinutes: Number(e.target.value),
+                            })
+                        }
+                        className={`${inputClass} cursor-pointer`}
+                    >
+                        {BASE_TIMEFRAME_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
+                    </select>
+                </label>
+
+                <label className="space-y-1">
+                    <span className={labelClass}>Currency</span>
+                    <input
+                        type="text"
+                        placeholder="USD"
+                        maxLength={5}
+                        value={config?.currency || ""}
+                        onChange={(e) =>
+                            update({ currency: e.target.value.toUpperCase() })
+                        }
+                        className={inputClass}
+                    />
+                </label>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
                 <input
                     type="text"
                     placeholder="Symbol"
@@ -69,74 +202,66 @@ export default function SourceSelect({ config, setConfig, onSaved }: SourceSelec
                         const symbol = e.target.value.toUpperCase();
                         update({ symbol, id: symbol.toLowerCase() });
                     }}
-                    className="
-                        w-full
-                        rounded-lg
-                        border
-                        border-[#363A45]
-                        bg-[#131722]
-                        px-3
-                        py-2
-                        text-sm
-                        text-gray-200
-                        outline-none
-                        transition
-                        hover:border-gray-500
-                        focus:ring-1
-                        focus:ring-blue-500/40
-                    "
+                    className={inputClass}
                 />
                 <input
                     type="number"
-                    placeholder="Point value"
+                    placeholder={config?.assetClass === "stock" ? "1 (shares)" : "Point value"}
                     min={0}
                     step="any"
-                    value={config?.pointValue || ""}
+                    disabled={config?.assetClass === "stock"}
+                    value={
+                        config?.assetClass === "stock"
+                            ? 1
+                            : config?.pointValue || ""
+                    }
                     onChange={(e) => update({ pointValue: Number(e.target.value) })}
-                    className="
-                        w-full
-                        rounded-lg
-                        border-[#363A45]
-                        bg-[#131722]
-                        px-3
-                        py-2
-                        text-sm
-                        text-gray-200
-                        outline-none
-                        transition
-                        hover:border-gray-500
-                        focus:ring-1
-                        focus:ring-blue-500/40
-                    "
+                    className={`${inputClass} disabled:cursor-not-allowed disabled:opacity-60`}
                 />
                 <input
                     type="number"
-                    placeholder="Commission / side"
+                    placeholder={
+                        config?.assetClass === "stock"
+                            ? "Fixed commission / order / side"
+                            : "Commission / contract / side"
+                    }
                     min={0}
                     step={0.01}
                     value={config?.commission || ""}
                     onChange={(e) => update({ commission: Number(e.target.value) })}
-                    className="
-                        w-full
-                        rounded-lg
-                        border-[#363A45]
-                        bg-[#131722]
-                        px-3
-                        py-2
-                        text-sm
-                        text-gray-200
-                        outline-none
-                        transition
-                        hover:border-gray-500
-                        focus:ring-1
-                        focus:ring-blue-500/40
-                    "
+                    className={inputClass}
                 />
+                <input
+                    type="number"
+                    placeholder="Commission % / side"
+                    min={0}
+                    step={0.01}
+                    value={config?.commissionPercent || ""}
+                    onChange={(e) =>
+                        update({ commissionPercent: Number(e.target.value) })
+                    }
+                    className={inputClass}
+                />
+                <p className="text-[11px] leading-relaxed text-gray-500 sm:col-span-2">
+                    Example EGX stock fees: fixed `2` per order/side plus `0.1`
+                    percent per side. Set the percentage to `0` for markets
+                    without a percentage commission.
+                </p>
             </div>
+
+            <p className="text-[11px] leading-relaxed text-gray-500">
+                {config?.assetClass === "stock"
+                    ? "Stock P/L is calculated in the source currency as price change × shares. Bracket stop/target distances are entered in that currency, not points. Commission is per side."
+                    : `Futures point value is the dollar value of one price point per ${assetClassDefinition(config?.assetClass).quantityLabel}.`}
+                {config?.baseTimeframeMinutes === 1440
+                    ? " Daily bars replay one candle per trading day; timestamp each bar on its trading day's UTC date."
+                    : " One-minute bars can be aggregated into every larger timeframe."}
+            </p>
 
             <input
                 ref={fileInputRef}
                 type="file"
+                accept=".json,application/json"
                 onChange={onFileChange}
                 className="
                     block

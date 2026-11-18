@@ -1,19 +1,25 @@
-export function formatMoney(value: number | null | undefined): string {
+export function formatMoney(
+    value: number | null | undefined,
+    currency = "USD",
+): string {
     if (value === null || value === undefined || !Number.isFinite(value)) {
         return "—";
     }
 
     const sign = value > 0 ? "+" : value < 0 ? "-" : "";
-    return `${sign}$${Math.abs(value).toFixed(2)}`;
+    return `${sign}${currency} ${Math.abs(value).toFixed(2)}`;
 }
 
-export function formatMoneyPlain(value: number | null | undefined): string {
+export function formatMoneyPlain(
+    value: number | null | undefined,
+    currency = "USD",
+): string {
     if (value === null || value === undefined || !Number.isFinite(value)) {
         return "—";
     }
 
     const sign = value < 0 ? "-" : "";
-    return `${sign}$${Math.abs(value).toFixed(2)}`;
+    return `${sign}${currency} ${Math.abs(value).toFixed(2)}`;
 }
 
 export function formatNumber(

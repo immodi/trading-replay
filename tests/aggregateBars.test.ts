@@ -130,6 +130,23 @@ test("packed aggregation matches object aggregation and can drop a leading parti
     assert.equal(result.bars[0].volume, 5);
 });
 
+test("daily aggregation does not flag every day as a partial bucket", () => {
+    const DAY = 86_400;
+    const result = aggregateBars(
+        [
+            bar(BASE, 10, 12, 9, 11),
+            bar(BASE + DAY, 11, 13, 10, 12),
+            bar(BASE + 2 * DAY, 12, 14, 11, 13),
+        ],
+        1440,
+        false,
+        1440,
+    );
+
+    assert.equal(result.bars.length, 3);
+    assert.equal(result.partialBucketCount, 0);
+});
+
 test("out-of-order bars are rejected rather than silently merged", () => {
     assert.throws(
         () =>
