@@ -10,6 +10,10 @@
     "components": "tsx src/cli.ts components",
     "download": "tsx src/cli.ts download --mode full",
     "download:append": "tsx src/cli.ts download --mode append",
+    "download:today": "tsx src/cli.ts download --mode today",
+    "universe": "tsx src/cli.ts universe",
+    "universe:egx30": "tsx src/cli.ts universe --index egx30",
+    "universe:egx100": "tsx src/cli.ts universe --index egx100",
     "test": "node --import tsx --test tests/*.test.ts",
     "typecheck": "tsc --noEmit"
   },

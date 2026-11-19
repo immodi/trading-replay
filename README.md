@@ -225,6 +225,25 @@ pnpm research:egx
 
 Reports are written under `research/egx-swing/results/`.
 
+## EGX daily screener (Python side project)
+
+[`egx-screener`](./egx-screener) is a standalone Python + single-page tool that
+applies the Donchian breakout rule to the latest EGX30 close and produces a ranked,
+sized watchlist for the next open. It stores its own per-strategy data under
+`egx-screener/data/`, never writes to `data/`, and shells out to the
+downloader's `today` mode for a fresh window. A **Refresh names** action updates
+the EGX30/EGX100 constituent lists from Investing.com through the same Node
+pipeline.
+
+```bash
+python3 egx-screener/server.py          # http://127.0.0.1:8787
+python3 egx-screener/screen.py --strategy donchian --refresh
+```
+
+The strategy, eligibility gates, ranking, and sizing are documented in
+[`egx-screener/STRATEGY.md`](./egx-screener/STRATEGY.md), with references to the
+Python functions that implement each rule.
+
 ### Generating the file from a CSV
 
 The included converter reads one or more Databento GLBX MDP3 1-minute OHLCV

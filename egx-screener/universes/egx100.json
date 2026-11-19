@@ -1,0 +1,514 @@
+{
+  "key": "egx100",
+  "label": "EGX 100",
+  "source": "https://www.investing.com/indices/egx-100-ewi-components",
+  "updatedAt": "2026-11-19T19:53:54.035Z",
+  "count": 101,
+  "stocks": [
+    {
+      "symbol": "CCAP",
+      "name": "Qalaa",
+      "slug": "citadel-capita"
+    },
+    {
+      "symbol": "COMI",
+      "name": "Com Intl Bk",
+      "slug": "com-intl-bk"
+    },
+    {
+      "symbol": "EGTS",
+      "name": "ERC",
+      "slug": "egyptian-resor"
+    },
+    {
+      "symbol": "VLMR",
+      "name": "Valmore Holding",
+      "slug": "egypt-kuwait-h"
+    },
+    {
+      "symbol": "ELEC",
+      "name": "Electro Cable",
+      "slug": "electro-cable"
+    },
+    {
+      "symbol": "ELKA",
+      "name": "Cairo Housing",
+      "slug": "el-kahera-hous"
+    },
+    {
+      "symbol": "ETEL",
+      "name": "Telecom Egypt",
+      "slug": "telecom-egypt"
+    },
+    {
+      "symbol": "HRHO",
+      "name": "EFG Holding",
+      "slug": "efg-hermes-hol"
+    },
+    {
+      "symbol": "MPRC",
+      "name": "Egyptian Media Production City",
+      "slug": "egypt-media-pr"
+    },
+    {
+      "symbol": "OCDI",
+      "name": "SODIC",
+      "slug": "6th-oct-dev-in"
+    },
+    {
+      "symbol": "PHDC",
+      "name": "Palm Hills",
+      "slug": "palm-hill-dev"
+    },
+    {
+      "symbol": "ASPI",
+      "name": "Aspire Capital Holding for Financial Investments",
+      "slug": "pioneers-hldg"
+    },
+    {
+      "symbol": "SKPC",
+      "name": "Sidi Kerir",
+      "slug": "sidi-kerir-pet"
+    },
+    {
+      "symbol": "SVCE",
+      "name": "South Valley Cement",
+      "slug": "s.-valley-ceme"
+    },
+    {
+      "symbol": "SWDY",
+      "name": "Elsewedy Electric",
+      "slug": "elsewedy-cable"
+    },
+    {
+      "symbol": "TMGH",
+      "name": "TMG",
+      "slug": "t-m-g-holding"
+    },
+    {
+      "symbol": "UEGC",
+      "name": "SCCD",
+      "slug": "upper-egypt-co"
+    },
+    {
+      "symbol": "ASCM",
+      "name": "ASEC Co for Mining",
+      "slug": "asec-mining-co"
+    },
+    {
+      "symbol": "GBCO",
+      "name": "GB AUTO",
+      "slug": "gb-auto-s.a.e"
+    },
+    {
+      "symbol": "COSG",
+      "name": "Cairo Oils & Soap",
+      "slug": "cairo-oil---so"
+    },
+    {
+      "symbol": "CSAG",
+      "name": "Canal Shipping Agencies",
+      "slug": "canal-shipping"
+    },
+    {
+      "symbol": "DAPH",
+      "name": "Tameer",
+      "slug": "dev---eng-cons"
+    },
+    {
+      "symbol": "EHDR",
+      "name": "EHD",
+      "slug": "egyptn-hous-de"
+    },
+    {
+      "symbol": "ELSH",
+      "name": "El Shams",
+      "slug": "shams-hous-dev"
+    },
+    {
+      "symbol": "ENGC",
+      "name": "Industrial Engineering",
+      "slug": "eng-indust(ico)"
+    },
+    {
+      "symbol": "ETRS",
+      "name": "Egyptian Transport & Commercial Services",
+      "slug": "egyptrans"
+    },
+    {
+      "symbol": "HDBK",
+      "name": "HDB",
+      "slug": "housing---dev"
+    },
+    {
+      "symbol": "HELI",
+      "name": "Misr El Gadida for Housing Dev",
+      "slug": "heliopolis-housing"
+    },
+    {
+      "symbol": "ISMA",
+      "name": "Ismailia Misr Poultry",
+      "slug": "ismalia-poultr"
+    },
+    {
+      "symbol": "KABO",
+      "name": "El Nasr Clothing & Textiles",
+      "slug": "kabo"
+    },
+    {
+      "symbol": "LCSW",
+      "name": "Lecico Egypt",
+      "slug": "lecico-egypt"
+    },
+    {
+      "symbol": "MASR",
+      "name": "Madinet Masr",
+      "slug": "medinet-nasr-h"
+    },
+    {
+      "symbol": "MPCO",
+      "name": "Mansourah Poultry",
+      "slug": "mansourah-pltr"
+    },
+    {
+      "symbol": "NCCW",
+      "name": "Nasr Co. for Civil Works",
+      "slug": "nasr-civil-wor"
+    },
+    {
+      "symbol": "ORWE",
+      "name": "Oriental Weavers",
+      "slug": "oriental-weave"
+    },
+    {
+      "symbol": "POUL",
+      "name": "Cairo Poultry",
+      "slug": "cairo-poultry"
+    },
+    {
+      "symbol": "PRCL",
+      "name": "Sheeni",
+      "slug": "ceramics-porcl"
+    },
+    {
+      "symbol": "RAYA",
+      "name": "Raya Holding",
+      "slug": "raya-tech---co"
+    },
+    {
+      "symbol": "UNIP",
+      "name": "Unipack",
+      "slug": "universal-p-p"
+    },
+    {
+      "symbol": "ZEOT",
+      "name": "Extracted Oils",
+      "slug": "extracted-oils"
+    },
+    {
+      "symbol": "ZMID",
+      "name": "ZAMCO",
+      "slug": "zahraa-maadi-i"
+    },
+    {
+      "symbol": "ABUK",
+      "name": "Abu Qir Fertilizers and Chemical Industries",
+      "slug": "abou-kir-fertilizers"
+    },
+    {
+      "symbol": "MBSC",
+      "name": "Misr Beni Suef Cement",
+      "slug": "misr-beni-suef-cement"
+    },
+    {
+      "symbol": "MCQE",
+      "name": "Misr Cement",
+      "slug": "misr-cement-qe"
+    },
+    {
+      "symbol": "AMOC",
+      "name": "Alexandria Mineral Oils",
+      "slug": "alx-mineral-oi"
+    },
+    {
+      "symbol": "CIEB",
+      "name": "Credit Agricole Egypt",
+      "slug": "credit-agricol"
+    },
+    {
+      "symbol": "NIPH",
+      "name": "Nile Pharma",
+      "slug": "nile-pharmaceu"
+    },
+    {
+      "symbol": "EAST",
+      "name": "EC",
+      "slug": "eastern-co"
+    },
+    {
+      "symbol": "PHAR",
+      "name": "EIPICO",
+      "slug": "egypt-intl-phr"
+    },
+    {
+      "symbol": "EGCH",
+      "name": "Kima",
+      "slug": "egypt-chem-ind"
+    },
+    {
+      "symbol": "SCEM",
+      "name": "Sinai Cement",
+      "slug": "sinai-cement"
+    },
+    {
+      "symbol": "EXPA",
+      "name": "EDBE",
+      "slug": "exp-dev-bk-of"
+    },
+    {
+      "symbol": "AIHC",
+      "name": "Arabia Investments Holding",
+      "slug": "arabia-inv-development---cash"
+    },
+    {
+      "symbol": "ALCN",
+      "name": "Alex Cont",
+      "slug": "alexandria-containers-and-goods"
+    },
+    {
+      "symbol": "AIFI",
+      "name": "Atlas",
+      "slug": "atlas-for-land-recl---agri-proc"
+    },
+    {
+      "symbol": "AMER",
+      "name": "Amer Group Holding",
+      "slug": "amer-group-holding"
+    },
+    {
+      "symbol": "AMIA",
+      "name": "AMIC",
+      "slug": "arab-moltaka-investments-co"
+    },
+    {
+      "symbol": "ATQA",
+      "name": "Misr National Steel",
+      "slug": "misr-national-steel---ataqa"
+    },
+    {
+      "symbol": "BTFH",
+      "name": "Beltone",
+      "slug": "beltone-financial-holding"
+    },
+    {
+      "symbol": "DSCW",
+      "name": "Dice",
+      "slug": "dice-sport---casual-wear"
+    },
+    {
+      "symbol": "EGAL",
+      "name": "Egypt Aluminum",
+      "slug": "egypt-aluminum"
+    },
+    {
+      "symbol": "GPIM",
+      "name": "GPI for Urban Growth",
+      "slug": "egyptians-for-inv---urban-devel"
+    },
+    {
+      "symbol": "IDRE",
+      "name": "New lsmailia for Urban Dev",
+      "slug": "ismailia-development-and-re-co"
+    },
+    {
+      "symbol": "JUFO",
+      "name": "Juhayna Food",
+      "slug": "juhayna-food-industries"
+    },
+    {
+      "symbol": "MEPA",
+      "name": "Medical Packaging",
+      "slug": "medical-packaging-company"
+    },
+    {
+      "symbol": "MPCI",
+      "name": "Memphis",
+      "slug": "memphis-pharmaceuticals"
+    },
+    {
+      "symbol": "OBRI",
+      "name": "El Ebour",
+      "slug": "el-obour-real-estate-investment"
+    },
+    {
+      "symbol": "ORHD",
+      "name": "ODE",
+      "slug": "orascom-hotels-and-development"
+    },
+    {
+      "symbol": "OIH",
+      "name": "Orascom Investment Holding",
+      "slug": "orascom-telecom-media---technology"
+    },
+    {
+      "symbol": "SDTI",
+      "name": "Sharm Dreams Co.",
+      "slug": "sharm-dreams-co.-for-tourism-inv."
+    },
+    {
+      "symbol": "ADIB",
+      "name": "Abu Dhabi Islamic Bank",
+      "slug": "abu-dhabi-islamic-bank-egypt"
+    },
+    {
+      "symbol": "ARCC",
+      "name": "Arabian Cement Co SAE",
+      "slug": "arabian-cement-co-sae"
+    },
+    {
+      "symbol": "IEEC",
+      "name": "IEEC",
+      "slug": "industrial-engineer-enterprises"
+    },
+    {
+      "symbol": "ORAS",
+      "name": "Orascom Construction Ltd",
+      "slug": "orascom-construction-ltd"
+    },
+    {
+      "symbol": "EMFD",
+      "name": "Emaar Misr for Development SAE",
+      "slug": "emaar-misr-for-development-sae"
+    },
+    {
+      "symbol": "ARAB",
+      "name": "Arab Developers Holding",
+      "slug": "porto-group-holding-sae"
+    },
+    {
+      "symbol": "CLHO",
+      "name": "Cleopatra Hospital",
+      "slug": "cleopatra-hospital"
+    },
+    {
+      "symbol": "EFID",
+      "name": "Edita Food",
+      "slug": "edita-food-industries"
+    },
+    {
+      "symbol": "SIPC",
+      "name": "Sabaa",
+      "slug": "sabaa-international-company-pharma"
+    },
+    {
+      "symbol": "MFPC",
+      "name": "Misr Fertilizers",
+      "slug": "misr-fertilizers-production-co-sae"
+    },
+    {
+      "symbol": "MTIE",
+      "name": "MM Group",
+      "slug": "mm-group-for-industry"
+    },
+    {
+      "symbol": "ICFC",
+      "name": "ICFC",
+      "slug": "icfc"
+    },
+    {
+      "symbol": "MOED",
+      "name": "Egyptian Modern",
+      "slug": "the-egyptian-modern-education"
+    },
+    {
+      "symbol": "ISPH",
+      "name": "Ibnsina Pharma",
+      "slug": "ibnsina-pharma"
+    },
+    {
+      "symbol": "ATLC",
+      "name": "Al Tawfeek Leasing",
+      "slug": "al-tawfeek-financial"
+    },
+    {
+      "symbol": "CNFN",
+      "name": "Contact Financial Holding",
+      "slug": "sarwa-capital"
+    },
+    {
+      "symbol": "FWRY",
+      "name": "Fawry",
+      "slug": "fawry-banking-and-payment"
+    },
+    {
+      "symbol": "RMDA",
+      "name": "Rameda",
+      "slug": "tenth-of-ramadan-for-pharmaceutical"
+    },
+    {
+      "symbol": "OFH",
+      "name": "O B Financial",
+      "slug": "orascom-investment-holding-ca"
+    },
+    {
+      "symbol": "ISMQ",
+      "name": "Iron Steel for Mines Quarries",
+      "slug": "iron-steel-for-mines-quarries"
+    },
+    {
+      "symbol": "VLMRA",
+      "name": "Valmore Holding A",
+      "slug": "egypt-kuwait-holding"
+    },
+    {
+      "symbol": "GDWA",
+      "name": "Gadwa for Industrial Development",
+      "slug": "gadwa-for-industrial-development"
+    },
+    {
+      "symbol": "PRDC",
+      "name": "PREDCO",
+      "slug": "pioneer-properties-urban-dev"
+    },
+    {
+      "symbol": "EFIH",
+      "name": "E-finance",
+      "slug": "e-finance-digital-financial-invest"
+    },
+    {
+      "symbol": "MCRO",
+      "name": "Macro Group",
+      "slug": "macro-pharmaceutical"
+    },
+    {
+      "symbol": "TAQA",
+      "name": "TAQA Arabia",
+      "slug": "taqa-arabia"
+    },
+    {
+      "symbol": "ACTF",
+      "name": "Act Financial",
+      "slug": "act-financial"
+    },
+    {
+      "symbol": "VALU",
+      "name": "U Consumer Finance",
+      "slug": "u-consumer-finance"
+    },
+    {
+      "symbol": "BONY",
+      "name": "Bonyan",
+      "slug": "bonyan-dev-trade"
+    },
+    {
+      "symbol": "AIDC",
+      "name": "Arabia for Investment and",
+      "slug": "arabia-for-investment-and"
+    },
+    {
+      "symbol": "GOUR",
+      "name": "Gourmet Egyptcom Foods",
+      "slug": "gourmet-egyptcom-foods"
+    }
+  ]
+}

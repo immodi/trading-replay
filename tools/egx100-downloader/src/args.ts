@@ -1,9 +1,15 @@
-export type RunMode = "full" | "append";
+import type { IndexKey } from "./paths.ts";
+
+export type RunMode = "full" | "append" | "today";
 
 export type CliOptions = {
-    command: "login" | "components" | "download" | "help";
+    command: "login" | "components" | "download" | "universe" | "help";
     mode: RunMode;
+    index: IndexKey;
+    json: boolean;
+    knownFile: string | null;
     symbols: string[];
+    days: number | null;
     limit: number | null;
     outputDir: string | null;
     authFile: string | null;
@@ -19,7 +25,7 @@ export type CliOptions = {
     verbose: boolean;
 };
 
-const COMMANDS = new Set(["login", "components", "download"]);
+const COMMANDS = new Set(["login", "components", "download", "universe"]);
 
 function requireValue(args: string[], index: number, flag: string): string {
     const value = args[index];
@@ -51,7 +57,11 @@ export function parseArgs(argv: string[]): CliOptions {
     const options: CliOptions = {
         command,
         mode: "full",
+        index: "egx100",
+        json: false,
+        knownFile: null,
         symbols: [],
+        days: null,
         limit: null,
         outputDir: null,
         authFile: null,
@@ -73,12 +83,32 @@ export function parseArgs(argv: string[]): CliOptions {
         switch (arg) {
             case "--mode": {
                 const value = requireValue(args, ++index, arg);
-                if (value !== "full" && value !== "append") {
-                    throw new Error("--mode must be full or append.");
+                if (value !== "full" && value !== "append" && value !== "today") {
+                    throw new Error("--mode must be full, append, or today.");
                 }
                 options.mode = value;
                 break;
             }
+            case "--days":
+                options.days = positiveInt(requireValue(args, ++index, arg), arg);
+                if (options.days < 1) {
+                    throw new Error("--days must be at least 1.");
+                }
+                break;
+            case "--index": {
+                const value = requireValue(args, ++index, arg);
+                if (value !== "egx30" && value !== "egx100") {
+                    throw new Error("--index must be egx30 or egx100.");
+                }
+                options.index = value;
+                break;
+            }
+            case "--json":
+                options.json = true;
+                break;
+            case "--known":
+                options.knownFile = requireValue(args, ++index, arg);
+                break;
             case "--symbols": {
                 const value = requireValue(args, ++index, arg);
                 options.symbols = value
@@ -149,16 +179,25 @@ Usage:
   pnpm components
   pnpm download [options]
   pnpm download:append [options]
+  pnpm download:today [options]
+  pnpm universe [options]
 
 Run from tools/egx100-downloader.
 
 Commands:
   login        Open Chromium, sign in manually, save the session state.
-  components   Print the EGX100 component list without downloading data.
+  components   Print one index component list without downloading data.
   download     Download daily history for every component.
+  universe     Resolve the live component list with Investing.com tickers.
 
 Options:
-  --mode full|append   full (default) overwrites; append merges new days.
+  --mode full|append|today
+                       full (default) overwrites; append merges new days;
+                       today fetches a fresh window ending today and overwrites.
+  --days N             today mode: fetch the last N calendar days (includes today).
+  --index egx30|egx100 Universe/components index (default egx100).
+  --json               universe: print one JSON document to stdout.
+  --known FILE         universe: JSON {slug: symbol} map to skip page loads.
   --symbols A,B        Only process matching ticker/name/slug values.
   --limit N            Stop after N components (useful for testing).
   --output DIR         Output directory (default: <repo>/data/egx100).

@@ -13,8 +13,13 @@ export const DEFAULT_AUTH_FILE = path.join(PROJECT_DIR, ".auth", "investing.json
 export const DOWNLOAD_DIR = path.join(PROJECT_DIR, ".downloads");
 export const CACHE_DIR = path.join(PROJECT_DIR, ".cache");
 
-export const COMPONENTS_URL =
-    "https://www.investing.com/indices/egx-100-ewi-components";
+export const COMPONENTS_URLS = {
+    egx100: "https://www.investing.com/indices/egx-100-ewi-components",
+    egx30: "https://www.investing.com/indices/egx30-components",
+} as const;
+
+export type IndexKey = keyof typeof COMPONENTS_URLS;
+
 export const HOME_URL = "https://www.investing.com/";
 
 export const REQUEST_DELAY_MS = 1500;

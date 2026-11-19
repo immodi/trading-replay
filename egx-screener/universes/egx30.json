@@ -1,0 +1,159 @@
+{
+  "key": "egx30",
+  "label": "EGX 30",
+  "source": "https://www.investing.com/indices/egx30-components",
+  "updatedAt": "2026-11-19T19:54:00.610Z",
+  "count": 30,
+  "stocks": [
+    {
+      "symbol": "CCAP",
+      "name": "Qalaa",
+      "slug": "citadel-capita"
+    },
+    {
+      "symbol": "COMI",
+      "name": "Com Intl Bk",
+      "slug": "com-intl-bk"
+    },
+    {
+      "symbol": "VLMR",
+      "name": "Valmore Holding",
+      "slug": "egypt-kuwait-h"
+    },
+    {
+      "symbol": "ETEL",
+      "name": "Telecom Egypt",
+      "slug": "telecom-egypt"
+    },
+    {
+      "symbol": "HRHO",
+      "name": "EFG Holding",
+      "slug": "efg-hermes-hol"
+    },
+    {
+      "symbol": "PHDC",
+      "name": "Palm Hills",
+      "slug": "palm-hill-dev"
+    },
+    {
+      "symbol": "SKPC",
+      "name": "Sidi Kerir",
+      "slug": "sidi-kerir-pet"
+    },
+    {
+      "symbol": "TMGH",
+      "name": "TMG",
+      "slug": "t-m-g-holding"
+    },
+    {
+      "symbol": "GBCO",
+      "name": "GB AUTO",
+      "slug": "gb-auto-s.a.e"
+    },
+    {
+      "symbol": "HELI",
+      "name": "Misr El Gadida for Housing Dev",
+      "slug": "heliopolis-housing"
+    },
+    {
+      "symbol": "RAYA",
+      "name": "Raya Holding",
+      "slug": "raya-tech---co"
+    },
+    {
+      "symbol": "ABUK",
+      "name": "Abu Qir Fertilizers and Chemical Industries",
+      "slug": "abou-kir-fertilizers"
+    },
+    {
+      "symbol": "MCQE",
+      "name": "Misr Cement",
+      "slug": "misr-cement-qe"
+    },
+    {
+      "symbol": "AMOC",
+      "name": "Alexandria Mineral Oils",
+      "slug": "alx-mineral-oi"
+    },
+    {
+      "symbol": "EAST",
+      "name": "EC",
+      "slug": "eastern-co"
+    },
+    {
+      "symbol": "ALCN",
+      "name": "Alex Cont",
+      "slug": "alexandria-containers-and-goods"
+    },
+    {
+      "symbol": "BTFH",
+      "name": "Beltone",
+      "slug": "beltone-financial-holding"
+    },
+    {
+      "symbol": "EGAL",
+      "name": "Egypt Aluminum",
+      "slug": "egypt-aluminum"
+    },
+    {
+      "symbol": "JUFO",
+      "name": "Juhayna Food",
+      "slug": "juhayna-food-industries"
+    },
+    {
+      "symbol": "ORHD",
+      "name": "ODE",
+      "slug": "orascom-hotels-and-development"
+    },
+    {
+      "symbol": "ADIB",
+      "name": "Abu Dhabi Islamic Bank",
+      "slug": "abu-dhabi-islamic-bank-egypt"
+    },
+    {
+      "symbol": "ORAS",
+      "name": "Orascom Construction Ltd",
+      "slug": "orascom-construction-ltd"
+    },
+    {
+      "symbol": "EMFD",
+      "name": "Emaar Misr for Development SAE",
+      "slug": "emaar-misr-for-development-sae"
+    },
+    {
+      "symbol": "CLHO",
+      "name": "Cleopatra Hospital",
+      "slug": "cleopatra-hospital"
+    },
+    {
+      "symbol": "EFID",
+      "name": "Edita Food",
+      "slug": "edita-food-industries"
+    },
+    {
+      "symbol": "MFPC",
+      "name": "Misr Fertilizers",
+      "slug": "misr-fertilizers-production-co-sae"
+    },
+    {
+      "symbol": "ISPH",
+      "name": "Ibnsina Pharma",
+      "slug": "ibnsina-pharma"
+    },
+    {
+      "symbol": "FWRY",
+      "name": "Fawry",
+      "slug": "fawry-banking-and-payment"
+    },
+    {
+      "symbol": "RMDA",
+      "name": "Rameda",
+      "slug": "tenth-of-ramadan-for-pharmaceutical"
+    },
+    {
+      "symbol": "EFIH",
+      "name": "E-finance",
+      "slug": "e-finance-digital-financial-invest"
+    }
+  ]
+}

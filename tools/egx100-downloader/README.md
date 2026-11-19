@@ -136,6 +136,49 @@ pnpm download:append --create-missing
 If the file is already current, the stock is reported as **up to date** and no
 download is attempted.
 
+## 5. Fetch a fresh window ending today
+
+```bash
+pnpm download:today --days 120 --output /tmp/egx-today
+```
+
+Today mode requests the last `--days` calendar days ending today, writes a
+**fresh** set of files (it does not merge with whatever is already in the
+output directory), and never reaches further back than the requested window.
+It is intended for screeners that need a short rolling history and want a
+clean, reproducible snapshot on every run.
+
+- `--days N` controls the window size (default `1`).
+- `--from` / `--to` still override the computed range.
+- `--symbols A,B` accepts tickers, names, or Investing.com slugs.
+- `--output DIR` should point at the screener's own data directory; the
+  downloader will not write into `data/egx100` unless you ask it to.
+- A stock with no rows in the window is reported as **no rows** and no file is
+  written for it. If the whole run has no rows, the caller (for example the
+  EGX screener) should treat the session as unavailable.
+
+## 6. Resolve the live index names
+
+```bash
+pnpm universe --index egx30 --json
+pnpm universe --index egx100 --json
+```
+
+`universe` loads the live Investing.com component list for the selected index,
+reuses a `--known` `{slug: ticker}` map when provided, and resolves any new slug
+by opening its Investing.com historical page — the same ticker logic the
+downloader uses. It prints one JSON document to stdout; progress goes to stderr.
+
+```bash
+pnpm universe --index egx30 --json --known universes/egx30.json > egx30-live.json
+```
+
+- `--index egx30|egx100` selects the Investing.com components page.
+- `--known FILE` accepts either a `{slug: ticker}` object or a universe file
+  with a `stocks` array; known slugs skip the page load.
+- `--symbols A,B`, `--limit N`, `--dry-run`, and `--delay MS` behave as usual.
+- `--json` writes the result to stdout and keeps logs on stderr.
+
 ## Commands and options
 
 ```text
@@ -143,12 +186,20 @@ pnpm auth
 pnpm components
 pnpm download [options]
 pnpm download:append [options]
+pnpm download:today [options]
+pnpm universe [options]
 pnpm test
 pnpm typecheck
 ```
 
 ```text
---mode full|append   full (default) overwrites; append merges new days
+--mode full|append|today
+                     full (default) overwrites; append merges new days;
+                     today fetches a fresh window ending today
+--days N             today mode: last N calendar days (default 1)
+--index egx30|egx100 universe/components index (default egx100)
+--json               universe: JSON on stdout, logs on stderr
+--known FILE         universe: {slug: ticker} map to skip page loads
 --symbols A,B        only matching ticker/name/slug values
 --limit N            stop after N components
 --output DIR         output directory (default: <repo>/data/egx100)

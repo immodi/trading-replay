@@ -42,6 +42,13 @@ const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const DOWNLOAD_ROW_CAP = 4_900;
 const CHUNK_YEARS = 10;
 
+function subtractCalendarDays(date: string, days: number): string {
+    const [year, month, day] = date.split("-").map(Number);
+    const shifted = new Date(Date.UTC(year, month - 1, day));
+    shifted.setUTCDate(shifted.getUTCDate() - days);
+    return shifted.toISOString().slice(0, 10);
+}
+
 function addYearsMinusOneDay(date: string, years: number): string {
     const [year, month, day] = date.split("-").map(Number);
     const shifted = new Date(Date.UTC(year + years, month - 1, day));
@@ -114,7 +121,7 @@ function prefilterByKnownManifest(
 
 function stockCacheFile(
     ticker: string,
-    mode: "full" | "append",
+    mode: "full" | "append" | "today",
     chunk: number,
 ): string {
     const directory = path.join(CACHE_DIR, "csv");
@@ -128,7 +135,7 @@ function stockCacheFile(
 async function downloadRange(options: {
     page: Page;
     ticker: string;
-    mode: "full" | "append";
+    mode: "full" | "append" | "today";
     startDate: string;
     endDate: string;
     chunk: number;
@@ -175,7 +182,7 @@ async function downloadRange(options: {
 async function downloadRangeChunked(options: {
     page: Page;
     ticker: string;
-    mode: "full" | "append";
+    mode: "full" | "append" | "today";
     startDate: string;
     endDate: string;
     verbose: boolean;
@@ -274,11 +281,12 @@ async function downloadRangeChunked(options: {
 async function processStock(options: {
     page: Page;
     stock: ComponentStock;
-    mode: "full" | "append";
+    mode: "full" | "append" | "today";
     outputDir: string;
     manifest: Manifest;
     from: string | null;
     to: string | null;
+    days: number | null;
     createMissing: boolean;
     verbose: boolean;
     retries: number;
@@ -288,6 +296,7 @@ async function processStock(options: {
     written: number;
     skipped: boolean;
     unmatched: boolean;
+    noData: boolean;
 }> {
     const metadata = await openHistoricalPage(options.page, options.stock.slug, {
         retries: options.retries,
@@ -304,16 +313,38 @@ async function processStock(options: {
             written: 0,
             skipped: true,
             unmatched: true,
+            noData: false,
         };
     }
 
+    // "today" mode always writes a fresh window. Remove any previous file for
+    // this symbol so a failed/empty fetch cannot leave stale bars behind.
+    if (options.mode === "today" && existing !== null) {
+        fs.rmSync(outputFile, { force: true });
+    }
+
     const bounds = await readFirstAndLastAvailableDates(options.page);
-    const maxDate = options.to === null ? bounds.max || todayUtc() : assertDate(options.to, "--to");
+    const siteMax = bounds.max || todayUtc();
+    const maxDate =
+        options.mode === "today"
+            ? minDate(
+                  options.to === null ? todayUtc() : assertDate(options.to, "--to"),
+                  siteMax,
+              )
+            : options.to === null
+              ? siteMax
+              : assertDate(options.to, "--to");
 
     let startDate: string;
     let appendExisting: DailyBar[] = [];
 
-    if (options.mode === "append" && existing !== null && existing.length > 0) {
+    if (options.mode === "today") {
+        const days = options.days ?? 1;
+        startDate =
+            options.from === null
+                ? subtractCalendarDays(maxDate, days - 1)
+                : assertDate(options.from, "--from");
+    } else if (options.mode === "append" && existing !== null && existing.length > 0) {
         const lastDate = barDate(existing[existing.length - 1].time);
         startDate =
             options.from === null ? nextUtcDate(lastDate) : assertDate(options.from, "--from");
@@ -326,7 +357,7 @@ async function processStock(options: {
                 fileName,
                 existing,
             );
-            return { entry, written: 0, skipped: true, unmatched: false };
+            return { entry, written: 0, skipped: true, unmatched: false, noData: false };
         } else {
             appendExisting = existing;
         }
@@ -336,7 +367,9 @@ async function processStock(options: {
         );
     } else {
         startDate =
-            options.from === null ? bounds.min : assertDate(options.from, "--from");
+            options.from === null
+                ? (bounds.min || "1970-01-01")
+                : assertDate(options.from, "--from");
     }
 
     if (startDate > maxDate) {
@@ -351,6 +384,7 @@ async function processStock(options: {
             written: 0,
             skipped: true,
             unmatched: false,
+            noData: false,
         };
     }
 
@@ -370,10 +404,15 @@ async function processStock(options: {
     });
 
     const startTimestamp = Date.parse(`${startDate}T00:00:00Z`) / 1000;
+    const endTimestamp = Date.parse(`${maxDate}T23:59:59Z`) / 1000;
     const incoming =
         options.mode === "append"
             ? rangeResult.bars.filter((bar) => bar.time >= startTimestamp)
-            : rangeResult.bars;
+            : options.mode === "today"
+              ? rangeResult.bars.filter(
+                    (bar) => bar.time >= startTimestamp && bar.time <= endTimestamp,
+                )
+              : rangeResult.bars;
 
     if (incoming.length === 0) {
         if (options.mode === "append") {
@@ -382,6 +421,17 @@ async function processStock(options: {
                 written: 0,
                 skipped: true,
                 unmatched: false,
+                noData: false,
+            };
+        }
+
+        if (options.mode === "today") {
+            return {
+                entry: toManifestEntry(metadata, fileName, []),
+                written: 0,
+                skipped: true,
+                unmatched: false,
+                noData: true,
             };
         }
 
@@ -413,6 +463,7 @@ async function processStock(options: {
                 : merged.length,
         skipped: false,
         unmatched: false,
+        noData: false,
     };
 }
 
@@ -481,6 +532,7 @@ export async function runDownload(options: {
     const startedAt = new Date().toISOString();
     let downloaded = 0;
     let skipped = 0;
+    let noData = 0;
 
     for (let index = 0; index < stocks.length; index += 1) {
         const stock = stocks[index];
@@ -502,6 +554,7 @@ export async function runDownload(options: {
                     manifest,
                     from: cli.from,
                     to: cli.to,
+                    days: cli.days,
                     createMissing: cli.createMissing,
                     verbose: cli.verbose,
                     retries: cli.retries,
@@ -510,6 +563,9 @@ export async function runDownload(options: {
 
                 if (result.unmatched) {
                     log("  skipped (does not match --symbols)");
+                } else if (result.noData) {
+                    noData += 1;
+                    log("  no rows in the requested window");
                 } else if (result.skipped) {
                     skipped += 1;
                     log(
@@ -567,7 +623,7 @@ export async function runDownload(options: {
 
     log("");
     log(
-        `Done · ${downloaded} downloaded · ${skipped} up to date · ${failures.length} failed`,
+        `Done · ${downloaded} downloaded · ${skipped} up to date · ${noData} with no rows · ${failures.length} failed`,
     );
 
     if (failures.length > 0) {

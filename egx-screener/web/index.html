@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>EGX Daily Screener</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="mark"></span>
+        <div>
+          <h1>EGX Daily Screener</h1>
+          <p id="strategy-subtitle">Close-of-day decision, next-open fill</p>
+        </div>
+      </div>
+
+      <div class="controls">
+        <label>
+          <span>Strategy</span>
+          <select id="strategy"></select>
+        </label>
+        <label>
+          <span>Equity (EGP)</span>
+          <input id="equity" type="number" min="0" step="1000" inputmode="numeric" />
+        </label>
+        <label>
+          <span>Held</span>
+          <input id="held" type="text" placeholder="COMI, ETEL" autocomplete="off" />
+        </label>
+        <label>
+          <span>Fixed fee / order</span>
+          <input
+            id="fixed-fee"
+            type="number"
+            min="0"
+            step="0.5"
+            inputmode="decimal"
+            title="Fixed broker fee per order per side, in EGP"
+          />
+        </label>
+        <label>
+          <span>Fee % / order</span>
+          <input
+            id="fee-pct"
+            type="number"
+            min="0"
+            step="0.01"
+            inputmode="decimal"
+            title="Percentage fee per order per side, in percent (0.1 means 0.1%)"
+          />
+        </label>
+        <button
+          id="refresh-names"
+          class="ghost"
+          type="button"
+          title="Fetch the latest EGX30/EGX100 constituents from Investing.com. Does not fetch bars."
+        >
+          Refresh names
+        </button>
+        <button id="refresh" class="primary" type="button">Refresh today</button>
+      </div>
+    </header>
+
+    <main>
+      <div id="banner" class="banner hidden"></div>
+
+      <div id="progress" class="progress hidden">
+        <div class="progress-head">
+          <span id="progress-label">Refreshing…</span>
+          <span id="progress-count"></span>
+        </div>
+        <div class="progress-track">
+          <div id="progress-bar" class="progress-bar"></div>
+        </div>
+        <pre id="progress-log" class="progress-log"></pre>
+      </div>
+
+      <section class="session-strip">
+        <div class="session-main">
+          <span class="eyebrow">Session</span>
+          <strong id="session-date">—</strong>
+          <span id="session-note" class="muted"></span>
+        </div>
+        <div class="session-stats" id="session-stats"></div>
+      </section>
+
+      <section class="panel plan-panel">
+        <div class="panel-head">
+          <div>
+            <h2>Orders for next open</h2>
+            <p class="muted" id="plan-note">
+              Selected names, reference entry, stop, size, and exit plan.
+            </p>
+          </div>
+          <span class="count" id="selected-count">0</span>
+        </div>
+        <div id="orders" class="orders"></div>
+      </section>
+
+      <section class="panel universe-panel">
+        <div class="panel-head">
+          <div>
+            <h2>Universe checklist</h2>
+            <p class="muted">
+              Every name in the universe. The five chips are the eligibility
+              gates; click a row for the full pass/fail detail.
+            </p>
+          </div>
+          <div class="table-tools">
+            <input
+              id="search"
+              type="search"
+              placeholder="Filter symbol or name"
+              autocomplete="off"
+            />
+          </div>
+        </div>
+
+        <div class="tabs" id="tabs"></div>
+
+        <div class="gate-key">
+          <span class="gate-key-label">Gate key</span>
+          <span><i class="gate pass">H</i> History ≥ 60 bars</span>
+          <span><i class="gate pass">F</i> Fresh session</span>
+          <span><i class="gate pass">V</i> Volume &gt; 0</span>
+          <span><i class="gate pass">P</i> Close ≥ 1 EGP</span>
+          <span><i class="gate pass">L</i> Liquidity ≥ 2M EGP</span>
+          <span class="muted">red = failed</span>
+        </div>
+
+        <div class="split">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="num">#</th>
+                  <th>Symbol</th>
+                  <th class="num">Close</th>
+                  <th>Signal</th>
+                  <th>Gates</th>
+                  <th class="num">Score</th>
+                  <th class="num">Fee drag</th>
+                  <th class="num">Stop ref</th>
+                  <th class="num">Shares ref</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="rows"></tbody>
+            </table>
+            <p id="empty" class="empty hidden"></p>
+          </div>
+
+          <aside id="detail" class="detail-panel" aria-live="polite">
+            <div class="detail-empty">
+              <h3>Inspect a stock</h3>
+              <p>
+                Choose any row to see its checklist, signal, reference trade
+                plan, and indicator values.
+              </p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="panel legend-panel">
+        <details open>
+          <summary>How to read this screen</summary>
+          <div class="legend-grid">
+            <div>
+              <h4>Entry / desired price</h4>
+              <p>
+                The decision is made on today's close, but the fill is the
+                <strong>next open</strong>. There is no fixed limit price in the
+                strategy. The order card shows today's close as a reference;
+                enter the actual open there to recalculate the stop and size.
+              </p>
+            </div>
+            <div>
+              <h4>Stop loss (SL)</h4>
+              <p>
+                <strong>7.5% below the actual fill.</strong> The table and order
+                cards show a reference stop based on today's close. Recalculate
+                it from the real next-open fill before placing an order.
+              </p>
+            </div>
+            <div>
+              <h4>Take profit (TP)</h4>
+              <p>
+                <strong>There is no fixed take-profit.</strong> The strategy
+                exits on its structural exit (the 10-day close low for Donchian), the
+                7.5% stop, or after 20 sessions. The order card shows the
+                current exit trigger.
+              </p>
+            </div>
+            <div>
+              <h4>Fees</h4>
+              <p>
+                Sizing reserves the <strong>round-trip cost</strong>. The
+                default EGX model is <strong>2 EGP + 0.10% per executed order,
+                per side</strong> (research baseline: 0.30%/side + 0 fixed).
+                Cards show the round-trip fee, its share of the risk budget,
+                and the break-even move. A highlighted fee drag means the win
+                can be largely eaten by costs.
+              </p>
+            </div>
+            <div>
+              <h4>Checklist gates</h4>
+              <p>
+                H = history ≥ 60 bars · F = fresh session · V = volume &gt; 0 ·
+                P = close ≥ 1 EGP · L = 20-day median traded value ≥ 2,000,000
+                EGP. Hover a chip or open the row for the actual value.
+              </p>
+            </div>
+          </div>
+          <p class="doc-links">
+            <a href="/STRATEGY.md" target="_blank" rel="noreferrer">
+              Open the full strategy and filter document
+            </a>
+            <a href="/donchian.md" target="_blank" rel="noreferrer">
+              Open the manual one-line checklist
+            </a>
+          </p>
+        </details>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

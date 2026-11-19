@@ -1,0 +1,21 @@
+{
+  "min_history_bars": 60,
+  "min_price": 1.0,
+  "min_median_traded_value_20d": 2000000,
+  "risk_per_trade": 0.01,
+  "max_order_notional": 1000000,
+  "cost_pct_per_side": 0.001,
+  "fixed_fee_per_order": 2,
+  "fee_warning_threshold": 0.25,
+  "equity": 100000,
+  "max_new_per_day": 3,
+  "max_positions": 12,
+  "ranking_weights": {
+    "breakout_atr": 0.5,
+    "cross_strength": 0.3,
+    "volume_ratio": 0.2,
+    "rs60": 0.2,
+    "trend_flag": 0.1,
+    "atr_pct": -0.3
+  }
+}

@@ -1,6 +1,10 @@
 import type { Page } from "playwright-core";
 
-import { COMPONENTS_URL, PAGE_TIMEOUT_MS } from "./paths.ts";
+import {
+    COMPONENTS_URLS,
+    PAGE_TIMEOUT_MS,
+    type IndexKey,
+} from "./paths.ts";
 import { log, retryLabel, warn } from "./log.ts";
 import type { ComponentStock } from "./types.ts";
 
@@ -8,8 +12,10 @@ const EQUITY_PATH = /^\/equities\/[^/]+\/?$/;
 
 export async function loadComponents(
     page: Page,
-    options: { retries: number; verbose: boolean },
+    options: { retries: number; verbose: boolean; index?: IndexKey },
 ): Promise<ComponentStock[]> {
+    const index = options.index ?? "egx100";
+    const componentsUrl = COMPONENTS_URLS[index];
     let lastError: unknown = null;
 
     for (let attempt = 0; attempt <= options.retries; attempt += 1) {
@@ -18,7 +24,7 @@ export async function loadComponents(
                 log(`Loading components page${retryLabel(attempt, options.retries + 1)}…`);
             }
 
-            await page.goto(COMPONENTS_URL, {
+            await page.goto(componentsUrl, {
                 waitUntil: "domcontentloaded",
                 timeout: PAGE_TIMEOUT_MS,
             });
@@ -84,7 +90,7 @@ export async function loadComponents(
             }, EQUITY_PATH.source);
 
             if (stocks.length === 0) {
-                throw new Error("The EGX100 components table contained no stock links.");
+                throw new Error(`The ${index.toUpperCase()} components table contained no stock links.`);
             }
 
             return stocks;
@@ -102,5 +108,5 @@ export async function loadComponents(
 
     throw lastError instanceof Error
         ? lastError
-        : new Error("Could not load the EGX100 components page.");
+        : new Error(`Could not load the ${index.toUpperCase()} components page.`);
 }

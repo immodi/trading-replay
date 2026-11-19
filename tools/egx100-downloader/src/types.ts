@@ -45,7 +45,7 @@ export type Manifest = {
     source: string;
     stocks: ManifestEntry[];
     lastRun?: {
-        mode: "full" | "append";
+        mode: "full" | "append" | "today";
         startedAt: string;
         finishedAt: string;
         failures: Array<{ symbol: string; message: string }>;
